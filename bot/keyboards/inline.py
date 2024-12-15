@@ -71,7 +71,7 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
     kb.append([
         InlineKeyboardButton(
             text="♻Рестарт сессии",
-            callback_data=Restart(
+            callback_data=RestartSessionData(
                 session_id=leads[0].session_id
             ).pack(),
         ),

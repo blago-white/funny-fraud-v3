@@ -70,6 +70,7 @@ class GologinProfilesManager:
         self._manager.stop()
 
     def _get_gologin_debugger(self, pid: str, worker_id: int) -> str:
+        print(f"USED PORT: {10000+(worker_id%10000)}")
         return GoLogin({
             "token": self._TOKEN,
             "profile_id": pid,
