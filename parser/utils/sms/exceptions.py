@@ -1,0 +1,2 @@
+class NumberGettingException(Exception):
+    pass
