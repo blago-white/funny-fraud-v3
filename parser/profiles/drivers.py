@@ -1,3 +1,5 @@
+import os
+
 from fake_useragent import UserAgent
 from selenium.webdriver import ChromeOptions, Chrome
 from selenium.webdriver.chrome.service import Service
@@ -14,11 +16,11 @@ class WebDriversService:
                 platforms=["pc"]
             ),
             gologin_manager: GologinProfilesManager = GologinProfilesManager(),
-            driver_path: str = "C:\\chromedriver.exe"):
+            driver_path: str = None):
         self._default_driver = default_driver
         self._default_opts_class = default_opts_class
         self._agent_service = agent_service
-        self._driver_path = driver_path
+        self._driver_path = driver_path or os.environ.get("CHROME_DRIVER_PATH")
         self._gologin_manager = gologin_manager
 
     def get_desctop(self, worker_id: str, proxy: str = None):
