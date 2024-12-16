@@ -173,6 +173,20 @@ class OfferInitializerParser:
         ).click()
 
         print("WAIT FOR OTP PASSWORD")
+
+        START = time.time()
+
+        while True:
+            if time.time() - START > 20:
+                print("PAYMENT URL DONT CHANGES")
+
+                raise Exception("Cannot submit form")
+
+            if self._driver.current_url != self._card_data_page_path:
+                break
+
+        print("PAYMENT URL CHANGES")
+
         try:
             WebDriverWait(self._driver, 60).until(
                 expected_conditions.presence_of_element_located(
