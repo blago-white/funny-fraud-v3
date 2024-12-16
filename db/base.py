@@ -6,7 +6,7 @@ import redis
 
 
 class BaseRedisService(metaclass=ABCMeta):
-    _conn: redis.Redis = redis.Redis.from_url("redis://45.10.41.83:6379/0")
+    _conn: redis.Redis = redis.Redis.from_url("redis://localhost:6379/0")
 
     def __init__(self, conn: redis.Redis = None):
         self._conn = conn or self._conn
