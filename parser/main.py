@@ -150,6 +150,12 @@ class LeadsGenerator:
                         error="Failed to send payment request"
                     )
 
+                self._db_service.change_status(
+                    session_id=session_id,
+                    lead_id=lead_id,
+                    status=LeadGenResultStatus.WAIT_CODE_FAIL
+                )
+
                 self._try_enter_card_data(initializer=initializer,
                                           session_id=session_id,
                                           lead_id=lead_id,
