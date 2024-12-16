@@ -18,7 +18,7 @@ async def main():
     dp = Dispatcher()
 
     bot = Bot(
-        token="7842973296:AAG3IxA_9ExogWmuv9QUnv8-p7VWs1fUKJw",
+        token=os.environ.get("BOT_TOKEN"),
         default=DefaultBotProperties(
             parse_mode=ParseMode.HTML
         )
