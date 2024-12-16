@@ -218,8 +218,6 @@ class LeadsGenerator:
 
             initializer.resend_otp()
 
-        self._try_close_driver(initializer=initializer)
-
         print(f"LEAD #{lead_id} FINISHED")
 
         self._db_service.change_status(
@@ -227,6 +225,8 @@ class LeadsGenerator:
             session_id=session_id,
             lead_id=lead_id,
         )
+
+        self._try_close_driver(initializer=initializer)
 
     def _receive_sms_code(self, phone_id: int):
         code, start_time = None, time.time()
@@ -288,7 +288,6 @@ class LeadsGenerator:
         START = time.time()
 
         while time.time() - START < 60 * 60 * 3:
-
             if self._db_service.can_start_wait_code(
                     session_id=session_id,
                     lead_id=lead_id
