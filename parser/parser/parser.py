@@ -98,6 +98,10 @@ class OfferInitializerParser:
             otp_field.send_keys(Keys.CONTROL+"a")
             otp_field.send_keys(Keys.DELETE)
 
+        self._driver.find_element(
+            By.ID, "passwordEdit"
+        ).click()
+
         for i in code:
             self._driver.find_element(
                 By.ID, "passwordEdit"
