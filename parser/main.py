@@ -61,13 +61,21 @@ class LeadsGenerator:
 
         print(f"LEAD #{lead_id} STARTED")
 
-        initializer = self._initializer(
-            payments_card=session.card,
-            driver=self._drivers_service.get_desctop(
-                proxy=session.proxy,
-                worker_id=(session_id * lead_id) + 1
+        try:
+            initializer = self._initializer(
+                payments_card=session.card,
+                driver=self._drivers_service.get_desctop(
+                    proxy=session.proxy,
+                    worker_id=(session_id * lead_id) + 1
+                )
             )
-        )
+        except Exception as e:
+            self._db_service.change_status(
+                session_id=session_id,
+                lead_id=lead_id,
+                status=LeadGenResultStatus.FAILED,
+                error=f"Initializing error: {repr(e)} {e}"
+            )
 
         print(f"LEAD #{lead_id} BROWSER INITED")
 
