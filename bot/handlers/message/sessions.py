@@ -208,7 +208,6 @@ async def approve_session(
 
         if not leads:
             continue
-        print(leads)
 
         req_update = leads_differences_exists(
             prev_leads=prev_leads,

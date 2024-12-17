@@ -161,12 +161,6 @@ class LeadsGenerator:
                                           lead_id=lead_id,
                                           retries=1)
 
-                self._db_service.change_status(
-                    session_id=session_id,
-                    lead_id=lead_id,
-                    status=LeadGenResultStatus.WAIT_CODE_FAIL
-                )
-
         print(f"LEAD #{lead_id} SUBMIT PAYMENT")
 
         self._db_service.change_status(
