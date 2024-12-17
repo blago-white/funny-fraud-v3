@@ -47,7 +47,7 @@ class GologinProfilesManager:
             },
             'proxyEnabled': True,
             'proxy': {
-                'mode': 'gologin',
+                'mode': 'http',
                 'host': proxy.split("@")[1].split(":")[0],
                 'port': proxy.split("@")[1].split(":")[-1],
                 'username': proxy.split(":")[0],
