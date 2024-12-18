@@ -32,7 +32,10 @@ class OwnerCredentalsGenerator:
     def _get_random_password():
         return "".join(
             [random.choice(
-                string.ascii_lowercase + string.ascii_uppercase + "-"
+                random.choice([
+                    string.ascii_lowercase,
+                    string.ascii_uppercase
+                ])
             ) for _ in range(9)] + ["-"] + [random.choice(string.digits)]
         )
 
