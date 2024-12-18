@@ -17,22 +17,26 @@ def session_results_commiter(func):
 
         self: LeadsGenerator = args[0]
 
-        session_id, session = (
-            kwargs.get("session_id"), kwargs.get("session")
+        session_id, session, lead_id = (
+            kwargs.get("session_id"),
+            kwargs.get("session"),
+            kwargs.get("lead_id")
         )
 
         session: LeadsGenerationSession
 
-        _, lead_id = self._db_service.add(
-            session_id=session_id,
-            result=LeadGenResult(
+        if not lead_id:
+            _, lead_id = self._db_service.add(
                 session_id=session_id,
-                status=LeadGenResultStatus.PROGRESS,
-                error="",
+                result=LeadGenResult(
+                    session_id=session_id,
+                    status=LeadGenResultStatus.PROGRESS,
+                    error="",
+                )
             )
-        )
-
-        print(f"LEAD #{lead_id} STARTED")
+            print(f"LEAD #{lead_id} STARTED")
+        else:
+            print(f"LEAD #{lead_id} RESTARTED")
 
         exception = None
 
@@ -48,6 +52,8 @@ def session_results_commiter(func):
                 break
             except Exception as e:
                 exception = e
+
+            print(f"TRY START BROWSER FAILED {exception}")
 
             session.proxies.remove(proxy)
         else:
