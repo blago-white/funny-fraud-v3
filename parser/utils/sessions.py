@@ -55,7 +55,7 @@ def session_results_commiter(func):
                 session_id=session_id,
                 lead_id=lead_id,
                 status=LeadGenResultStatus.FAILED,
-                error=f"Initializing error: {repr(e)} {e}"
+                error=f"Initializing error: {repr(exception)} {exception}"
             )
 
         print(f"LEAD #{lead_id} BROWSER INITED")
