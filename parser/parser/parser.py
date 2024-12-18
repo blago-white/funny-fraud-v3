@@ -83,29 +83,20 @@ class OfferInitializerParser:
 
         self._enter_owner_data()
 
-    def enter_payment_card_otp(self, code: str, _retry: bool = 3):
-        if _retry == 3:
-            WebDriverWait(self._driver, 60).until(
-                expected_conditions.presence_of_element_located(
-                    (By.ID, "passwordEdit")
-                )
+    def enter_payment_card_otp(self, code: str):
+        WebDriverWait(self._driver, 60).until(
+            expected_conditions.presence_of_element_located(
+                (By.ID, "passwordEdit")
             )
-        else:
-            otp_field = self._driver.find_element(
-                By.ID, "passwordEdit"
-            )
-
-            otp_field.send_keys(Keys.CONTROL+"a")
-            otp_field.send_keys(Keys.DELETE)
+        )
 
         self._driver.find_element(
             By.ID, "passwordEdit"
         ).click()
 
-        for i in code:
-            self._driver.find_element(
-                By.ID, "passwordEdit"
-            ).send_keys(i)
+        self._driver.find_element(
+            By.ID, "passwordEdit"
+        ).send_keys(code)
 
         try:
             WebDriverWait(self._driver, 7).until(
@@ -125,10 +116,7 @@ class OfferInitializerParser:
                 raise exceptions.OTPError("Success page not opened but "
                                           "code is ok")
 
-        if not _retry:
-            raise exceptions.InvalidOtpCodeError("Invalid otp code received")
-        else:
-            return self.enter_payment_card_otp(code=code, _retry=_retry-1)
+        raise exceptions.InvalidOtpCodeError("Invalid otp code received")
 
     def enter_card_data(self):
         if self._card_data_already_entered:
