@@ -149,8 +149,11 @@ async def add_proxies(message: Message, state: FSMContext):
         await message.reply("❌ Неверный формат прокси")
         return
 
-    if len(proxies) != int(current_session_form.get("count_requests")):
-        await message.reply(f"❌ Неверное кол-во прокси {len(proxies)}")
+    correct_proxies_len = int(current_session_form.get("count_requests"))*3
+
+    if len(proxies) != correct_proxies_len:
+        await message.reply(f"❌ Неверное кол-во прокси "
+                            f"{len(proxies)} -> {correct_proxies_len}")
         return
 
     await state.set_data(data=current_session_form | {
@@ -208,7 +211,6 @@ async def approve_session(
 
         if not leads:
             continue
-        print(leads)
 
         req_update = leads_differences_exists(
             prev_leads=prev_leads,
@@ -216,7 +218,6 @@ async def approve_session(
         )
 
         if req_update:
-            print("UPDATE KB ----")
             try:
                 await replyed.edit_reply_markup(
                     reply_markup=generate_leads_statuses_kb(leads=leads)

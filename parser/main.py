@@ -9,6 +9,7 @@ from .parser.exceptions import TraficBannedError, InvalidOtpCodeError, OTPError
 from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession
 from .utils.sms.services import SmsCodesService
+from .utils.sessions import session_results_commiter
 from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation
 
 
@@ -36,12 +37,14 @@ class LeadsGenerator:
 
         threads = [threading.Thread(
             target=self.generate,
-            args=(new_session_id, LeadsGenerationSession(
-                ref_link=data.ref_link,
-                proxy=data.proxies[_],
-                card=data.card,
-                count=1,
-            )),
+            kwargs=dict(
+                session_id=new_session_id,
+                session=LeadsGenerationSession(
+                    ref_link=data.ref_link,
+                    proxies=data.proxies[_*3:_*3+3],
+                    card=data.card,
+                    count=1,
+                )),
         ) for _ in range(data.count)]
 
         for t in threads:
@@ -49,36 +52,11 @@ class LeadsGenerator:
 
         return new_session_id
 
-    def generate(self, session_id: int, session: LeadsGenerationSession):
-        _, lead_id = self._db_service.add(
-            session_id=session_id,
-            result=LeadGenResult(
-                session_id=session_id,
-                status=LeadGenResultStatus.PROGRESS,
-                error="",
-            )
-        )
-
-        print(f"LEAD #{lead_id} STARTED")
-
-        try:
-            initializer = self._initializer(
-                payments_card=session.card,
-                driver=self._drivers_service.get_desctop(
-                    proxy=session.proxy,
-                    worker_id=(session_id * lead_id) + 1
-                )
-            )
-        except Exception as e:
-            self._db_service.change_status(
-                session_id=session_id,
-                lead_id=lead_id,
-                status=LeadGenResultStatus.FAILED,
-                error=f"Initializing error: {repr(e)} {e}"
-            )
-
-        print(f"LEAD #{lead_id} BROWSER INITED")
-
+    @session_results_commiter
+    def generate(self, session_id: int,
+                 lead_id: int,
+                 initializer: OfferInitializerParser,
+                 session: LeadsGenerationSession):
         for _ in range(self._GLOBAL_RETRIES):
             self._check_stopped(initializer, session_id, lead_id)
 
@@ -103,27 +81,15 @@ class LeadsGenerator:
                 break
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
-                self._try_close_driver(initializer=initializer)
-
-                return self._db_service.change_status(
-                    status=LeadGenResultStatus.FAILED,
-                    session_id=session_id,
-                    lead_id=lead_id,
-                    error=f"USED PROXY ERROR: {
+                raise TraficBannedError(
+                    f"USED PROXY ERROR: {
                         session.proxy.replace("@", "#")
                     }\n{repr(e)}"
                 )
             except Exception as e:
                 print(f"LEAD #{lead_id} INIT ERROR: {repr(e)} {e}")
                 if _ >= self._GLOBAL_RETRIES - 1:
-                    self._try_close_driver(initializer=initializer)
-
-                    return self._db_service.change_status(
-                        session_id=session_id,
-                        lead_id=lead_id,
-                        status=LeadGenResultStatus.FAILED,
-                        error=str(e)
-                    )
+                    raise e
 
         print(f"LEAD #{lead_id} CARD DATA ENTER")
 
@@ -145,29 +111,22 @@ class LeadsGenerator:
 
                 break
             except Exception as e:
-                print(f"LEAD #{lead_id} SUBMIT PAYMENT "
-                      f"ERROR: {repr(e)}")
-
-                if _ >= self._CARD_DATA_ENTERING_RETRIES - 1:
-                    self._try_close_driver(initializer=initializer)
-
-                    return self._db_service.change_status(
-                        session_id=session_id,
-                        lead_id=lead_id,
-                        status=LeadGenResultStatus.FAILED,
-                        error="Failed to send payment request"
-                    )
-
-                self._try_enter_card_data(initializer=initializer,
-                                          session_id=session_id,
-                                          lead_id=lead_id,
-                                          retries=1)
-
                 self._db_service.change_status(
                     session_id=session_id,
                     lead_id=lead_id,
                     status=LeadGenResultStatus.WAIT_CODE_FAIL
                 )
+
+                print(f"LEAD #{lead_id} SUBMIT PAYMENT "
+                      f"ERROR: {repr(e)}")
+
+                if _ >= self._CARD_DATA_ENTERING_RETRIES - 1:
+                    raise type(e)("Failed to send payment request")
+
+                self._try_enter_card_data(initializer=initializer,
+                                          session_id=session_id,
+                                          lead_id=lead_id,
+                                          retries=1)
 
         print(f"LEAD #{lead_id} SUBMIT PAYMENT")
 
@@ -193,8 +152,7 @@ class LeadsGenerator:
 
             except ClientAbortedOtpValidation as e:
                 print(f"LEAD #{lead_id} OTP VERIF CANCELED {repr(e)}")
-                return self._try_close_driver(initializer=initializer)
-
+                raise e
             except (Exception, InvalidOtpCodeError, OtpTimeoutError) as e:
                 if type(e) is OtpTimeoutError:
                     print(f"LEAD #{lead_id} OTP TIMEOUT ERROR: {repr(e)}")
@@ -208,13 +166,7 @@ class LeadsGenerator:
 
                     error_msg += " [Otp code retries 3]"
 
-                    self._try_close_driver(initializer=initializer)
-                    return self._db_service.change_status(
-                        status=LeadGenResultStatus.FAILED,
-                        session_id=session_id,
-                        lead_id=lead_id,
-                        error=error_msg
-                    )
+                    raise type(e)(error_msg)
 
             print(f"LEAD #{lead_id} INVALID OTP, RETRY")
 
@@ -227,14 +179,6 @@ class LeadsGenerator:
             initializer.resend_otp()
 
         print(f"LEAD #{lead_id} FINISHED")
-
-        self._db_service.change_status(
-            status=LeadGenResultStatus.SUCCESS,
-            session_id=session_id,
-            lead_id=lead_id,
-        )
-
-        self._try_close_driver(initializer=initializer)
 
     def _receive_sms_code(self, phone_id: int):
         code, start_time = None, time.time()
@@ -260,10 +204,8 @@ class LeadsGenerator:
         USE_FORCE = False
 
         while time.time() - START < 120:
-            print(f"LEAD {lead_id} REFRESH OTP {self._db_service.get(
-                session_id=session_id,
-                lead_id=lead_id
-            )}")
+            print(f"LEAD {lead_id} REFRESH OTP")
+
             lead = self._db_service.get(
                 session_id=session_id,
                 lead_id=lead_id
@@ -275,7 +217,7 @@ class LeadsGenerator:
             if lead.status == LeadGenResultStatus.RESEND_CODE:
                 USE_FORCE = True
 
-            if (time.time() - START > 30) and USE_FORCE:
+            if ((time.time() - START) > 30) and USE_FORCE:
                 raise OtpTimeoutError("Forced new code")
 
             if ((lead.sms_code != sms_code) and
@@ -319,12 +261,7 @@ class LeadsGenerator:
             except Exception as e:
                 print(f"ENTER CARD DATA ERROR: {repr(e)}")
                 if _ >= (retries or self._CARD_DATA_ENTERING_RETRIES) - 1:
-                    return self._db_service.change_status(
-                        session_id=session_id,
-                        lead_id=lead_id,
-                        status=LeadGenResultStatus.FAILED,
-                        error="Failed to enter card data"
-                    )
+                    raise type(e)("Failed to enter card data")
 
     def _try_close_driver(self, initializer: OfferInitializerParser):
         try:
@@ -337,5 +274,4 @@ class LeadsGenerator:
         if self._db_service.get(
                 session_id=session_id, lead_id=lead_id
         )[0].status == LeadGenResultStatus.FAILED:
-            initializer.driver.close()
             raise SystemExit(0)
