@@ -143,6 +143,8 @@ async def set_payments_card(message: Message, state: FSMContext):
 
     await state.set_state(state=SessionForm.approve_session)
 
+    current_session_form = dict(await state.get_data())
+
     await message.reply(
         text="✅ Отлично, форма заполнена!\n"
              f"| Кол-во запросов: "

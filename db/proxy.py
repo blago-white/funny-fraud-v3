@@ -31,37 +31,51 @@ class ProxyRepository(SimpleConcurrentRepository):
 
         self._proxy_port += 1
 
-        return f"{body}:{port}"
+        proxy = f"{body}:{port}"
+
+        print(f"RETRIEVE NEXT PROXY: {proxy}")
+
+        return proxy
 
     @SimpleConcurrentRepository.locked()
     def add(self, proxy: str):
         proxy_components = proxy.split(":")
-        proxy_body, proxy_port = ":".join(proxy_components[2]), int(proxy_components[-1])
+        proxy_body, proxy_port = f"{proxy_components[0]}:{proxy_components[1]}", int(proxy_components[-1])
 
-        if not (0 < proxy_port <= 1000):
-            raise ProxyFormatError()
+        if not (10000 < proxy_port <= 11000):
+            raise ProxyFormatError(f"Not correct proxy port {proxy_port}")
 
-        self._conn.set(self._PROXY_BODY, proxy_body)
-        self._conn.set(self._PROXY_CURRENT_PORT, proxy_port)
+        self._proxy_body = proxy_body
+        self._proxy_port = proxy_port
 
         return str(self)
 
     @property
     def _proxy_port(self):
-        port = self._conn.get(self._PROXY_CURRENT_PORT).decode()
+        port = self._conn.get(self._PROXY_CURRENT_PORT)
 
         if not port:
             return port
 
-        return int(port)
+        return int(port.decode())
 
     @_proxy_port.setter
     def _proxy_port(self, new_port: int):
-        if new_port > 1000:
+        if not (10000 < new_port <= 11000):
             raise ProxyFormatError("Try update proxy port failed")
 
         self._conn.set(self._PROXY_CURRENT_PORT, new_port)
 
     @property
     def _proxy_body(self) -> str | None:
-        return self._conn.get(self._PROXY_BODY).decode()
+        body = self._conn.get(self._PROXY_BODY)
+
+        if not proxy:
+            return body
+
+        return body.decode().replace("~", ":")
+
+    @_proxy_body.setter
+    def _proxy_body(self, body: str) -> str | None:
+        safe_body = body.replace(":", "~")
+        self._conn.set(self._PROXY_BODY, safe_body)

@@ -83,11 +83,7 @@ class LeadsGenerator:
                 break
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
-                raise TraficBannedError(
-                    f"USED PROXY ERROR: {
-                        session.proxy.replace("@", "#")
-                    }\n{repr(e)}"
-                )
+                raise TraficBannedError()
             except Exception as e:
                 print(f"LEAD #{lead_id} INIT ERROR: {repr(e)} {e}")
                 if _ >= self._GLOBAL_RETRIES - 1:

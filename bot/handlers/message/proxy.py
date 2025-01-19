@@ -33,12 +33,22 @@ async def set_apikey(message: Message, state: FSMContext,
                      proxydb: ProxyRepository):
     await state.clear()
 
+    print("START")
+
     if (not len(message.text) > 3) or (len(message.text.split(":")) != 3):
+        print("OTM")
         return await message.reply("✅Ввод отменен")
 
-    proxy = proxydb.add(proxy=message.text.replace(
-        " ", ""
-    ).replace("\n", ""))
+    try:
+        proxy = proxydb.add(proxy=message.text.replace(
+            " ", ""
+        ).replace("\n", ""))
+    except Exception as e:
+        return await message.reply(
+            text=f"Ошибка добавления прокси: {e!r}"
+        )
+
+    print("OK")
 
     await message.reply(
         text=f"✅Прокси сохранен:\n\n <code>{proxy}</code>"

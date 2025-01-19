@@ -1,4 +1,4 @@
-class ProxyNotExists(BaseException):
+class ProxyNotExists(Exception):
     def __repr__(self):
         return f"{self.__class__.__name__}(\"Set Up proxy please!\")"
 
@@ -6,5 +6,5 @@ class ProxyNotExists(BaseException):
         return f"Set Up proxy please!"
 
 
-class ProxyFormatError(BaseException):
+class ProxyFormatError(Exception):
     pass
