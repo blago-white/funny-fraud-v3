@@ -17,7 +17,7 @@ class ProxyRepository(SimpleConcurrentRepository):
     def can_use(self) -> tuple[bool, str | None]:
         body, port = self._proxy_body, self._proxy_port
 
-        if (not body) or (not port or not (0 < port <= 900)):
+        if (not body) or (not port or not (0 < port <= 10900)):
             return False, f"{body}:{port}"
 
         return True, None
