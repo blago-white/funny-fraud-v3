@@ -70,7 +70,7 @@ class ProxyRepository(SimpleConcurrentRepository):
     def _proxy_body(self) -> str | None:
         body = self._conn.get(self._PROXY_BODY)
 
-        if not proxy:
+        if not body:
             return body
 
         return body.decode().replace("~", ":")
