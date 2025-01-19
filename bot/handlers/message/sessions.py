@@ -15,6 +15,7 @@ from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
 from db.transfer import LeadGenResultStatus
 from db.sms import SmsServiceApikeyRepository
+from db.proxy import ProxyRepository
 from parser.profiles.gologin import GologinProfilesManager
 from parser.sessions import LeadsGenerationSession
 from parser.main import LeadsGenerator
@@ -27,16 +28,21 @@ router = Router(name=__name__)
 
 
 @router.message(CommandStart())
-@db_services_provider(provide_leads=False, provide_sms=True)
+@db_services_provider(provide_leads=False,
+                      provide_sms=True,
+                      provide_proxy=True)
 async def start(
         message: Message, state: FSMContext,
         gologindb: GologinApikeysRepository,
-        smsdb: SmsServiceApikeyRepository):
+        smsdb: SmsServiceApikeyRepository,
+        proxydb: ProxyRepository):
     await state.clear()
 
     gologin_apikey, sms_service_apikey = (
         gologindb.get_current(), smsdb.get_current()
     )
+
+    proxy_ok, _ = proxydb.can_use
 
     await message.bot.send_message(
         chat_id=message.chat.id,
@@ -50,22 +56,33 @@ async def start(
              f"<code>{sms_service_apikey[:6] + '...' + sms_service_apikey[-3:]
                       if sms_service_apikey
                       else ""}"
-             f"</code></b>",
+             f"</code></b>\n"
+             f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>",
         reply_markup=MAIN_MENU_KB
     )
 
 
 @router.message(F.text == "🔥Новый Сеанс")
-@db_services_provider(provide_leads=False, provide_sms=True)
+@db_services_provider(provide_leads=False,
+                      provide_sms=True,
+                      provide_proxy=True)
 async def new_session(
         message: Message,
         state: FSMContext,
         gologindb: GologinApikeysRepository,
-        smsdb: SmsServiceApikeyRepository):
+        smsdb: SmsServiceApikeyRepository,
+        proxydb: ProxyRepository):
     if not (gologindb.exists and smsdb.exists):
         return await message.reply(
             "⭕Сначала добавьте <b>Gologin apikey</b> и "
             "<b>El-Sms apikey</b>"
+        )
+
+    can_use_proxy, proxy = proxydb.can_use
+
+    if not can_use_proxy:
+        return await message.reply(
+            f"⭕Обновите прокси! <code>[{proxy}]</code>"
         )
 
     await state.set_state(state=SessionForm.set_count_complete_requests)
@@ -124,42 +141,6 @@ async def set_payments_card(message: Message, state: FSMContext):
         }
     )
 
-    await state.set_state(state=SessionForm.set_proxy)
-
-    await message.reply(
-        text="📩 Введите список прокси длинной равной кол-ву лидов:\n\n"
-             "<i>login:password@host:port login1:password1@host1:port1 ...</i>"
-    )
-
-
-@router.message(SessionForm.set_proxy)
-async def add_proxies(message: Message, state: FSMContext):
-    current_session_form = dict(await state.get_data())
-    try:
-        proxies = message.text.split("\n")
-
-        for i in proxies:
-            if len(i.split("@")) != 2:
-                raise ValueError
-            if len(i.split("@")[0].split(":")) != 2:
-                raise ValueError
-            if len(i.split("@")[-1].split(":")) != 2:
-                raise ValueError
-    except:
-        await message.reply("❌ Неверный формат прокси")
-        return
-
-    correct_proxies_len = int(current_session_form.get("count_requests"))*3
-
-    if len(proxies) != correct_proxies_len:
-        await message.reply(f"❌ Неверное кол-во прокси "
-                            f"{len(proxies)} -> {correct_proxies_len}")
-        return
-
-    await state.set_data(data=current_session_form | {
-        "proxies": proxies
-    })
-
     await state.set_state(state=SessionForm.approve_session)
 
     await message.reply(
@@ -167,8 +148,7 @@ async def add_proxies(message: Message, state: FSMContext):
              f"| Кол-во запросов: "
              f"{current_session_form.get("count_requests")}\n"
              f"| Реф. ссылка: <code>"
-             f"{current_session_form.get("ref_link")}</code>\n"
-             f"| Прокси: {len(proxies)} шт.",
+             f"{current_session_form.get("ref_link")}</code>\n",
         reply_markup=APPROVE_KB,
     )
 
@@ -190,7 +170,6 @@ async def approve_session(
 
     session_form = LeadsGenerationSession(
         ref_link=session_form.get("ref_link"),
-        proxies=session_form.get("proxies"),
         card=session_form.get("payments_card"),
         count=session_form.get("count_requests"),
     )

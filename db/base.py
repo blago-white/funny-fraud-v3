@@ -1,6 +1,6 @@
 import random
 import time
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 import redis
 
@@ -29,7 +29,74 @@ class DefaultApikeyRedisRepository(BaseRedisService, metaclass=ABCMeta):
         return new_apikey
 
 
-class DefaulConcurrentRepository(BaseRedisService):
+class BaseConcurrentRepository(metaclass=ABCMeta):
+    _locked: str = False
+
+    @abstractmethod
+    def lock(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def unlock(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def wait_for_lock(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def locked(cls, *args, **kwargs):
+        pass
+
+
+class SimpleConcurrentRepository(BaseRedisService, BaseConcurrentRepository):
+    _locked: str = False
+
+    def lock(self):
+        if self._locked:
+            return False
+
+        self._locked = True
+
+        return True
+
+    def unlock(self):
+        self._locked = False
+
+    def wait_for_lock(self):
+        c = 0
+
+        while c < 1500:
+            if self.lock():
+                return True
+
+            time.sleep(.01)
+            c += 1
+
+    @classmethod
+    def locked(cls):
+        def wrapper(func):
+            def wrapped(*args, **kwargs):
+                self: SimpleConcurrentRepository = args[0]
+
+                if not issubclass(type(self), cls):
+                    raise TypeError("Not correct decorator place")
+
+                self.wait_for_lock()
+
+                result = func(*args, **kwargs)
+
+                self.unlock()
+
+                return result
+
+            return wrapped
+
+        return wrapper
+
+
+class DefaulConcurrentRepository(BaseRedisService, BaseConcurrentRepository):
     _locked: str = False
 
     def lock(self, session_id: int, lead_id: int = "x"):

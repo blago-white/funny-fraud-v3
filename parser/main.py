@@ -4,6 +4,7 @@ import time
 from db.leads import LeadGenerationResultsService
 from db.transfer import (LeadGenResult,
                          LeadGenResultStatus)
+from db.proxy import ProxyRepository
 from parser.profiles.drivers import WebDriversService
 from .parser.exceptions import TraficBannedError, InvalidOtpCodeError, OTPError
 from .parser.parser import OfferInitializerParser
@@ -24,9 +25,11 @@ class LeadsGenerator:
             db_service: LeadGenerationResultsService = None,
             sms_service: SmsCodesService = None,
             drivers_service: WebDriversService = None,
+            proxy_service: ProxyRepository = None
     ):
         self._initializer = initializer or OfferInitializerParser
         self._db_service = db_service or LeadGenerationResultsService()
+        self._proxy_service = proxy_service or ProxyRepository()
         self._sms_service = sms_service or SmsCodesService()
         self._drivers_service = drivers_service or WebDriversService()
 
@@ -41,7 +44,6 @@ class LeadsGenerator:
                 session_id=new_session_id,
                 session=LeadsGenerationSession(
                     ref_link=data.ref_link,
-                    proxies=data.proxies[_*3:_*3+3],
                     card=data.card,
                     count=1,
                 )),

@@ -5,7 +5,6 @@ class SessionForm(StatesGroup):
     set_count_complete_requests = State()
     set_ref_link = State()
     set_card_number = State()
-    set_proxy = State()
     approve_session = State()
 
 
@@ -19,3 +18,7 @@ class SmsServiceApikeySettingForm(StatesGroup):
 
 class PaymentCodeSettingForm(StatesGroup):
     wait_payment_code = State()
+
+
+class ProxySettingForm(StatesGroup):
+    wait_base_proxy = State()

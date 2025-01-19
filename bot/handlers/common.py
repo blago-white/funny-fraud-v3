@@ -4,12 +4,14 @@ from parser.main import LeadsGenerator
 from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
 from db.sms import SmsServiceApikeyRepository
+from db.proxy import ProxyRepository
 from parser.utils.sms.services import SmsCodesService
 
 
 def db_services_provider(provide_leads: bool = True,
                          provide_gologin: bool = True,
-                         provide_sms: bool = False):
+                         provide_sms: bool = False,
+                         provide_proxy: bool = False):
     def wrapper(func):
         @wraps(func)
         async def wrapped(*args, **kwargs):
@@ -23,6 +25,9 @@ def db_services_provider(provide_leads: bool = True,
 
             if provide_sms:
                 db_services.update(smsdb=SmsServiceApikeyRepository())
+
+            if provide_proxy:
+                db_services.update(proxydb=ProxyRepository())
 
             return await func(*args, **kwargs, **db_services)
 

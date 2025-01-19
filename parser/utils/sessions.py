@@ -34,9 +34,9 @@ def session_results_commiter(func):
 
         print(f"LEAD #{lead_id} STARTED")
 
-        exception = None
+        while True:
+            proxy = self._proxy_service.next()
 
-        for proxy in session.proxies.copy():
             try:
                 initializer = self._initializer(
                     payments_card=session.card,
@@ -47,16 +47,7 @@ def session_results_commiter(func):
                 )
                 break
             except Exception as e:
-                exception = e
-
-            session.proxies.remove(proxy)
-        else:
-            return self._db_service.change_status(
-                session_id=session_id,
-                lead_id=lead_id,
-                status=LeadGenResultStatus.FAILED,
-                error=f"Initializing error: {repr(exception)} {exception}"
-            )
+                print(f"LEAD #{lead_id} FAILED ")
 
         print(f"LEAD #{lead_id} BROWSER INITED")
 
@@ -65,21 +56,12 @@ def session_results_commiter(func):
                    "session": LeadsGenerationSession(
                        ref_link=session.ref_link,
                        card=session.card,
-                       proxy=session.proxies[0],
                    )}
 
         try:
             func(*args, **kwargs)
         except TraficBannedError as e:
-            if session.proxy:
-                return wrapped(*args, **kwargs)
-            else:
-                return self._db_service.change_status(
-                    session_id=session_id,
-                    lead_id=lead_id,
-                    status=LeadGenResultStatus.FAILED,
-                    error=f"{repr(e)}"
-                )
+            return wrapped(*args, **kwargs)
         except Exception as e:
             return self._db_service.change_status(
                 session_id=session_id,
