@@ -6,7 +6,13 @@ from db.transfer import (LeadGenResult,
                          LeadGenResultStatus)
 from db.proxy import ProxyRepository
 from parser.profiles.drivers import WebDriversService
-from .parser.exceptions import TraficBannedError, InvalidOtpCodeError, OTPError
+from .parser.exceptions import (TraficBannedError,
+                                InvalidOtpCodeError,
+                                OTPError,
+                                RegistrationSMSTimeoutError,
+                                BadPhoneError,
+                                InitializingError,
+                                CardDataEnteringBanned)
 from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession
 from .utils.sms.services import SmsCodesService
@@ -58,20 +64,38 @@ class LeadsGenerator:
     def generate(self, session_id: int,
                  lead_id: int,
                  initializer: OfferInitializerParser,
-                 session: LeadsGenerationSession):
+                 session: LeadsGenerationSession,
+                 use_phone: list[int, str] = (None, None)):
+        self._check_stopped(initializer, session_id, lead_id)
+
+        phone_id, phone = use_phone
+
         for _ in range(self._GLOBAL_RETRIES):
             self._check_stopped(initializer, session_id, lead_id)
 
             try:
-                phone_id, phone = self._sms_service.get_number()
+                if not (phone_id or phone):
+                    phone_id, phone = self._sms_service.get_number()
 
-                print(f"LEAD #{lead_id} PHONE RECEIVED")
+                    print(f"LEAD #{lead_id} PHONE GENERATED")
+            except:
+                raise BadPhoneError("Cannot get phone number!")
+
+            try:
+                print(f"LEAD #{lead_id} PHONE RECEIVED - {phone_id=} {phone=}")
 
                 initializer.init(
                     url=session.ref_link,
                     phone=phone
                 )
+            except Exception as e:
+                raise InitializingError(
+                    crude_exception=e,
+                    used_phone_id=phone_id,
+                    used_phone_number=phone
+                )
 
+            try:
                 print(f"LEAD #{lead_id} WAIT CODE")
 
                 code = self._receive_sms_code(phone_id=phone_id)
@@ -81,13 +105,22 @@ class LeadsGenerator:
                 initializer.enter_registration_code(code=code)
 
                 break
+            except RegistrationSMSTimeoutError:
+                pass
+            except CardDataEnteringBanned:
+                raise BadPhoneError()
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
-                raise TraficBannedError()
+                raise TraficBannedError(used_phone_id=phone_id,
+                                        used_phone_number=phone)
             except Exception as e:
                 print(f"LEAD #{lead_id} INIT ERROR: {repr(e)} {e}")
                 if _ >= self._GLOBAL_RETRIES - 1:
-                    raise e
+                    raise InitializingError(
+                        crude_exception=e,
+                        used_phone_id=None,
+                        used_phone_number=None
+                    )
 
         print(f"LEAD #{lead_id} CARD DATA ENTER")
 
@@ -183,7 +216,7 @@ class LeadsGenerator:
 
         while code is None:
             if time.time() - start_time > 90:
-                raise TimeoutError("No receive sms")
+                raise RegistrationSMSTimeoutError("No receive sms")
 
             code = self._sms_service.check_code(phone_id=phone_id)
 

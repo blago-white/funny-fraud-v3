@@ -345,7 +345,7 @@ class OfferInitializerParser:
                 )
             )
         except:
-            raise exceptions.TraficBannedError("Change proxy, banned!")
+            raise exceptions.TraficBannedError()
 
         self._driver.find_element(
             By.CSS_SELECTOR, ".css-1tb3n43.e1jyzd9p2"
