@@ -1,8 +1,11 @@
+import random
+import time
 from typing import TYPE_CHECKING
+from requests.exceptions import JSONDecodeError
 
 from db.transfer import LeadGenResultStatus, LeadGenResult
 from parser.sessions import LeadsGenerationSession
-from parser.parser.exceptions import TraficBannedError, RegistrationSMSTimeoutError, BadPhoneError, InitializingError
+from parser.parser.exceptions import TraficBannedError, RegistrationSMSTimeoutError, BadPhoneError, InitializingError, BadSMSService
 
 if TYPE_CHECKING:
     from parser.main import LeadsGenerator
@@ -11,6 +14,14 @@ else:
 
 
 def session_results_commiter(func):
+    def _close_driver(drivers_service, pid, initializer):
+        try:
+            drivers_service.gologin_manager.delete_profile(pid=pid)
+            initializer.driver.close()
+            return True
+        except:
+            return False
+
     def wrapped(*args,
                 _used_phone: str = None,
                 _used_phone_id: int = None,
@@ -33,26 +44,48 @@ def session_results_commiter(func):
                 result=LeadGenResult(
                     session_id=session_id,
                     status=LeadGenResultStatus.PROGRESS,
+                    ref_link=session.ref_link.split('?aff_id=')[-1].split("&")[0],
                     error="",
                 )
             )
 
         print(f"LEAD #{lead_id} STARTED")
 
-        while True:
+        for _ in range(10):
+            time.sleep(lead_id*0.25)
+
             proxy = self._proxy_service.next()
 
             try:
-                initializer = self._initializer(
-                    payments_card=session.card,
-                    driver=self._drivers_service.get_desctop(
-                        proxy=proxy,
-                        worker_id=(session_id * lead_id) + 1
-                    )
+                pid, driver = self._drivers_service.get_desctop(
+                    proxy=proxy,
+                    worker_id=(session_id * lead_id) + 1
                 )
                 break
+            except JSONDecodeError as e:
+                print(f"LEAD #{lead_id} GOLOGIN RESPONSE FAILED - {e} | {repr(e)}")
+
+                return self._db_service.change_status(
+                    session_id=session_id,
+                    lead_id=lead_id,
+                    status=LeadGenResultStatus.FAILED,
+                    error=f"GOLOGIN RESPONSE FAILED: \n\n{repr(e)}\n\n{e}"
+                )
             except Exception as e:
                 print(f"LEAD #{lead_id} FAILED - {e} {repr(e)}")
+        else:
+            print(f"LEAD #{lead_id} CANT RUN GOLOGIN")
+            return self._db_service.change_status(
+                session_id=session_id,
+                lead_id=lead_id,
+                status=LeadGenResultStatus.FAILED,
+                error=f"CANT RUN GOLOGIN AFTER 15 RETRY"
+            )
+
+        initializer = self._initializer(
+            payments_card=session.card,
+            driver=driver
+        )
 
         print(f"LEAD #{lead_id} BROWSER INITED")
 
@@ -65,50 +98,48 @@ def session_results_commiter(func):
 
         try:
             func(*args, **kwargs)
-        except SystemExit:
-            print(f"LEAD #{lead_id} SYSTEM EXIT 0")
+        except (SystemExit, BadSMSService) as fatal_error:
+            print(f"LEAD #{lead_id} FATAL ERROR {fatal_error} - {repr(fatal_error)}")
 
-            return SystemExit(1)
-        except (TraficBannedError, InitializingError) as e:
-            print(f"{e} {repr(e)} LEAD #{lead_id} RETRY NO PHONE GENERATION")
+            if not (self._db_service.get(
+                    session_id=session_id, lead_id=lead_id
+            )[0].status == LeadGenResultStatus.FAILED):
+                self._db_service.change_status(
+                    session_id=session_id,
+                    lead_id=lead_id,
+                    status=LeadGenResultStatus.FAILED,
+                    error=f"{repr(fatal_error)}\n\n{fatal_error}"
+                )
 
-            try:
-                initializer.driver.close()
-                print(f"LEAD #{lead_id} DRIVER STOPPED")
-            except:
-                print(f"LEAD #{lead_id} CANT STOP DRIVER")
+            raise fatal_error
+        except (TraficBannedError, InitializingError) as init_error:
+            print(f"{init_error} {repr(init_error)} LEAD #{lead_id} RETRY NO PHONE GENERATION")
 
-            return wrapped(*args,
-                           **kwargs | {
-                               "use_phone": (
-                                   e.used_phone_id, e.used_phone_number
-                               ),
-                               "lead_id": lead_id
-                           })
+            _close_driver(initializer=initializer,
+                          drivers_service=self._drivers_service,
+                          pid=pid)
+
+            return wrapped(
+                *args,
+                **kwargs | {
+                    "use_phone": (
+                        init_error.used_phone_id, init_error.used_phone_number
+                    ),
+                    "lead_id": lead_id
+                }
+            )
         except (RegistrationSMSTimeoutError, BadPhoneError, Exception) as e:
             print(f"{e} {repr(e)} LEAD #{lead_id} RETRY WITH PHONE GENERATION")
 
-            try:
-                initializer.driver.close()
-                print(f"LEAD #{lead_id} DRIVER STOPPED")
-            except:
-                print(f"LEAD #{lead_id} CANT STOP DRIVER")
+            _close_driver(initializer=initializer,
+                          drivers_service=self._drivers_service,
+                          pid=pid)
 
             return wrapped(*args, **kwargs | {"lead_id": lead_id})
-        # except Exception as e:
-            # print(f"LEAD #{lead_id} FATAL ERROR - {e} | {repr(e)}")
-            #
-            # return self._db_service.change_status(
-            #     session_id=session_id,
-            #     lead_id=lead_id,
-            #     status=LeadGenResultStatus.FAILED,
-            #     error=f"{repr(e)}\n\n{e}"
-            # )
         finally:
-            try:
-                initializer.driver.close()
-            except:
-                print(f"LEAD #{lead_id} CANT STOP DRIVER")
+            _close_driver(initializer=initializer,
+                          drivers_service=self._drivers_service,
+                          pid=pid)
 
         self._db_service.change_status(
             status=LeadGenResultStatus.SUCCESS,

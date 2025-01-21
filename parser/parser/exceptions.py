@@ -27,6 +27,10 @@ class BadPhoneError(Exception):
     pass
 
 
+class BadSMSService(Exception):
+    pass
+
+
 class InitializingError(TraficBannedError):
     crude_exception: Exception
 

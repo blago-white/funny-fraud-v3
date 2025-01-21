@@ -113,14 +113,17 @@ async def set_count_requests(message: Message, state: FSMContext):
 
 @router.message(SessionForm.set_ref_link)
 async def process_ref_link(message: Message, state: FSMContext):
-    ref_link = message.text
+    ref_links = message.text.split("\n")
 
-    if (not ref_link.startswith("https://")) or (" " in ref_link):
-        await message.reply("Неверный формат\n\n<i>нужна ссылка</i>")
-        return
+    for link in ref_links:
+        if (not link.startswith("https://")) or (" " in link):
+            await message.reply("Неверный формат\n\n<i>нужна ссылка</i>")
+            return
 
     current_session_form = dict(await state.get_data())
-    await state.set_data(data=current_session_form | {"ref_link": ref_link})
+    await state.set_data(data=current_session_form | {
+        "ref_links": ref_links
+    })
 
     await state.set_state(state=SessionForm.set_card_number)
 
@@ -149,8 +152,9 @@ async def set_payments_card(message: Message, state: FSMContext):
         text="✅ Отлично, форма заполнена!\n"
              f"| Кол-во запросов: "
              f"{current_session_form.get("count_requests")}\n"
-             f"| Реф. ссылка: <code>"
-             f"{current_session_form.get("ref_link")}</code>\n",
+             f"| Реф. ссылки: <code>"
+             f"{', '.join(current_session_form.get("ref_links"))}"
+             f"</code>\n",
         reply_markup=APPROVE_KB,
     )
 
@@ -171,7 +175,7 @@ async def approve_session(
     session_form = await state.get_data()
 
     session_form = LeadsGenerationSession(
-        ref_link=session_form.get("ref_link"),
+        ref_links=session_form.get("ref_links"),
         card=session_form.get("payments_card"),
         count=session_form.get("count_requests"),
     )

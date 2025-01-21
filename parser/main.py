@@ -11,6 +11,7 @@ from .parser.exceptions import (TraficBannedError,
                                 OTPError,
                                 RegistrationSMSTimeoutError,
                                 BadPhoneError,
+                                BadSMSService,
                                 InitializingError,
                                 CardDataEnteringBanned)
 from .parser.parser import OfferInitializerParser
@@ -25,6 +26,8 @@ class LeadsGenerator:
 
     _GLOBAL_RETRIES = 9
     _CARD_DATA_ENTERING_RETRIES = 7
+    _PHONE_RETRIEVING_RETRIES = 4
+    _SMS_SENDING_INITIALIZING_RETRIES = 3
 
     def __init__(
             self, initializer: OfferInitializerParser = None,
@@ -44,16 +47,19 @@ class LeadsGenerator:
 
         self._db_service.init(session_id=new_session_id)
 
-        threads = [threading.Thread(
-            target=self.generate,
-            kwargs=dict(
-                session_id=new_session_id,
-                session=LeadsGenerationSession(
-                    ref_link=data.ref_link,
-                    card=data.card,
-                    count=1,
-                )),
-        ) for _ in range(data.count)]
+        threads = []
+
+        for ref_link in data.ref_links:
+            threads.extend([threading.Thread(
+                target=self.generate,
+                kwargs=dict(
+                    session_id=new_session_id,
+                    session=LeadsGenerationSession(
+                        ref_link=ref_link,
+                        card=data.card,
+                        count=1,
+                    )),
+            ) for _ in range(data.count)])
 
         for t in threads:
             t.start()
@@ -68,32 +74,52 @@ class LeadsGenerator:
                  use_phone: list[int, str] = (None, None)):
         self._check_stopped(initializer, session_id, lead_id)
 
-        phone_id, phone = use_phone
+        bad_phone = False
 
         for _ in range(self._GLOBAL_RETRIES):
             self._check_stopped(initializer, session_id, lead_id)
 
-            try:
-                if not (phone_id or phone):
-                    phone_id, phone = self._sms_service.get_number()
+            for _ in range(self._PHONE_RETRIEVING_RETRIES):
+                self._check_stopped(initializer, session_id, lead_id)
 
-                    print(f"LEAD #{lead_id} PHONE GENERATED")
-            except:
-                raise BadPhoneError("Cannot get phone number!")
-
-            try:
-                print(f"LEAD #{lead_id} PHONE RECEIVED - {phone_id=} {phone=}")
-
-                initializer.init(
-                    url=session.ref_link,
-                    phone=phone
+                use_phone = self._try_get_phone(
+                    exists_phone=use_phone if not bad_phone else (None, None),
+                    lead_id=lead_id
                 )
-            except Exception as e:
+
+                if not all(use_phone):
+                    continue
+                else:
+                    phone_id, phone = use_phone
+                    bad_phone = False
+                    break
+            else:
+                raise BadSMSService(
+                    f"Bad response from sms service "
+                    f"[{self._PHONE_RETRIEVING_RETRIES} retry]!"
+                )
+
+            print(f"LEAD #{lead_id} PHONE RECEIVED - {phone_id=} {phone=}")
+
+            for _ in range(self._SMS_SENDING_INITIALIZING_RETRIES):
+                self._check_stopped(initializer, session_id, lead_id)
+
+                try:
+                    initializer.init(
+                        url=session.ref_link,
+                        phone=phone
+                    )
+                    break
+                except Exception as e:
+                    print(f"LEAD #{lead_id} CANNOT SEND REG SMS RETRY №{_}")
+                    continue
+            else:
                 raise InitializingError(
-                    crude_exception=e,
                     used_phone_id=phone_id,
                     used_phone_number=phone
                 )
+
+            self._check_stopped(initializer, session_id, lead_id)
 
             try:
                 print(f"LEAD #{lead_id} WAIT CODE")
@@ -105,14 +131,15 @@ class LeadsGenerator:
                 initializer.enter_registration_code(code=code)
 
                 break
-            except RegistrationSMSTimeoutError:
-                pass
-            except CardDataEnteringBanned:
-                raise BadPhoneError()
+            except (RegistrationSMSTimeoutError, CardDataEnteringBanned):
+                bad_phone = True
+                continue
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
-                raise TraficBannedError(used_phone_id=phone_id,
-                                        used_phone_number=phone)
+                raise TraficBannedError(
+                    used_phone_id=phone_id,
+                    used_phone_number=phone
+                )
             except Exception as e:
                 print(f"LEAD #{lead_id} INIT ERROR: {repr(e)} {e}")
                 if _ >= self._GLOBAL_RETRIES - 1:
@@ -121,6 +148,12 @@ class LeadsGenerator:
                         used_phone_id=None,
                         used_phone_number=None
                     )
+                bad_phone = True
+        else:
+            raise InitializingError(
+                used_phone_id=None,
+                used_phone_number=None
+            )
 
         print(f"LEAD #{lead_id} CARD DATA ENTER")
 
@@ -306,3 +339,15 @@ class LeadsGenerator:
                 session_id=session_id, lead_id=lead_id
         )[0].status == LeadGenResultStatus.FAILED:
             raise SystemExit(0)
+
+    def _try_get_phone(self, exists_phone: tuple[int, str], lead_id: int) -> tuple[int, str]:
+        try:
+            if not all(exists_phone):
+                exists_phone = self._sms_service.get_number()
+
+                print(f"LEAD #{lead_id} PHONE GENERATED")
+        except:
+            print(f"LEAD #{lead_id} CANNOT GET PHONE NUMBER")
+            return None, None
+        else:
+            return exists_phone

@@ -40,6 +40,7 @@ class LeadGenResult:
     error: str | None = None
     proxy: str | None = None
     sms_code: str | None = None
+    ref_link: str | None = None
 
     lead_id: int | None = None
 

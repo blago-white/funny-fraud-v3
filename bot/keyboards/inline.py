@@ -43,7 +43,8 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
 
         kb_line.append(InlineKeyboardButton(
             text=f"{_get_lead_status(status=result.status)} "
-                 f"#{result.lead_id}",
+                 f"#{result.lead_id} | "
+                 f"{result.ref_link}",
             callback_data=LeadStatusCallbackData(
                 session_id=result.session_id,
                 lead_id=result.lead_id,

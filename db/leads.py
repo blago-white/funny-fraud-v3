@@ -61,7 +61,8 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
                                       LeadGenResultStatus.FAILED),
             sms_code=l.split("@")[2],
             error=l.split("@")[3],
-            proxy=l.split("@")[4]
+            ref_link=l.split("@")[4],
+            proxy=l.split("@")[5]
         ) for l in leads]
 
         return [l for l in session_leads
@@ -84,6 +85,7 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
                                  f"{result.status}@"
                                  f"{result.sms_code}@"
                                  f"{result.error}@"
+                                 f"{result.ref_link}@"
                                  f"{result.proxy}&"
                            )
 
@@ -97,6 +99,7 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
                            f"{result.status}@"
                            f"{result.sms_code}@"
                            f"{result.error}@"
+                           f"{result.ref_link}@"
                            f"{result.proxy}"
                        ])
                        )
@@ -105,18 +108,22 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
 
     @DefaulConcurrentRepository.locked()
     def mark_success(self, session_id: int, lead_id: int):
-        return self._change_status(status=LeadGenResultStatus.SUCCESS,
-                            session_id=session_id,
-                            lead_id=lead_id)
+        return self._change_status(
+            status=LeadGenResultStatus.SUCCESS,
+            session_id=session_id,
+            lead_id=lead_id
+        )
 
     @DefaulConcurrentRepository.locked()
     def mark_failed(
             self, session_id: int, lead_id: int,
             error: str = None):
-        return self._change_status(status=LeadGenResultStatus.FAILED,
-                            session_id=session_id,
-                            lead_id=lead_id,
-                            error=error)
+        return self._change_status(
+            status=LeadGenResultStatus.FAILED,
+            session_id=session_id,
+            lead_id=lead_id,
+            error=error
+        )
 
     @DefaulConcurrentRepository.locked()
     def change_status(
@@ -126,18 +133,16 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
             sms_code: str = None,
             error: str = None):
         return self._change_status(session_id=session_id,
-                            lead_id=lead_id,
-                            status=status,
-                            sms_code=sms_code,
-                            error=error)
+                                   lead_id=lead_id,
+                                   status=status,
+                                   sms_code=sms_code,
+                                   error=error)
 
     @DefaulConcurrentRepository.locked()
     def can_start_wait_code(self, session_id: int, lead_id: int) -> bool:
-        session = self.get(session_id=session_id)
-
         return self._change_status(status=LeadGenResultStatus.WAIT_CODE,
-                            session_id=session_id,
-                            lead_id=lead_id)
+                                   session_id=session_id,
+                                   lead_id=lead_id)
 
     @DefaulConcurrentRepository.locked(only_session_id=True)
     def drop_waiting_lead(self, session_id: int):
@@ -166,8 +171,9 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
 
         return all(results)
 
-    def _update_main_lead_status(self, session_id: int,
-                                 status: LeadGenResultStatus):
+    def _update_main_lead_status(
+            self, session_id: int,
+            status: LeadGenResultStatus):
         leads = self.get(session_id=session_id)
 
         waiting_lead = [l for l in leads if code_is_blocking(status=l.status)]
@@ -214,7 +220,9 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
             if lead_id_raw.isdigit() and int(lead_id_raw) == int(lead_id):
                 exists[i_id] = (f"{lead_id}@{status}@"
                                 f"{sms_code or result.sms_code}@"
-                                f"{error or result.error}@{result.proxy}")
+                                f"{error or result.error}@"
+                                f"{result.ref_link}@"
+                                f"{result.proxy}")
                 break
 
         self._conn.set(name=id_,
