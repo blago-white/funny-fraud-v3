@@ -170,58 +170,94 @@ class OfferInitializerParser:
 
             field.send_keys(field_value)
 
-    def _submit_payment_form(self):
-        WebDriverWait(self._driver, 10).until(
-            expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button[data-test-id='submit-payment']")
-            )
-        )
-
-        self._card_data_page_path = self._driver.current_url
-
-        self._driver.find_element(
-            By.CSS_SELECTOR,
-            "button[data-test-id='submit-payment']"
-        ).click()
+    def _submit_payment_form(self, _need_click_submit: bool = True):
+        if _need_click_submit:
+            self._click_submit_payment_form()
 
         print("WAIT FOR OTP PASSWORD")
 
-        START = time.time()
+        if _need_click_submit:
+            START = time.time()
 
-        while True:
-            if time.time() - START > 20:
-                print("PAYMENT URL DONT CHANGES")
+            while True:
+                if time.time() - START > 20:
+                    print("PAYMENT URL DONT CHANGES")
 
-                raise Exception("Cannot submit form")
+                    raise Exception("Cannot submit form")
 
-            if self._driver.current_url != self._card_data_page_path:
-                break
+                if self._driver.current_url != self._card_data_page_path:
+                    break
 
-        print("PAYMENT URL CHANGES")
+            print("PAYMENT URL CHANGES")
 
         try:
-            WebDriverWait(self._driver, 60).until(
+            WebDriverWait(self._driver, 15).until(
                 expected_conditions.presence_of_element_located(
                     (By.ID, "passwordEdit")
                 )
             )
+
+            print("OTP PASSWORD REQUEST COMPLETE")
+
+            return
         except:
-            WebDriverWait(self._driver, 10).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button[class='css-kbwmb3']")
+            try:
+                WebDriverWait(self._driver, 3).until(
+                    expected_conditions.presence_of_element_located(
+                        (By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']")
+                    )
+                )
+
+                self._driver.find_element(
+                    By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
+                ).click()
+            except:
+                if "Не удалось инициализировать" in self._driver.page_source:
+                    self._driver.execute_script("location.href = location.href;")
+
+                    return self._click_submit_payment_form(
+                        _need_click_submit=False,
+                    )
+
+        try:
+            WebDriverWait(self._driver, 13).until(
+                expected_conditions.presence_of_element_located(
+                    (By.ID, "passwordEdit")
                 )
             )
 
-            self._driver.find_element(
-                By.CSS_SELECTOR, "button[class='css-kbwmb3']"
-            ).click()
-            self._card_data_already_entered = False
+            print("OTP PASSWORD REQUEST COMPLETE")
 
-            print("ERROR GETTING OTP CODE PAGE")
+            return
+        except:
+            try:
+                WebDriverWait(self._driver, 0.1).until(
+                    expected_conditions.presence_of_element_located(
+                        (By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']")
+                    )
+                )
 
-            raise exceptions.OTPError("Error getting otp page")
+                self._driver.find_element(
+                    By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
+                ).click()
 
-        print("OTP PASSWORD REQUEST COMPLETE")
+                return self._submit_payment_form()
+            except:
+                WebDriverWait(self._driver, 10).until(
+                    expected_conditions.element_to_be_clickable(
+                        (By.CSS_SELECTOR, "button[class='css-kbwmb3']")
+                    )
+                )
+
+                self._driver.find_element(
+                    By.CSS_SELECTOR, "button[class='css-kbwmb3']"
+                ).click()
+
+        self._card_data_already_entered = False
+
+        print("ERROR GETTING OTP CODE PAGE")
+
+        raise exceptions.OTPError("Error getting otp page")
 
     def _try_go_to_payment(self):
         pass
@@ -426,3 +462,17 @@ class OfferInitializerParser:
                 (By.CSS_SELECTOR, "input[id='pan']")
             )
         )
+
+    def _click_submit_payment_form(self):
+        WebDriverWait(self._driver, 10).until(
+            expected_conditions.element_to_be_clickable(
+                (By.CSS_SELECTOR, "button[data-test-id='submit-payment']")
+            )
+        )
+
+        self._card_data_page_path = self._driver.current_url
+
+        self._driver.find_element(
+            By.CSS_SELECTOR,
+            "button[data-test-id='submit-payment']"
+        ).click()

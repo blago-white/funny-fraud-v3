@@ -22,6 +22,14 @@ def session_results_commiter(func):
         except:
             return False
 
+    def convert_ref_link(ref_link):
+        if "aff_id" in ref_link:
+            return ref_link.split('?aff_id=')[-1].split("&")[0]
+        elif "wmid" in ref_link:
+            return ref_link.split('&wmid=')[-1].split("=")[-1]
+        else:
+            return ref_link
+
     def wrapped(*args,
                 _used_phone: str = None,
                 _used_phone_id: int = None,
@@ -44,7 +52,7 @@ def session_results_commiter(func):
                 result=LeadGenResult(
                     session_id=session_id,
                     status=LeadGenResultStatus.PROGRESS,
-                    ref_link=session.ref_link.split('?aff_id=')[-1].split("&")[0],
+                    ref_link=convert_ref_link(session.ref_link),
                     error="",
                 )
             )
