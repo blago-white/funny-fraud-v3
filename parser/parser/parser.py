@@ -170,7 +170,16 @@ class OfferInitializerParser:
 
             field.send_keys(field_value)
 
-    def _submit_payment_form(self, _need_click_submit: bool = True):
+    def _submit_payment_form(self, _need_reenter_card: bool = False,
+                             _need_click_submit: bool = True):
+        if _need_reenter_card:
+            self._card_data_already_entered = False
+
+            try:
+                self._enter_card()
+            except:
+                raise Exception("Cannot submit, maybe sub page opens!")
+
         if _need_click_submit:
             self._click_submit_payment_form()
 
@@ -211,12 +220,14 @@ class OfferInitializerParser:
                 self._driver.find_element(
                     By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
                 ).click()
+
+                return self._submit_payment_form(_need_reenter_card=True)
             except:
                 if "Не удалось инициализировать" in self._driver.page_source:
                     self._driver.execute_script("location.href = location.href;")
 
-                    return self._click_submit_payment_form(
-                        _need_click_submit=False,
+                    return self._submit_payment_form(
+                        _need_click_submit=False
                     )
 
         try:
@@ -241,7 +252,7 @@ class OfferInitializerParser:
                     By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
                 ).click()
 
-                return self._submit_payment_form()
+                return self._submit_payment_form(_need_reenter_card=True)
             except:
                 WebDriverWait(self._driver, 10).until(
                     expected_conditions.element_to_be_clickable(
