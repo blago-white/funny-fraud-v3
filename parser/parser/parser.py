@@ -172,6 +172,8 @@ class OfferInitializerParser:
 
     def _submit_payment_form(self, _need_reenter_card: bool = False,
                              _need_click_submit: bool = True):
+        print(f"CALL _submit_payment_form({_need_click_submit=}, {_need_reenter_card=})")
+
         if _need_reenter_card:
             self._card_data_already_entered = False
 
@@ -210,6 +212,8 @@ class OfferInitializerParser:
 
             return
         except:
+            print("OTP PASSWORDS FIELD FIND ERROR 1")
+
             try:
                 WebDriverWait(self._driver, 3).until(
                     expected_conditions.presence_of_element_located(
@@ -221,9 +225,15 @@ class OfferInitializerParser:
                     By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
                 ).click()
 
+                print("CLICK GET SUB №1 | REENTER CARD")
+
                 return self._submit_payment_form(_need_reenter_card=True)
             except:
+                print("CANNOT CLICK GET SUB №1")
+
                 if "Не удалось инициализировать" in self._driver.page_source:
+                    print("RED CROSS EXISTS")
+
                     self._driver.execute_script("location.href = location.href;")
 
                     return self._submit_payment_form(
@@ -252,6 +262,8 @@ class OfferInitializerParser:
                     By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
                 ).click()
 
+                print("CLICK GET SUB №2 | REENTER CARD")
+
                 return self._submit_payment_form(_need_reenter_card=True)
             except:
                 WebDriverWait(self._driver, 10).until(
@@ -263,6 +275,8 @@ class OfferInitializerParser:
                 self._driver.find_element(
                     By.CSS_SELECTOR, "button[class='css-kbwmb3']"
                 ).click()
+
+                print("CANNOT CLICK GET SUB №2 | NEED RETRY")
 
         self._card_data_already_entered = False
 
