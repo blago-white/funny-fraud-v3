@@ -157,9 +157,12 @@ class LeadsGenerator:
 
         print(f"LEAD #{lead_id} CARD DATA ENTER")
 
-        self._try_enter_card_data(initializer=initializer,
-                                  session_id=session_id,
-                                  lead_id=lead_id)
+        try:
+            self._try_enter_card_data(initializer=initializer,
+                                      session_id=session_id,
+                                      lead_id=lead_id)
+        except:
+            raise CreatePaymentFatalError("Cannot set card data!")
 
         print(f"LEAD #{lead_id} CARD DATA COMPLETE")
 

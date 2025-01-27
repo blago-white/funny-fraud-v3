@@ -215,21 +215,29 @@ class OfferInitializerParser:
             START = time.time()
 
             while True:
-                if time.time() - START > 20:
+                try:
+                    self._enter_card(overrided_timeout=2)
+                except:
+                    pass
+
+                if "Не удалось инициализировать" in self._driver.page_source:
+                    self._driver.execute_script("location.href = location.href;")
+
+                    return self._submit_payment_form(
+                        _need_reenter_card=True,
+                        _retry_count=_retry_count-1
+                    )
+
+                elif "Сервис недоступен" in self._driver.page_source:
+                    self._driver.execute_script("location.href = location.href;")
+
+                    return self._submit_payment_form(
+                        _need_reenter_card=True,
+                        _retry_count=_retry_count-1
+                    )
+
+                if time.time() - START > 25:
                     print("PAYMENT URL DONT CHANGES")
-
-                    try:
-                        self._enter_card(overrided_timeout=3)
-                    except:
-                        pass
-
-                    if "Не удалось инициализировать" in self._driver.page_source:
-                        self._driver.execute_script("location.href = location.href;")
-
-                        return self._submit_payment_form(
-                            _need_reenter_card=True,
-                            _retry_count=_retry_count-1
-                        )
 
                     raise Exception("Cannot submit form")
 
