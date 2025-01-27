@@ -105,16 +105,18 @@ class OfferInitializerParser:
                 )
             )
         except:
-            try:
-                WebDriverWait(self._driver, 60).until(
-                    expected_conditions.presence_of_element_located(
-                        (By.CSS_SELECTOR, "p[class='css-dth2xi']")
+            for _ in range(3):
+                try:
+                    WebDriverWait(self._driver, 35).until(
+                        expected_conditions.presence_of_element_located(
+                            (By.CSS_SELECTOR, "p[class='css-dth2xi']")
+                        )
                     )
-                )
-                return True
-            except:
-                raise exceptions.OTPError("Success page not opened but "
-                                          "code is ok")
+                    return True
+                except:
+                    self._driver.execute_script("location.href = location.href;")
+            else:
+                raise exceptions.OTPError("Success page not opened but code is ok")
 
         raise exceptions.InvalidOtpCodeError("Invalid otp code received")
 
@@ -146,14 +148,22 @@ class OfferInitializerParser:
         except:
             print("CANNOT RESEND CODE")
 
-    def _enter_card(self):
-        WebDriverWait(self._driver, 120).until(
+    def _enter_card(self, is_retry: bool = False, overrided_timeout: int = 120):
+        WebDriverWait(self._driver, overrided_timeout).until(
             expected_conditions.presence_of_element_located(
                 (By.CSS_SELECTOR, "input[id='pan']")
             )
         )
 
-        self._try_exit_profile()
+        if not is_retry:
+            self._try_exit_profile()
+
+        # if is_retry:
+        #     if self._payments_card.number in self._driver.find_element(
+        #         By.CSS_SELECTOR,
+        #         self._PAYMENT_CARD_FIELDS_IDS[0]
+        #     ).text:
+        #
 
         for field_id, field_value in zip(self._PAYMENT_CARD_FIELDS_IDS,
                                          (self._payments_card.number,
@@ -163,6 +173,9 @@ class OfferInitializerParser:
                 By.CSS_SELECTOR, field_id
             )
 
+            if field_value in field.text:
+                continue
+
             field.click()
 
             field.send_keys(Keys.CONTROL + "a")
@@ -171,19 +184,30 @@ class OfferInitializerParser:
             field.send_keys(field_value)
 
     def _submit_payment_form(self, _need_reenter_card: bool = False,
-                             _need_click_submit: bool = True):
+                             _reenter_card_optional: bool = False,
+                             _need_click_submit: bool = True,
+                             _retry_count: int = 6):
+        if not _retry_count:
+            self._card_data_already_entered = False
+
+            print("ERROR GETTING OTP CODE PAGE")
+
+            raise exceptions.OTPError("Error getting otp page")
+
         print(f"CALL _submit_payment_form({_need_click_submit=}, {_need_reenter_card=})")
 
         if _need_reenter_card:
             self._card_data_already_entered = False
 
             try:
-                self._enter_card()
+                self._enter_card(overrided_timeout=60)
             except:
                 raise Exception("Cannot submit, maybe sub page opens!")
 
         if _need_click_submit:
             self._click_submit_payment_form()
+        else:
+            self._click_submit_payment_form(override_timeout=3)
 
         print("WAIT FOR OTP PASSWORD")
 
@@ -193,6 +217,19 @@ class OfferInitializerParser:
             while True:
                 if time.time() - START > 20:
                     print("PAYMENT URL DONT CHANGES")
+
+                    try:
+                        self._enter_card(overrided_timeout=3)
+                    except:
+                        pass
+
+                    if "Не удалось инициализировать" in self._driver.page_source:
+                        self._driver.execute_script("location.href = location.href;")
+
+                        return self._submit_payment_form(
+                            _need_reenter_card=True,
+                            _retry_count=_retry_count-1
+                        )
 
                     raise Exception("Cannot submit form")
 
@@ -215,6 +252,9 @@ class OfferInitializerParser:
             print("OTP PASSWORDS FIELD FIND ERROR 1")
 
             try:
+                if not self._driver.current_url.endswith("payment/"):
+                    raise Exception("Is not sub page, skip!")
+
                 WebDriverWait(self._driver, 3).until(
                     expected_conditions.presence_of_element_located(
                         (By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']")
@@ -227,7 +267,10 @@ class OfferInitializerParser:
 
                 print("CLICK GET SUB №1 | REENTER CARD")
 
-                return self._submit_payment_form(_need_reenter_card=True)
+                return self._submit_payment_form(
+                    _need_reenter_card=True,
+                    _retry_count=_retry_count-1
+                )
             except:
                 print("CANNOT CLICK GET SUB №1")
 
@@ -237,7 +280,8 @@ class OfferInitializerParser:
                     self._driver.execute_script("location.href = location.href;")
 
                     return self._submit_payment_form(
-                        _need_click_submit=False
+                        _need_click_submit=False,
+                        _retry_count=_retry_count-1
                     )
 
         try:
@@ -252,6 +296,9 @@ class OfferInitializerParser:
             return
         except:
             try:
+                if not self._driver.current_url.endswith("payment/"):
+                    raise Exception("Is not sub page, skip!")
+
                 WebDriverWait(self._driver, 0.1).until(
                     expected_conditions.presence_of_element_located(
                         (By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']")
@@ -264,7 +311,10 @@ class OfferInitializerParser:
 
                 print("CLICK GET SUB №2 | REENTER CARD")
 
-                return self._submit_payment_form(_need_reenter_card=True)
+                return self._submit_payment_form(
+                    _need_reenter_card=True,
+                    _retry_count=_retry_count-1
+                )
             except:
                 WebDriverWait(self._driver, 10).until(
                     expected_conditions.element_to_be_clickable(
@@ -278,11 +328,11 @@ class OfferInitializerParser:
 
                 print("CANNOT CLICK GET SUB №2 | NEED RETRY")
 
-        self._card_data_already_entered = False
+        self._driver.execute_script("location.href = location.href;")
+        time.sleep(1)
+        self._driver.execute_script("location.href = location.href;")
 
-        print("ERROR GETTING OTP CODE PAGE")
-
-        raise exceptions.OTPError("Error getting otp page")
+        return self._submit_payment_form(_need_click_submit=False, _retry_count=_retry_count-1)
 
     def _try_go_to_payment(self):
         pass
@@ -488,8 +538,8 @@ class OfferInitializerParser:
             )
         )
 
-    def _click_submit_payment_form(self):
-        WebDriverWait(self._driver, 10).until(
+    def _click_submit_payment_form(self, override_timeout: int = 10):
+        WebDriverWait(self._driver, override_timeout).until(
             expected_conditions.element_to_be_clickable(
                 (By.CSS_SELECTOR, "button[data-test-id='submit-payment']")
             )

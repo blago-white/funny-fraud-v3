@@ -4,3 +4,7 @@ class OtpTimeoutError(Exception):
 
 class ClientAbortedOtpValidation(Exception):
     pass
+
+
+class CreatePaymentFatalError(Exception):
+    pass

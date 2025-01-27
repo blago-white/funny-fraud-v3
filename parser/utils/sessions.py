@@ -5,7 +5,12 @@ from requests.exceptions import JSONDecodeError
 
 from db.transfer import LeadGenResultStatus, LeadGenResult
 from parser.sessions import LeadsGenerationSession
-from parser.parser.exceptions import TraficBannedError, RegistrationSMSTimeoutError, BadPhoneError, InitializingError, BadSMSService
+from parser.exceptions import ClientAbortedOtpValidation
+from parser.parser.exceptions import (TraficBannedError,
+                                      RegistrationSMSTimeoutError,
+                                      BadPhoneError,
+                                      InitializingError,
+                                      BadSMSService)
 
 if TYPE_CHECKING:
     from parser.main import LeadsGenerator
@@ -106,7 +111,10 @@ def session_results_commiter(func):
 
         try:
             func(*args, **kwargs)
-        except (SystemExit, BadSMSService) as fatal_error:
+        except (SystemExit,
+                BadSMSService,
+                CreatePaymentFatalError,
+                ClientAbortedOtpValidation) as fatal_error:
             print(f"LEAD #{lead_id} FATAL ERROR {fatal_error} - {repr(fatal_error)}")
 
             if not (self._db_service.get(

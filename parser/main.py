@@ -18,7 +18,7 @@ from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession
 from .utils.sms.services import SmsCodesService
 from .utils.sessions import session_results_commiter
-from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation
+from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation, CreatePaymentFatalError
 
 
 class LeadsGenerator:
@@ -185,7 +185,7 @@ class LeadsGenerator:
                       f"ERROR: {repr(e)}")
 
                 if _ >= self._CARD_DATA_ENTERING_RETRIES - 1:
-                    raise type(e)("Failed to send payment request")
+                    raise CreatePaymentFatalError("Failed to send payment request")
 
                 self._try_enter_card_data(initializer=initializer,
                                           session_id=session_id,
@@ -213,7 +213,6 @@ class LeadsGenerator:
                 initializer.enter_payment_card_otp(code=code)
 
                 break
-
             except ClientAbortedOtpValidation as e:
                 print(f"LEAD #{lead_id} OTP VERIF CANCELED {repr(e)}")
                 raise e
@@ -230,7 +229,7 @@ class LeadsGenerator:
 
                     error_msg += " [Otp code retries 3]"
 
-                    raise type(e)(error_msg)
+                    raise CreatePaymentFatalError(error_msg)
 
             print(f"LEAD #{lead_id} INVALID OTP, RETRY")
 
