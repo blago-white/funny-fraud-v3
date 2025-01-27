@@ -5,7 +5,7 @@ from requests.exceptions import JSONDecodeError
 
 from db.transfer import LeadGenResultStatus, LeadGenResult
 from parser.sessions import LeadsGenerationSession
-from parser.exceptions import ClientAbortedOtpValidation
+from parser.exceptions import ClientAbortedOtpValidation, CreatePaymentFatalError
 from parser.parser.exceptions import (TraficBannedError,
                                       RegistrationSMSTimeoutError,
                                       BadPhoneError,
