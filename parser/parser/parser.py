@@ -108,10 +108,13 @@ class OfferInitializerParser:
             for _ in range(3):
                 try:
                     for _ in range(35):
-                        if "подписка" in self._driver.page_source.lower() and "оформлена" in self._driver.page_source.lower():
+                        if (("подписка" in self._driver.page_source.lower())
+                                and ("оформлена" in self._driver.page_source.lower())):
+                            print("CONFIRM WORDS IN PAGE SOURCE")
                             return True
 
                         if "no_spasibo_registration" in self._driver.current_url:
+                            print("CONFIRM ARGUMENT IN URL")
                             return True
 
                         try:
@@ -120,8 +123,10 @@ class OfferInitializerParser:
                                     (By.CSS_SELECTOR, "p[class='css-dth2xi']")
                                 )
                             )
+                            print("CONFIRM BUTTON EXISTS")
                             return True
                         except:
+                            print(f"NEXT CYCLE CONFIRMATION: {"no_spasibo_registration" in self._driver.current_url} {self._driver.current_url}")
                             continue
                     raise TimeoutError("Cannot find success flags")
                 except:
