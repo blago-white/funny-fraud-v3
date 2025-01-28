@@ -107,12 +107,23 @@ class OfferInitializerParser:
         except:
             for _ in range(3):
                 try:
-                    WebDriverWait(self._driver, 35).until(
-                        expected_conditions.presence_of_element_located(
-                            (By.CSS_SELECTOR, "p[class='css-dth2xi']")
-                        )
-                    )
-                    return True
+                    for _ in range(35):
+                        if "подписка" in self._driver.page_source.lower() and "оформлена" in self._driver.page_source.lower():
+                            return True
+
+                        if "no_spasibo_registration" in self._driver.current_url:
+                            return True
+
+                        try:
+                            WebDriverWait(self._driver, 1).until(
+                                expected_conditions.presence_of_element_located(
+                                    (By.CSS_SELECTOR, "p[class='css-dth2xi']")
+                                )
+                            )
+                            return True
+                        except:
+                            continue
+                    raise TimeoutError("Cannot find success flags")
                 except:
                     self._driver.execute_script("location.href = location.href;")
             else:
@@ -156,7 +167,7 @@ class OfferInitializerParser:
         )
 
         if not is_retry:
-            self._try_exit_profile()
+            self._try_exit_profile(override_timeout=.1)
 
         # if is_retry:
         #     if self._payments_card.number in self._driver.find_element(
@@ -200,7 +211,7 @@ class OfferInitializerParser:
             self._card_data_already_entered = False
 
             try:
-                self._enter_card(overrided_timeout=60)
+                self._enter_card(overrided_timeout=15)
             except:
                 raise Exception("Cannot submit, maybe sub page opens!")
 
@@ -510,9 +521,9 @@ class OfferInitializerParser:
         tel_field.send_keys(Keys.CONTROL + "a")
         tel_field.send_keys(Keys.DELETE)
 
-    def _try_exit_profile(self):
+    def _try_exit_profile(self, override_timeout: int = 20):
         try:
-            WebDriverWait(self._driver, 20).until(
+            WebDriverWait(self._driver, override_timeout).until(
                 expected_conditions.element_to_be_clickable(
                     (By.CSS_SELECTOR, "button[data-test-id='profile-toggle']")
                 )
