@@ -193,10 +193,13 @@ class LeadsGenerator:
                     raise CreatePaymentFatalError(
                         "Failed to send payment request")
 
-                self._try_enter_card_data(initializer=initializer,
-                                          session_id=session_id,
-                                          lead_id=lead_id,
-                                          retries=1)
+                try:
+                    self._try_enter_card_data(initializer=initializer,
+                                              session_id=session_id,
+                                              lead_id=lead_id,
+                                              retries=1)
+                except:
+                    pass
 
         print(f"LEAD #{lead_id} SUBMIT PAYMENT")
 
