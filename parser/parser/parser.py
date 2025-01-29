@@ -13,6 +13,7 @@ class OfferInitializerParser:
     _form_already_inited: bool = False
     _card_data_already_entered: bool = False
     _card_data_page_path: str = None
+    _account_not_logined: bool = None
 
     _OWNER_DATA_FIELDS_IDS = [
         "input[name='firstName']",
@@ -172,7 +173,7 @@ class OfferInitializerParser:
         )
 
         if not is_retry:
-            self._try_exit_profile(override_timeout=.1)
+            self._try_exit_profile(override_timeout=.25)
 
         # if is_retry:
         #     if self._payments_card.number in self._driver.find_element(
@@ -188,9 +189,6 @@ class OfferInitializerParser:
             field = self._driver.find_element(
                 By.CSS_SELECTOR, field_id
             )
-
-            if field_value in field.text:
-                continue
 
             field.click()
 
@@ -231,11 +229,6 @@ class OfferInitializerParser:
             START = time.time()
 
             while True:
-                try:
-                    self._enter_card(overrided_timeout=2)
-                except:
-                    pass
-
                 if "Не удалось инициализировать" in self._driver.page_source:
                     self._driver.execute_script("location.href = location.href;")
 
@@ -259,6 +252,16 @@ class OfferInitializerParser:
 
                 if self._driver.current_url != self._card_data_page_path:
                     break
+
+                try:
+                    self._enter_card(overrided_timeout=2)
+                except:
+                    pass
+
+                try:
+                    self._click_submit_payment_form(override_timeout=2)
+                except:
+                    pass
 
             print("PAYMENT URL CHANGES")
 
@@ -527,6 +530,9 @@ class OfferInitializerParser:
         tel_field.send_keys(Keys.DELETE)
 
     def _try_exit_profile(self, override_timeout: int = 20):
+        if self._account_not_logined:
+            return
+
         try:
             WebDriverWait(self._driver, override_timeout).until(
                 expected_conditions.element_to_be_clickable(
@@ -534,6 +540,8 @@ class OfferInitializerParser:
                 )
             )
         except:
+            self._account_not_logined = True
+
             print("ACCOUNT NOT LOGINED")
             return
 
@@ -548,6 +556,7 @@ class OfferInitializerParser:
                 )
             )
         except:
+            self._account_not_logined = False
             print("POPUP DONT OPEN")
             return
             # raise Exception("Popup dont opened")
