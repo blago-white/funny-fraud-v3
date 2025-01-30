@@ -153,7 +153,24 @@ class OfferInitializerParser:
             self._try_go_to_payment()
 
         self._card_data_already_entered = True
-        self._enter_card()
+
+        for _ in range(4):
+            try:
+                self._enter_card()
+                return
+            except:
+                try:
+                    self._click_subscription_button()
+                except:
+                    pass
+
+                if self._card_data_already_entered:
+                    self._driver.get(self._card_data_page_path)
+                else:
+                    self._driver.execute_script(
+                        f"location.href = location.href"
+                    )
+        raise Exception("Cannot enter card!")
 
     def resend_otp(self):
         try:
@@ -225,10 +242,13 @@ class OfferInitializerParser:
             except:
                 raise Exception("Cannot submit, maybe sub page opens!")
 
-        if _need_click_submit:
-            self._click_submit_payment_form()
-        else:
-            self._click_submit_payment_form(override_timeout=3)
+        try:
+            if _need_click_submit:
+                self._click_submit_payment_form()
+            else:
+                self._click_submit_payment_form(override_timeout=3)
+        except:
+            pass
 
         print("WAIT FOR OTP PASSWORD")
 
