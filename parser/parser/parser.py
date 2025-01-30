@@ -110,7 +110,8 @@ class OfferInitializerParser:
                 try:
                     for _ in range(35):
                         if (("подписка" in self._driver.page_source.lower())
-                                and ("оформлена" in self._driver.page_source.lower())):
+                                and (
+                                        "оформлена" in self._driver.page_source.lower())):
                             print("CONFIRM WORDS IN PAGE SOURCE")
                             return True
 
@@ -127,13 +128,16 @@ class OfferInitializerParser:
                             print("CONFIRM BUTTON EXISTS")
                             return True
                         except:
-                            print(f"NEXT CYCLE CONFIRMATION: {"no_spasibo_registration" in self._driver.current_url} {self._driver.current_url}")
+                            print(
+                                f"NEXT CYCLE CONFIRMATION: {"no_spasibo_registration" in self._driver.current_url} {self._driver.current_url}")
                             continue
                     raise TimeoutError("Cannot find success flags")
                 except:
-                    self._driver.execute_script("location.href = location.href;")
+                    self._driver.execute_script(
+                        "location.href = location.href;")
             else:
-                raise exceptions.OTPError("Success page not opened but code is ok")
+                raise exceptions.OTPError(
+                    "Success page not opened but code is ok")
 
         raise exceptions.InvalidOtpCodeError("Invalid otp code received")
 
@@ -165,7 +169,8 @@ class OfferInitializerParser:
         except:
             print("CANNOT RESEND CODE")
 
-    def _enter_card(self, is_retry: bool = False, overrided_timeout: int = 120):
+    def _enter_card(
+            self, is_retry: bool = False, overrided_timeout: int = 120):
         WebDriverWait(self._driver, overrided_timeout).until(
             expected_conditions.presence_of_element_located(
                 (By.CSS_SELECTOR, "input[id='pan']")
@@ -197,10 +202,11 @@ class OfferInitializerParser:
 
             field.send_keys(field_value)
 
-    def _submit_payment_form(self, _need_reenter_card: bool = False,
-                             _reenter_card_optional: bool = False,
-                             _need_click_submit: bool = True,
-                             _retry_count: int = 6):
+    def _submit_payment_form(
+            self, _need_reenter_card: bool = False,
+            _reenter_card_optional: bool = False,
+            _need_click_submit: bool = True,
+            _retry_count: int = 6):
         if not _retry_count:
             self._card_data_already_entered = False
 
@@ -208,7 +214,8 @@ class OfferInitializerParser:
 
             raise exceptions.OTPError("Error getting otp page")
 
-        print(f"CALL _submit_payment_form({_need_click_submit=}, {_need_reenter_card=})")
+        print(
+            f"CALL _submit_payment_form({_need_click_submit=}, {_need_reenter_card=})")
 
         if _need_reenter_card:
             self._card_data_already_entered = False
@@ -230,19 +237,21 @@ class OfferInitializerParser:
 
             while True:
                 if "Не удалось инициализировать" in self._driver.page_source:
-                    self._driver.execute_script("location.href = location.href;")
+                    self._driver.execute_script(
+                        "location.href = location.href;")
 
                     return self._submit_payment_form(
                         _need_reenter_card=True,
-                        _retry_count=_retry_count-1
+                        _retry_count=_retry_count - 1
                     )
 
                 elif "Сервис недоступен" in self._driver.page_source:
-                    self._driver.execute_script("location.href = location.href;")
+                    self._driver.execute_script(
+                        "location.href = location.href;")
 
                     return self._submit_payment_form(
                         _need_reenter_card=True,
-                        _retry_count=_retry_count-1
+                        _retry_count=_retry_count - 1
                     )
 
                 if time.time() - START > 25:
@@ -263,6 +272,13 @@ class OfferInitializerParser:
                 except:
                     pass
 
+                try:
+                    self._click_subscription_button(override_timeout=2)
+                except:
+                    pass
+
+                time.sleep(2)
+
             print("PAYMENT URL CHANGES")
 
         try:
@@ -282,21 +298,13 @@ class OfferInitializerParser:
                 if not self._driver.current_url.endswith("payment/"):
                     raise Exception("Is not sub page, skip!")
 
-                WebDriverWait(self._driver, 3).until(
-                    expected_conditions.presence_of_element_located(
-                        (By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']")
-                    )
-                )
-
-                self._driver.find_element(
-                    By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
-                ).click()
+                self._click_subscription_button()
 
                 print("CLICK GET SUB №1 | REENTER CARD")
 
                 return self._submit_payment_form(
                     _need_reenter_card=True,
-                    _retry_count=_retry_count-1
+                    _retry_count=_retry_count - 1
                 )
             except:
                 print("CANNOT CLICK GET SUB №1")
@@ -304,11 +312,12 @@ class OfferInitializerParser:
                 if "Не удалось инициализировать" in self._driver.page_source:
                     print("RED CROSS EXISTS")
 
-                    self._driver.execute_script("location.href = location.href;")
+                    self._driver.execute_script(
+                        "location.href = location.href;")
 
                     return self._submit_payment_form(
                         _need_click_submit=False,
-                        _retry_count=_retry_count-1
+                        _retry_count=_retry_count - 1
                     )
 
         try:
@@ -326,32 +335,16 @@ class OfferInitializerParser:
                 if not self._driver.current_url.endswith("payment/"):
                     raise Exception("Is not sub page, skip!")
 
-                WebDriverWait(self._driver, 0.1).until(
-                    expected_conditions.presence_of_element_located(
-                        (By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']")
-                    )
-                )
-
-                self._driver.find_element(
-                    By.CSS_SELECTOR, "div[class='css-9yskcp'] button[class='css-kbwmb3']"
-                ).click()
+                self._click_subscription_button()
 
                 print("CLICK GET SUB №2 | REENTER CARD")
 
                 return self._submit_payment_form(
                     _need_reenter_card=True,
-                    _retry_count=_retry_count-1
+                    _retry_count=_retry_count - 1
                 )
             except:
-                WebDriverWait(self._driver, 10).until(
-                    expected_conditions.element_to_be_clickable(
-                        (By.CSS_SELECTOR, "button[class='css-kbwmb3']")
-                    )
-                )
-
-                self._driver.find_element(
-                    By.CSS_SELECTOR, "button[class='css-kbwmb3']"
-                ).click()
+                self._click_subscription_button()
 
                 print("CANNOT CLICK GET SUB №2 | NEED RETRY")
 
@@ -359,7 +352,8 @@ class OfferInitializerParser:
         time.sleep(1)
         self._driver.execute_script("location.href = location.href;")
 
-        return self._submit_payment_form(_need_click_submit=False, _retry_count=_retry_count-1)
+        return self._submit_payment_form(_need_click_submit=False,
+                                         _retry_count=_retry_count - 1)
 
     def _try_go_to_payment(self):
         pass
@@ -440,7 +434,8 @@ class OfferInitializerParser:
 
         WebDriverWait(self._driver, 10).until(
             expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button[data-testid='phoneNumber-nextButton']")
+                (By.CSS_SELECTOR,
+                 "button[data-testid='phoneNumber-nextButton']")
             )
         )
 
@@ -552,7 +547,8 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 5).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button[data-test-id='profile-popup-exit']")
+                    (By.CSS_SELECTOR,
+                     "button[data-test-id='profile-popup-exit']")
                 )
             )
         except:
@@ -583,4 +579,15 @@ class OfferInitializerParser:
         self._driver.find_element(
             By.CSS_SELECTOR,
             "button[data-test-id='submit-payment']"
+        ).click()
+
+    def _click_subscription_button(self, override_timeout: int = 3):
+        WebDriverWait(self._driver, override_timeout).until(
+            expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, "button[class='css-kbwmb3']")
+            )
+        )
+
+        self._driver.find_element(
+            By.CSS_SELECTOR, "button[class='css-kbwmb3']"
         ).click()
