@@ -277,7 +277,10 @@ class OfferInitializerParser:
                 except:
                     pass
 
-                time.sleep(2)
+                if time.time() - START < 5:
+                    time.sleep(5)
+                else:
+                    time.sleep(2)
 
             print("PAYMENT URL CHANGES")
 
