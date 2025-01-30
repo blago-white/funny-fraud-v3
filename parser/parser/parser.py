@@ -254,7 +254,7 @@ class OfferInitializerParser:
                         _retry_count=_retry_count - 1
                     )
 
-                if time.time() - START > 25:
+                if time.time() - START > 19:
                     print("PAYMENT URL DONT CHANGES")
 
                     raise Exception("Cannot submit form")
@@ -271,16 +271,6 @@ class OfferInitializerParser:
                     self._click_submit_payment_form(override_timeout=2)
                 except:
                     pass
-
-                try:
-                    self._click_subscription_button(override_timeout=2)
-                except:
-                    pass
-
-                if time.time() - START < 5:
-                    time.sleep(5)
-                else:
-                    time.sleep(2)
 
             print("PAYMENT URL CHANGES")
 
@@ -312,12 +302,12 @@ class OfferInitializerParser:
             except:
                 print("CANNOT CLICK GET SUB №1")
 
-                if "Не удалось инициализировать" in self._driver.page_source:
+                if "не удалось инициализировать" in self._driver.page_source.lower():
                     print("RED CROSS EXISTS")
 
                     self._driver.execute_script(
-                        "location.href = location.href;")
-
+                        "location.href = location.href;"
+                    )
                     return self._submit_payment_form(
                         _need_click_submit=False,
                         _retry_count=_retry_count - 1
@@ -353,7 +343,6 @@ class OfferInitializerParser:
 
         self._driver.execute_script("location.href = location.href;")
         time.sleep(1)
-        self._driver.execute_script("location.href = location.href;")
 
         return self._submit_payment_form(_need_click_submit=False,
                                          _retry_count=_retry_count - 1)
