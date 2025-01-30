@@ -288,7 +288,7 @@ class OfferInitializerParser:
             print("OTP PASSWORDS FIELD FIND ERROR 1")
 
             try:
-                if not self._driver.current_url.endswith("payment/"):
+                if not (self._driver.current_url.endswith("payment/") or self._driver.current_url.endswith("payment")):
                     raise Exception("Is not sub page, skip!")
 
                 self._click_subscription_button()
@@ -325,7 +325,7 @@ class OfferInitializerParser:
             return
         except:
             try:
-                if not self._driver.current_url.endswith("payment/"):
+                if not (self._driver.current_url.endswith("payment/") or self._driver.current_url.endswith("payment")):
                     raise Exception("Is not sub page, skip!")
 
                 self._click_subscription_button()
