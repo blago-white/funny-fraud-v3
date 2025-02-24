@@ -171,6 +171,13 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
 
         return all(results)
 
+    @DefaulConcurrentRepository.locked(only_session_id=True)
+    def set_paid(self, session_id: int):
+        self._update_main_lead_status(
+            session_id=session_id,
+            status=LeadGenResultStatus.SUCCESS
+        )
+
     def _update_main_lead_status(
             self, session_id: int,
             status: LeadGenResultStatus):

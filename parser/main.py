@@ -212,6 +212,11 @@ class LeadsGenerator:
         for _ in range(3):
             self._check_stopped(initializer, session_id, lead_id)
 
+            try:
+                self._check_paid(initializer, session_id, lead_id)
+            except SystemExit:
+                break
+
             code = None
 
             try:
@@ -354,8 +359,15 @@ class LeadsGenerator:
             self, initializer: OfferInitializerParser,
             session_id: int, lead_id: int):
         if self._db_service.get(
-                session_id=session_id, lead_id=lead_id
+            session_id=session_id, lead_id=lead_id
         )[0].status == LeadGenResultStatus.FAILED:
+            raise SystemExit(0)
+
+    def _check_paid(self, initializer: OfferInitializerParser,
+                    session_id: int, lead_id: int):
+        if self._db_service.get(
+            session_id=session_id, lead_id=lead_id
+        )[0].status == LeadGenResultStatus.SUCCESS:
             raise SystemExit(0)
 
     def _try_get_phone(self, exists_phone: tuple[int, str], lead_id: int) -> \

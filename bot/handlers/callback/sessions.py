@@ -11,7 +11,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                LeadCallbackAction,
                                LeadStatusReverseData,
                                ForceLeadNewSmsData,
-                               RestartSessionData)
+                               RestartSessionData,
+                               LeadPaidData)
 from db.leads import LeadGenerationResultsService
 from db.transfer import LeadGenResultStatus
 from bot.states.forms import PaymentCodeSettingForm
@@ -131,3 +132,18 @@ async def drop_session(
         await query.answer("⚠Не удалось⚠")
     else:
         await query.answer("✅Сессия сброшена✅")
+
+
+@router.callback_query(LeadPaidData.filter())
+@db_services_provider(provide_gologin=False)
+async def set_lead_paid(
+        query: CallbackQuery,
+        callback_data: LeadPaidData,
+        leadsdb: LeadGenerationResultsService
+):
+    try:
+        leadsdb.set_paid(session_id=callback_data.session_id)
+    except:
+        await query.answer("❌ Ошибка изменения статуса")
+    else:
+        await query.answer("✅ Готово")

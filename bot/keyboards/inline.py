@@ -4,7 +4,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                LeadCallbackAction,
                                LeadStatusReverseData,
                                ForceLeadNewSmsData,
-                               RestartSessionData)
+                               RestartSessionData,
+                               LeadPaidData)
 from db.transfer import LeadGenResult, LeadGenResultStatus
 
 
@@ -66,6 +67,15 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
             callback_data=ForceLeadNewSmsData(
                 session_id=leads[0].session_id
             ).pack()
+        ),
+    ])
+
+    kb.append([
+        InlineKeyboardButton(
+            text="❇Лид оплачен",
+            callback_data=LeadPaidData(
+                session_id=leads[0].session_id
+            ).pack(),
         ),
     ])
 

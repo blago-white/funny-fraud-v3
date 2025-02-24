@@ -22,3 +22,7 @@ class ForceLeadNewSmsData(CallbackData, prefix="new_sms"):
 
 class RestartSessionData(CallbackData, prefix="restart"):
     session_id: int
+
+
+class LeadPaidData(CallbackData, prefix="paid"):
+    session_id: int
