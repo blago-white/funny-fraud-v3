@@ -182,12 +182,17 @@ async def approve_session(
 
     await state.clear()
 
+    await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
+
     replyed = await message.reply(
         text=labels.SESSION_INFO,
         reply_markup=EMPTY_KB
     )
 
     session_id = parser_service.mass_generate(data=session_form)
+
+    await state.set_data(data={"bot_message_id": 0,
+                               "session_id": session_id})
 
     leads, prev_leads, START_POLLING = None, list(), time.time()
 
@@ -229,6 +234,8 @@ async def approve_session(
 
         await asyncio.sleep(1.1)
 
+    await state.clear()
+
 
 @router.message(PaymentCodeSettingForm.wait_payment_code)
 @db_services_provider(provide_gologin=False)
@@ -238,13 +245,15 @@ async def set_payment_code(
 ):
     state_data = dict(await state.get_data())
 
-    bot_reply_msg_id, session_id, lead_id = state_data.values()
+    bot_reply_msg_id, session_id = state_data.values()
 
     if bot_reply_msg_id:
         await message.bot.delete_message(
             chat_id=message.chat.id,
             message_id=bot_reply_msg_id
         )
+
+        state_data.update(bot_message_id=0)
 
     user_code, chat_id = message.text, message.chat.id
 
@@ -260,11 +269,6 @@ async def set_payment_code(
             data=state_data | {"bot_message_id": bot_reply_msg_id}
         )
 
-    await state.clear()
+    await state.set_data(state_data)
 
-    leadsdb.change_status(
-        status=LeadGenResultStatus.CODE_RECEIVED,
-        session_id=session_id,
-        lead_id=lead_id,
-        sms_code=message.text
-    )
+    leadsdb.send_sms_code(session_id=session_id, sms_code=message.text)

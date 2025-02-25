@@ -173,9 +173,42 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
 
     @DefaulConcurrentRepository.locked(only_session_id=True)
     def set_paid(self, session_id: int):
-        self._update_main_lead_status(
+        leads = self.get(session_id=session_id)
+
+        code_entered_lead = [
+            l for l in leads if
+            l.status == LeadGenResultStatus.CODE_RECEIVED
+        ]
+
+        if code_entered_lead:
+            code_entered_lead = code_entered_lead[0]
+        else:
+            return False
+
+        self._change_status(
+            status=LeadGenResultStatus.SUCCESS,
             session_id=session_id,
-            status=LeadGenResultStatus.SUCCESS
+            lead_id=code_entered_lead.lead_id
+        )
+
+    @DefaulConcurrentRepository.locked(only_session_id=True)
+    def send_sms_code(self, session_id: int, sms_code: str):
+        leads = self.get(session_id=session_id)
+
+        waiting_lead = [
+            l for l in leads if code_is_blocking(l.status)
+        ]
+
+        if waiting_lead:
+            waiting_lead = waiting_lead[0]
+        else:
+            return False
+
+        self._change_status(
+            status=LeadGenResultStatus.CODE_RECEIVED,
+            session_id=session_id,
+            lead_id=waiting_lead.lead_id,
+            sms_code=sms_code
         )
 
     def _update_main_lead_status(

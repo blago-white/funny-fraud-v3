@@ -30,14 +30,6 @@ async def set_otp_code(
         state: FSMContext):
     await query.answer(text="❇Отправьте код❇")
 
-    await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
-
-    await state.set_data(data={
-        "bot_message_id": 0,
-        "session_id": callback_data.session_id,
-        "lead_id": callback_data.lead_id
-    })
-
 
 @router.callback_query(LeadStatusCallbackData.filter(
     F.action == LeadCallbackAction.VIEW_ERROR
