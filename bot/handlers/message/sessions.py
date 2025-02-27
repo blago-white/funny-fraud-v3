@@ -248,12 +248,15 @@ async def set_payment_code(
     bot_reply_msg_id, session_id = state_data.values()
 
     if bot_reply_msg_id:
-        await message.bot.delete_message(
-            chat_id=message.chat.id,
-            message_id=bot_reply_msg_id
-        )
+        try:
+            await message.bot.delete_message(
+                chat_id=message.chat.id,
+                message_id=bot_reply_msg_id
+            )
 
-        state_data.update(bot_message_id=0)
+            state_data.update(bot_message_id=0)
+        except:
+            pass
 
     user_code, chat_id = message.text, message.chat.id
 
