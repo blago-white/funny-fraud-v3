@@ -265,6 +265,8 @@ async def set_payment_code(
             text="❌<b>Неверный формат!</b> Введите заново"
         )
 
+        await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
+
         return await state.set_data(
             data=state_data | {"bot_message_id": bot_reply_msg_id}
         )
