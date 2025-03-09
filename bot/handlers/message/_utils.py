@@ -27,6 +27,5 @@ def all_threads_ended(leads: list[LeadGenResult]) -> bool:
 
 def get_sms_service(state_data: dict) -> object:
     return SMS_SERVICES_MAPPER[
-        state_data.get("sms-service"),
-        ELSMS.KEY
+        state_data.get("sms-service", ELSMS.KEY)
     ]
