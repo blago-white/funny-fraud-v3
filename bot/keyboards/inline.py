@@ -95,7 +95,7 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
     )
 
 
-def generate_sms_service_selection_kb(current: str = mapper.ELSMS):
+def generate_sms_service_selection_kb(current: str = mapper.ELSMS.KEY):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(

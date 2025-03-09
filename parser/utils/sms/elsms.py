@@ -17,6 +17,8 @@ class ElSmsSMSCodesService(BaseSmsService):
         )
 
     def get_number(self, retries: int = 3) -> str:
+        print("ELSMS GET NUMBER")
+
         response = requests.get(
             url=f"https://el-sms.com/api/orderPhone/"
                 f"?api_key={self._apikey}&v=1.4&country=ru&service=2908"

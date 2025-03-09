@@ -43,6 +43,6 @@ def db_services_provider(provide_leads: bool = True,
 def leads_service_provider(func):
     @wraps(func)
     async def wrapped(*args, **kwargs):
-        return await func(*args, **kwargs, parser_service=LeadsGenerator())
+        return await func(*args, **kwargs, parser_service_class=LeadsGenerator)
 
     return wrapped

@@ -13,6 +13,8 @@ class SmsHubSMSService(BaseSmsService):
         )
 
     def get_number(self):
+        print("SMSHUB GET NUMBER")
+
         result = requests.get(
             url="https://smshub.org/stubs/handler_api.php"
                 f"?api_key={self._apikey}&action=getNumber"
