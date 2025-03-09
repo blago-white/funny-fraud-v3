@@ -102,13 +102,13 @@ def generate_sms_service_selection_kb(current: str = mapper.ELSMS):
                 text=f"{"🚩" if current == mapper.SMSHUB else ""}🟧 Sms-Hub",
                 callback_data=SMSServiceSelectorData(
                     sms_service=mapper.SMSHUB
-                )
+                ).pack()
             )],
             [InlineKeyboardButton(
                 text=f"{"🚩" if current == mapper.ELSMS else ""}🟦 Еl-Sms",
                 callback_data=SMSServiceSelectorData(
                     sms_service=mapper.ELSMS
-                )
+                ).pack()
             )]
         ]
     )
