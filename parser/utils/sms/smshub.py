@@ -18,7 +18,7 @@ class SmsHubSMSService(BaseSmsService):
         result = requests.get(
             url="https://smshub.org/stubs/handler_api.php"
                 f"?api_key={self._apikey}&action=getNumber"
-                "&service=atu&country=russia&maxPrice=10"
+                "&service=atu&country=russia&maxPrice=20"
         ).text
 
         print("SMSHUB", result)

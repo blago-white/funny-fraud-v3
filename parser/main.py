@@ -379,7 +379,8 @@ class LeadsGenerator:
                 exists_phone = self._sms_service.get_number()
 
                 print(f"LEAD #{lead_id} PHONE GENERATED")
-        except:
+        except Exception as e:
+            print(e)
             print(f"LEAD #{lead_id} CANNOT GET PHONE NUMBER")
             return None, None
         else:
