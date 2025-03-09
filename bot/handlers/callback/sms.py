@@ -18,6 +18,9 @@ async def select_sms_service(
         data=dict(await state.get_data()) | {"sms-service": callback_data.sms_service}
     )
 
-    await query.message.edit_reply_markup(
-        reply_markup=generate_sms_service_selection_kb(current=callback_data.sms_service)
-    )
+    try:
+        await query.message.edit_reply_markup(
+            reply_markup=generate_sms_service_selection_kb(current=callback_data.sms_service)
+        )
+    except:
+        pass
