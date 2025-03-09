@@ -21,6 +21,8 @@ class SmsHubSMSService(BaseSmsService):
                 "&service=atu&country=russia&maxPrice=10"
         ).text
 
+        print("SMSHUB", result)
+
         if not result.startswith("ACCESS_NUMBER"):
             raise NumberGettingException(result)
 

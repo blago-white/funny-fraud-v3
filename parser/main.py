@@ -44,6 +44,8 @@ class LeadsGenerator:
         self._drivers_service = drivers_service or WebDriversService()
 
     def mass_generate(self, data: LeadsGenerationSession):
+        print(self._sms_service, "SMS SERVICE")
+
         new_session_id = self._db_service.get_count()
 
         self._db_service.init(session_id=new_session_id)
