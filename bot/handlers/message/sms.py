@@ -64,5 +64,5 @@ async def set_apikey(message: Message, state: FSMContext,
     await state.clear()
 
     await message.reply(
-        text=f"✅Ключ сохранен:\n\n <code>{smsdb.get_current()}</code>"
+        text=f"✅Ключ сохранен:\n\n <code>{apikey_repo.get_current()}</code>"
     )
