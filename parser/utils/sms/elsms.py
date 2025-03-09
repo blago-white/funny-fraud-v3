@@ -4,19 +4,18 @@ import requests
 
 from db.sms import SmsServiceApikeyRepository
 
+from .base import BaseSmsService
 from .exceptions import NumberGettingException
 
 
-class SmsCodesService:
+class ElSmsSMSCodesService(BaseSmsService):
     _id: str
-    _apikey: str = None
+    # _apikey: str = None
 
-    def __init__(self, apikey: str = None):
-        self._apikey = apikey or SmsServiceApikeyRepository().get_current()
+    # def __init__(self, apikey: str = None):
+    #     self._apikey = apikey or SmsServiceApikeyRepository().get_current()
 
     def get_number(self, retries: int = 3) -> str:
-        print("SMS_APIKEY", self._apikey)
-
         response = requests.get(
             url=f"https://el-sms.com/api/orderPhone/"
                 f"?api_key={self._apikey}&v=1.4&country=ru&service=2908"

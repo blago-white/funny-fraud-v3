@@ -5,7 +5,9 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                LeadStatusReverseData,
                                ForceLeadNewSmsData,
                                RestartSessionData,
-                               LeadPaidData)
+                               LeadPaidData,
+                               SMSServiceSelectorData)
+from parser.utils.sms import mapper
 from db.transfer import LeadGenResult, LeadGenResultStatus
 
 
@@ -90,4 +92,23 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
 
     return InlineKeyboardMarkup(
         inline_keyboard=kb
+    )
+
+
+def generate_sms_service_selection_kb(current: str = mapper.ELSMS):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text=f"{"🚩" if current == mapper.SMSHUB else ""}🟧 Sms-Hub",
+                callback_data=SMSServiceSelectorData(
+                    sms_service=mapper.SMSHUB
+                )
+            )],
+            [InlineKeyboardButton(
+                text=f"{"🚩" if current == mapper.ELSMS else ""}🟦 Еl-Sms",
+                callback_data=SMSServiceSelectorData(
+                    sms_service=mapper.ELSMS
+                )
+            )]
+        ]
     )

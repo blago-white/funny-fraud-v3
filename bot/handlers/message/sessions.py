@@ -7,22 +7,19 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from bot.keyboards.inline import generate_leads_statuses_kb
-from bot.keyboards.reply import APPROVE_KB, EMPTY_KB
+from bot.keyboards.inline import generate_leads_statuses_kb, generate_sms_service_selection_kb
+from bot.keyboards.reply import APPROVE_KB
 from bot.keyboards.reply import MAIN_MENU_KB
 from bot.states.forms import SessionForm, PaymentCodeSettingForm
-from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
-from db.transfer import LeadGenResultStatus
-from db.sms import SmsServiceApikeyRepository
+from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
-from parser.profiles.gologin import GologinProfilesManager
-from parser.sessions import LeadsGenerationSession
+from db.sms import SmsServiceApikeyRepository
 from parser.main import LeadsGenerator
-from ..common import db_services_provider, leads_service_provider
-
-from ._utils import all_threads_ended, leads_differences_exists
+from parser.sessions import LeadsGenerationSession
 from . import _labels as labels
+from ._utils import all_threads_ended, leads_differences_exists, get_sms_service
+from ..common import db_services_provider, leads_service_provider
 
 router = Router(name=__name__)
 
@@ -148,14 +145,16 @@ async def set_payments_card(message: Message, state: FSMContext):
 
     current_session_form = dict(await state.get_data())
 
+    await message.reply(text="✅ Отлично, форма заполнена!\n",
+                        reply_markup=APPROVE_KB)
+
     await message.reply(
-        text="✅ Отлично, форма заполнена!\n"
-             f"| Кол-во запросов: "
+        text=f"| Кол-во запросов: "
              f"{current_session_form.get("count_requests")}\n"
              f"| Реф. ссылки: <code>"
              f"{', '.join(current_session_form.get("ref_links"))}"
              f"</code>\n",
-        reply_markup=APPROVE_KB,
+        reply_markup=generate_sms_service_selection_kb(),
     )
 
 
@@ -165,7 +164,7 @@ async def set_payments_card(message: Message, state: FSMContext):
 async def approve_session(
         message: Message, state: FSMContext,
         leadsdb: LeadGenerationResultsService,
-        parser_service: LeadsGenerator
+        parser_service_class: LeadsGenerator
 ):
     if message.text != "✅Начать сеанс":
         await message.reply("✅Отменен")
@@ -180,14 +179,17 @@ async def approve_session(
         count=session_form.get("count_requests"),
     )
 
-    await state.clear()
+    sms_service = get_sms_service(state_data=(dict(await state.get_data())))
 
+    await state.clear()
     await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
 
-    replyed = await message.reply(
-        text=labels.SESSION_INFO,
-        reply_markup=EMPTY_KB
+    replyed = await message.bot.send_message(
+        chat_id=message.chat.id,
+        text=labels.SESSION_INFO
     )
+
+    parser_service = parser_service_class(sms_service=sms_service)
 
     session_id = parser_service.mass_generate(data=session_form)
 

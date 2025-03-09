@@ -8,6 +8,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+from bot.handlers.callback.sms import router as sms_callback_router
 from bot.handlers.callback.sessions import router as callback_router
 from bot.handlers.message.sessions import router as sessions_router
 from bot.handlers.message.gologin import router as gologin_router
@@ -29,7 +30,8 @@ async def main():
                        sessions_router,
                        gologin_router,
                        sms_router,
-                       proxy_router)
+                       proxy_router,
+                       sms_callback_router)
 
     await dp.start_polling(bot)
 

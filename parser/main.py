@@ -16,7 +16,7 @@ from .parser.exceptions import (TraficBannedError,
                                 CardDataEnteringBanned)
 from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession
-from .utils.sms.services import SmsCodesService
+from .utils.sms.elsms import ElSmsSMSCodesService
 from .utils.sessions import session_results_commiter
 from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation, \
     CreatePaymentFatalError
@@ -33,14 +33,14 @@ class LeadsGenerator:
     def __init__(
             self, initializer: OfferInitializerParser = None,
             db_service: LeadGenerationResultsService = None,
-            sms_service: SmsCodesService = None,
+            sms_service: ElSmsSMSCodesService = None,
             drivers_service: WebDriversService = None,
             proxy_service: ProxyRepository = None
     ):
         self._initializer = initializer or OfferInitializerParser
         self._db_service = db_service or LeadGenerationResultsService()
         self._proxy_service = proxy_service or ProxyRepository()
-        self._sms_service = sms_service or SmsCodesService()
+        self._sms_service = sms_service or ElSmsSMSCodesService()
         self._drivers_service = drivers_service or WebDriversService()
 
     def mass_generate(self, data: LeadsGenerationSession):

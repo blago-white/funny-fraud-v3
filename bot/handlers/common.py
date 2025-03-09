@@ -5,7 +5,7 @@ from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
 from db.sms import SmsServiceApikeyRepository
 from db.proxy import ProxyRepository
-from parser.utils.sms.services import SmsCodesService
+from parser.utils.sms.elsms import ElSmsSMSCodesService
 
 
 def db_services_provider(provide_leads: bool = True,

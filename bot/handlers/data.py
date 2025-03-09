@@ -26,3 +26,7 @@ class RestartSessionData(CallbackData, prefix="restart"):
 
 class LeadPaidData(CallbackData, prefix="paid"):
     session_id: int
+
+
+class SMSServiceSelectorData(CallbackData, prefix="sms-selector"):
+    sms_service: str
