@@ -5,6 +5,7 @@ MAIN_MENU_KB = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text="🔥Новый Сеанс"),
      KeyboardButton(text="🔄Указать Gologin Apikey"),
      KeyboardButton(text="🔄Указать El-Sms Apikey"),
+     KeyboardButton(text="🔄Указать Sms-Hub Apikey"),
      KeyboardButton(text="🔄Указать Прокси")],
 ], resize_keyboard=True)
 

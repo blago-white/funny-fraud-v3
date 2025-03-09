@@ -53,12 +53,12 @@ async def start(
                       if gologin_apikey
                       else ""}"
              f"</code></b>\n"
-             f"🟦 ☎<b>El-Sms apikey: {"✅" if elsms_service_apikey else "📛"}"
+             f"☎ 🟦<b>El-Sms apikey: {"✅" if elsms_service_apikey else "📛"}"
              f"<code>{elsms_service_apikey[:6] + '...' + elsms_service_apikey[-3:]
                       if elsms_service_apikey
                       else ""}"
              f"</code></b>\n"
-             f"🟧 ☎<b>Sms-Hub apikey: {"✅" if smshub_service_apikey else "📛"}"
+             f"☎ 🟧<b>Sms-Hub apikey: {"✅" if smshub_service_apikey else "📛"}"
              f"<code>{smshub_service_apikey[:6] + '...' + smshub_service_apikey[-3:]
                       if smshub_service_apikey
                       else ""}"
