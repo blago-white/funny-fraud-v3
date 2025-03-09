@@ -20,7 +20,7 @@ router = Router(name=__name__)
 @router.message(F.text == "🔄Указать El-Sms Apikey")
 async def make_reset_elsms_apikey(message: Message, state: FSMContext):
     await state.set_state(state=SmsServiceApikeySettingForm.wait_apikey)
-    await state.set_data(data={"sms-service": ELSMS})
+    await state.set_data(data={"sms-service": ELSMS.KEY})
 
     await message.bot.send_message(
         chat_id=message.chat.id,
@@ -33,7 +33,7 @@ async def make_reset_elsms_apikey(message: Message, state: FSMContext):
 @router.message(F.text == "🔄Указать Sms-Hub Apikey")
 async def make_reset_smshub_apikey(message: Message, state: FSMContext):
     await state.set_state(state=SmsServiceApikeySettingForm.wait_apikey)
-    await state.set_data(data={"sms-service": SMSHUB})
+    await state.set_data(data={"sms-service": SMSHUB.KEY})
 
     await message.bot.send_message(
         chat_id=message.chat.id,
