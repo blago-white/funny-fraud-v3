@@ -3,7 +3,7 @@ from functools import wraps
 from parser.main import LeadsGenerator
 from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
-from db.sms import SmsServiceApikeyRepository
+from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository
 from db.proxy import ProxyRepository
 from parser.utils.sms.elsms import ElSmsSMSCodesService
 
@@ -11,6 +11,8 @@ from parser.utils.sms.elsms import ElSmsSMSCodesService
 def db_services_provider(provide_leads: bool = True,
                          provide_gologin: bool = True,
                          provide_sms: bool = False,
+                         provide_elsms: bool = False,
+                         provide_smshub: bool = False,
                          provide_proxy: bool = False):
     def wrapper(func):
         @wraps(func)
@@ -23,8 +25,11 @@ def db_services_provider(provide_leads: bool = True,
             if provide_gologin:
                 db_services.update(gologindb=GologinApikeysRepository())
 
-            if provide_sms:
-                db_services.update(smsdb=SmsServiceApikeyRepository())
+            if provide_elsms:
+                db_services.update(elsmsdb=ElSmsServiceApikeyRepository())
+
+            if provide_smshub:
+                db_services.update(smshubdb=SmsHubServiceApikeyRepository())
 
             if provide_proxy:
                 db_services.update(proxydb=ProxyRepository())

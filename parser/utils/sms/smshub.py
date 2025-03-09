@@ -1,10 +1,17 @@
 import requests
 
+from db.sms import SmsHubServiceApikeyRepository
+
 from .exceptions import NumberGettingException
 from .base import BaseSmsService
 
 
 class SmsHubSMSService(BaseSmsService):
+    def __init__(self, apikey: str = None):
+        super().__init__(
+            apikey=apikey or SmsHubServiceApikeyRepository().get_current()
+        )
+
     def get_number(self):
         result = requests.get(
             url="https://smshub.org/stubs/handler_api.php"

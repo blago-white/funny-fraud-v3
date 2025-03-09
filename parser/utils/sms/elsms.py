@@ -2,7 +2,7 @@ import os
 
 import requests
 
-from db.sms import SmsServiceApikeyRepository
+from db.sms import ElSmsServiceApikeyRepository
 
 from .base import BaseSmsService
 from .exceptions import NumberGettingException
@@ -10,10 +10,11 @@ from .exceptions import NumberGettingException
 
 class ElSmsSMSCodesService(BaseSmsService):
     _id: str
-    # _apikey: str = None
 
-    # def __init__(self, apikey: str = None):
-    #     self._apikey = apikey or SmsServiceApikeyRepository().get_current()
+    def __init__(self, apikey: str = None):
+        super().__init__(
+            apikey=apikey or ElSmsServiceApikeyRepository().get_current()
+        )
 
     def get_number(self, retries: int = 3) -> str:
         response = requests.get(
