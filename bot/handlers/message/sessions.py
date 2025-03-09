@@ -190,7 +190,7 @@ async def approve_session(
         count=session_form.get("count_requests"),
     )
 
-    sms_service = get_sms_service(state_data=(dict(await state.get_data())))
+    sms_service = get_sms_service(state_data=(dict(await state.get_data())))()
 
     await state.clear()
     await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
