@@ -16,6 +16,7 @@ from ..common import db_services_provider
 
 router = Router(name=__name__)
 
+
 async def _process_change_sms_apikey(message: Message,
                                      state: FSMContext,
                                      sms_service_key: str):
@@ -59,12 +60,8 @@ async def make_reset_smshub_apikey(message: Message, state: FSMContext):
 
 @router.message(SmsServiceApikeySettingForm.wait_apikey)
 @db_services_provider(provide_leads=False,
-                      provide_gologin=False,
-                      provide_elsms=True,
-                      provide_smshub=True)
-async def set_apikey(message: Message, state: FSMContext,
-                     elsmsdb: ElSmsServiceApikeyRepository,
-                     smshubdb: SmsHubServiceApikeyRepository):
+                      provide_gologin=False)
+async def set_apikey(message: Message, state: FSMContext):
     if not len(message.text) > 3:
         return await message.reply("✅Ввод отменен")
 
