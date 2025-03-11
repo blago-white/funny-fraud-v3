@@ -8,7 +8,7 @@ from parser.utils.sms.mapper import ELSMS, SMSHUB, SMS_SERVICES_MAPPER
 from parser.utils.sms.elsms import ElSmsSMSCodesService
 from parser.utils.sms.smshub import SmsHubSMSService
 from bot.states.forms import SmsServiceApikeySettingForm
-from db.sms import SmsHubServiceApikeyRepository, ElSmsServiceApikeyRepository
+from db.sms import SMS_DB_REPOSITORY_MAPPER
 
 from ._utils import get_sms_service
 from ..common import db_services_provider
@@ -68,10 +68,9 @@ async def set_apikey(message: Message, state: FSMContext,
     if not len(message.text) > 3:
         return await message.reply("✅Ввод отменен")
 
-    if (await state.get_data()).get("sms-service") == ELSMS.KEY:
-        apikey_repo = elsmsdb
-    else:
-        apikey_repo = smshubdb
+    apikey_repo = SMS_DB_REPOSITORY_MAPPER[
+        (await state.get_data()).get("sms-service")
+    ]
 
     apikey_repo.set(new_apikey=message.text.replace(" ", ""))
 
