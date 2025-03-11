@@ -1,18 +1,11 @@
 from aiogram import F
 from aiogram.dispatcher.router import Router
-from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from parser.utils.sms.mapper import ELSMS, SMSHUB, SMS_SERVICES_MAPPER
-from parser.utils.sms.elsms import ElSmsSMSCodesService
-from parser.utils.sms.smshub import SmsHubSMSService
 from bot.states.forms import SmsServiceApikeySettingForm
-from db.sms import SMS_DB_REPOSITORY_MAPPER
-
-from ._utils import get_sms_service
+from parser.utils.sms.mapper import ELSMS, SMSHUB, SMS_DB_REPOSITORY_MAPPER
 from ..common import db_services_provider
-
 
 router = Router(name=__name__)
 

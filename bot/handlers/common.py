@@ -1,11 +1,11 @@
 from functools import wraps
 
-from parser.main import LeadsGenerator
-from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
-from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository, HelperSmsServiceApikeyRepository
+from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
-from parser.utils.sms.elsms import ElSmsSMSCodesService
+from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository, \
+    HelperSmsServiceApikeyRepository
+from parser.main import LeadsGenerator
 
 
 def db_services_provider(provide_leads: bool = True,

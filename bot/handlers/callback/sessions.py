@@ -1,11 +1,7 @@
-import asyncio
-import random
-
 from aiogram import F
 from aiogram.dispatcher.router import Router
 from aiogram.filters.callback_data import CallbackData, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
 
 from bot.handlers.data import (LeadStatusCallbackData,
                                LeadCallbackAction,
@@ -14,9 +10,7 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                RestartSessionData,
                                LeadPaidData)
 from db.leads import LeadGenerationResultsService
-from db.transfer import LeadGenResultStatus
-from bot.states.forms import PaymentCodeSettingForm
-from ..common import db_services_provider, leads_service_provider
+from ..common import db_services_provider
 
 router = Router(name=__name__)
 

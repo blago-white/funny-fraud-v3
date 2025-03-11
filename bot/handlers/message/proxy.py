@@ -1,14 +1,11 @@
 from aiogram import F
 from aiogram.dispatcher.router import Router
-from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.states.forms import ProxySettingForm
 from db.proxy import ProxyRepository
-
 from ..common import db_services_provider
-
 
 router = Router(name=__name__)
 

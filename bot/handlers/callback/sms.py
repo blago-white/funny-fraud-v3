@@ -2,8 +2,8 @@ from aiogram.dispatcher.router import Router
 from aiogram.filters.callback_data import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from ..data import SMSServiceSelectorData
 from bot.keyboards.inline import generate_sms_service_selection_kb
+from ..data import SMSServiceSelectorData
 
 router = Router(name=__name__)
 

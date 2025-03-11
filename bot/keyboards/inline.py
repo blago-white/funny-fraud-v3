@@ -7,8 +7,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                RestartSessionData,
                                LeadPaidData,
                                SMSServiceSelectorData)
-from parser.utils.sms import mapper
 from db.transfer import LeadGenResult, LeadGenResultStatus
+from parser.utils.sms import mapper
 
 
 def _get_lead_status(status: str):
