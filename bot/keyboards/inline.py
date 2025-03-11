@@ -108,6 +108,11 @@ def generate_sms_service_selection_kb(current: str = mapper.ELSMS.KEY):
                 callback_data=SMSServiceSelectorData(
                     sms_service=mapper.ELSMS.KEY
                 ).pack()
+            ), InlineKeyboardButton(
+                text=f"{"🚩" if current == mapper.HELPERSMS.KEY else ""}☎ Helper",
+                callback_data=SMSServiceSelectorData(
+                    sms_service=mapper.HELPERSMS.KEY
+                ).pack()
             )]
         ]
     )

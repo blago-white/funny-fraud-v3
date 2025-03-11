@@ -7,18 +7,22 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from bot.keyboards.inline import generate_leads_statuses_kb, generate_sms_service_selection_kb
+from bot.keyboards.inline import generate_leads_statuses_kb, \
+    generate_sms_service_selection_kb
 from bot.keyboards.reply import APPROVE_KB
 from bot.keyboards.reply import MAIN_MENU_KB
 from bot.states.forms import SessionForm, PaymentCodeSettingForm
 from db.gologin import GologinApikeysRepository
 from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
-from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository
+from db.sms import (ElSmsServiceApikeyRepository,
+                    SmsHubServiceApikeyRepository,
+                    HelperSmsServiceApikeyRepository)
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
 from . import _labels as labels
-from ._utils import all_threads_ended, leads_differences_exists, get_sms_service
+from ._utils import all_threads_ended, leads_differences_exists, \
+    get_sms_service
 from ..common import db_services_provider, leads_service_provider
 
 router = Router(name=__name__)
@@ -28,40 +32,56 @@ router = Router(name=__name__)
 @db_services_provider(provide_leads=False,
                       provide_elsms=True,
                       provide_smshub=True,
-                      provide_proxy=True)
+                      provide_proxy=True,
+                      provide_helper=TypeError)
 async def start(
         message: Message, state: FSMContext,
         gologindb: GologinApikeysRepository,
         elsmsdb: ElSmsServiceApikeyRepository,
         smshubdb: SmsHubServiceApikeyRepository,
+        helperdb: HelperSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
     await state.clear()
 
-    gologin_apikey, elsms_service_apikey, smshub_service_apikey = (
-        gologindb.get_current(),
-        elsmsdb.get_current(),
-        smshubdb.get_current()
-    )
+    apikeys = {
+        "gologin": gologindb.get_current(),
+        "elsms": elsmsdb.get_current(),
+        "smshub": smshubdb.get_current(),
+        "helpersms": helperdb.get_current(),
+    }
 
     proxy_ok, _ = proxydb.can_use
 
     await message.bot.send_message(
         chat_id=message.chat.id,
         text=f"🏠<b>Меню Парсера</b>\n"
-             f"🤖<b>Gologin apikey: {"✅" if gologin_apikey else "📛"}"
-             f"<code>{gologin_apikey[:6] + '...' + gologin_apikey[-3:]
-                      if gologin_apikey
-                      else ""}"
+             f"🤖<b>Gologin apikey: {"✅" if apikeys.get("gologin") else "📛"}"
+             f"<code>{
+                 apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
+                 if apikeys.get("gologin")
+                 else ""
+             }"
              f"</code></b>\n"
-             f"☎ <b>El-Sms apikey: {"✅" if elsms_service_apikey else "📛"}"
-             f"<code>{elsms_service_apikey[:6] + '...' + elsms_service_apikey[-3:]
-                      if elsms_service_apikey
-                      else ""}"
+             f"☎ <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
+             f"<code>{
+                 apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
+                 if apikeys.get("elsms")
+                 else ""
+             }"
              f"</code></b>\n"
-             f"☎ <b>Sms-Hub apikey: {"✅" if smshub_service_apikey else "📛"}"
-             f"<code>{smshub_service_apikey[:6] + '...' + smshub_service_apikey[-3:]
-                      if smshub_service_apikey
-                      else ""}"
+             f"☎ <b>Sms-Hub apikey: {"✅" if apikeys.get("smshub") else "📛"}"
+             f"<code>{
+                 apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
+                 if apikeys.get("smshub")
+                 else ""
+             }"
+             f"</code></b>\n"
+             f"☎ <b>Helper-Sms apikey: {"✅" if apikeys.get("helpersms") else "📛"}"
+             f"<code>{
+                 apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
+                 if apikeys.get("helpersms")
+                 else ""
+             }"
              f"</code></b>\n"
              f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>",
         reply_markup=MAIN_MENU_KB
@@ -72,6 +92,7 @@ async def start(
 @db_services_provider(provide_leads=False,
                       provide_elsms=True,
                       provide_smshub=True,
+                      provide_helper=True,
                       provide_proxy=True)
 async def new_session(
         message: Message,
@@ -79,11 +100,12 @@ async def new_session(
         gologindb: GologinApikeysRepository,
         elsmsdb: ElSmsServiceApikeyRepository,
         smshubdb: SmsHubServiceApikeyRepository,
+        helperdb: HelperSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
-    if not (gologindb.exists and elsmsdb.exists and smshubdb.exists):
+    if not (gologindb.exists and (elsmsdb.exists or smshubdb.exists or helperdb.exists)):
         return await message.reply(
-            "⭕Сначала добавьте <b>Gologin apikey</b> и "
-            "<b>El-Sms apikey</b>"
+            "⭕Сначала добавьте <b>Gologin apikey</b> и один из"
+            "<b>Sms-Service apikey</b>"
         )
 
     can_use_proxy, proxy = proxydb.can_use
@@ -235,7 +257,7 @@ async def approve_session(
                 text=f"✅<b>Сессия #{session_id} завершена</b>"
             )
 
-        if time.time() - START_POLLING > 60*60:
+        if time.time() - START_POLLING > 60 * 60:
             await asyncio.sleep(1)
             return await message.bot.send_message(
                 chat_id=message.chat.id,
