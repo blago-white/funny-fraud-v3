@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.states.forms import SmsServiceApikeySettingForm
-from parser.utils.sms.mapper import ELSMS, SMSHUB, SMS_DB_REPOSITORY_MAPPER
+from parser.utils.sms.mapper import ELSMS, SMSHUB, HELPERSMS, SMS_DB_REPOSITORY_MAPPER
 from ..common import db_services_provider
 
 router = Router(name=__name__)
@@ -47,7 +47,7 @@ async def make_reset_smshub_apikey(message: Message, state: FSMContext):
     await _process_change_sms_apikey(
         message=message,
         state=state,
-        sms_service_key=SMSHUB.KEY
+        sms_service_key=HELPERSMS.KEY
     )
 
 
