@@ -5,10 +5,10 @@ from .base import BaseSmsService
 
 
 class HelperSMSService(BaseSmsService):
-    _sms_service: HelperSMSService = None
+    _sms_service: Helper20SMS = None
 
     def __init__(self, *args,
-                 sms_service: HelperSMSService = None,
+                 sms_service: Helper20SMS = None,
                  **kwargs):
         super().__init__(*args, **kwargs)
 
