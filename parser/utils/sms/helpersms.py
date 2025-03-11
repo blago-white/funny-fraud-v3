@@ -9,7 +9,7 @@ from .base import BaseSmsService
 class HelperSMSService(BaseSmsService):
     _sms_service: Helper20SMS = None
 
-    def __init__(self, apikey: str,
+    def __init__(self, apikey: str = None,
                  sms_service: Helper20SMS = None):
         super().__init__(
             apikey=apikey or HelperSmsServiceApikeyRepository().get_current()
