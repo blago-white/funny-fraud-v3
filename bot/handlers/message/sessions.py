@@ -60,29 +60,26 @@ async def start(
                  apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
                  if apikeys.get("gologin")
                  else ""
-             }"
-             f"</code></b>\n"
-             f"☎ <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
+             }</code></b>\n\n"
+             f"☎ <b>Смс-Сервисы:</b>\n"
+             f"— <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
              f"<code>{
                  apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
                  if apikeys.get("elsms")
                  else ""
-             }"
-             f"</code></b>\n"
-             f"☎ <b>Sms-Hub apikey: {"✅" if apikeys.get("smshub") else "📛"}"
+             }</code></b>\n"
+             f"— <b>Sms-Hub apikey: {"✅" if apikeys.get("smshub") else "📛"}"
              f"<code>{
                  apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
                  if apikeys.get("smshub")
                  else ""
-             }"
-             f"</code></b>\n"
-             f"☎ <b>Helper-Sms apikey: {"✅" if apikeys.get("helpersms") else "📛"}"
+             }</code></b>\n"
+             f"— <b>Helper-Sms apikey: {"✅" if apikeys.get("helpersms") else "📛"}"
              f"<code>{
                  apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
                  if apikeys.get("helpersms")
                  else ""
-             }"
-             f"</code></b>\n"
+             }</code></b>\n\n"
              f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>",
         reply_markup=MAIN_MENU_KB
     )
