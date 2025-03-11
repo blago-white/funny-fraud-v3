@@ -13,7 +13,7 @@ from ..common import db_services_provider
 router = Router(name=__name__)
 
 
-@router.message(F.text == "🔄Указать Прокси")
+@router.message(F.text == "🔐 Изменить Прокси")
 async def make_reset_apikey(message: Message, state: FSMContext):
     await state.set_state(state=ProxySettingForm.wait_base_proxy)
 

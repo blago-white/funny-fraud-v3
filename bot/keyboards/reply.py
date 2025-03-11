@@ -11,7 +11,10 @@ MAIN_MENU_KB = ReplyKeyboardMarkup(keyboard=[
 ], resize_keyboard=True)
 
 APPROVE_KB = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text="✅Начать сеанс"), KeyboardButton(text="⛔️Отмена")]
+    [
+        KeyboardButton(text="✅Начать сеанс"),
+        KeyboardButton(text="⛔️Отмена")
+    ]
 ], resize_keyboard=True)
 
 EMPTY_KB = ReplyKeyboardMarkup(keyboard=[])

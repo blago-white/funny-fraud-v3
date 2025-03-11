@@ -16,11 +16,11 @@ from ..common import db_services_provider
 
 router = Router(name=__name__)
 
-
-@router.message(F.text == "🔄Указать El-Sms Apikey")
-async def make_reset_elsms_apikey(message: Message, state: FSMContext):
+async def _process_change_sms_apikey(message: Message,
+                                     state: FSMContext,
+                                     sms_service_key: str):
     await state.set_state(state=SmsServiceApikeySettingForm.wait_apikey)
-    await state.set_data(data={"sms-service": ELSMS.KEY})
+    await state.set_data(data={"sms-service": sms_service_key})
 
     await message.bot.send_message(
         chat_id=message.chat.id,
@@ -30,16 +30,30 @@ async def make_reset_elsms_apikey(message: Message, state: FSMContext):
     )
 
 
-@router.message(F.text == "🔄Указать Sms-Hub Apikey")
-async def make_reset_smshub_apikey(message: Message, state: FSMContext):
-    await state.set_state(state=SmsServiceApikeySettingForm.wait_apikey)
-    await state.set_data(data={"sms-service": SMSHUB.KEY})
+@router.message(F.text == "☎ El-Sms Apikey")
+async def make_reset_elsms_apikey(message: Message, state: FSMContext):
+    await _process_change_sms_apikey(
+        message=message,
+        state=state,
+        sms_service_key=ELSMS.KEY
+    )
 
-    await message.bot.send_message(
-        chat_id=message.chat.id,
-        text="🔄Укажите новый apikey:\n"
-             "<i>Если нажали по ошибке отправьте любой символ</i>",
-        reply_markup=ReplyKeyboardRemove()
+
+@router.message(F.text == "☎ Sms-Hub Apikey")
+async def make_reset_smshub_apikey(message: Message, state: FSMContext):
+    await _process_change_sms_apikey(
+        message=message,
+        state=state,
+        sms_service_key=SMSHUB.KEY
+    )
+
+
+@router.message(F.text == "☎ Helper-Sms Apikey")
+async def make_reset_smshub_apikey(message: Message, state: FSMContext):
+    await _process_change_sms_apikey(
+        message=message,
+        state=state,
+        sms_service_key=SMSHUB.KEY
     )
 
 
