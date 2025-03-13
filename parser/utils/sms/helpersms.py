@@ -29,7 +29,8 @@ class HelperSMSService(BaseSmsService):
 
         try:
             response = self._sms_service.get_number(
-                service_id=19031, in_bot_notifications=True
+                service_id=19031,
+                max_price=20
             )
         except Exception as e:
             raise NumberGettingException(e)
