@@ -53,15 +53,22 @@ class HelperSMSService(BaseSmsService):
         print("CHECK", response)
 
         if response.get("status") is True:
-            return response.get("data").get("codes")[-1]
+            try:
+                return response.get("data").get("codes")[-1]
+            except IndexError:
+                return None
 
         return NumberGettingException(response.get("detail"))
 
     def cancel(self, phone_id: int):
+        print(f"START CANCELING PHONE {phone_id}")
+
         if not phone_id:
             return True
 
-        time.sleep(3*60)
+        time.sleep(2*60)
+
+        print(f"CONTINUE CANCELING PHONE {phone_id}")
 
         threading.Thread(target=self._cancel, args=(phone_id, )).start()
 
