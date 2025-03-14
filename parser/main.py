@@ -76,6 +76,9 @@ class LeadsGenerator:
             initializer: OfferInitializerParser,
             session: LeadsGenerationSession,
             use_phone: list[int, str] = (None, None)):
+        if len(use_phone) != 2:
+            use_phone = [None, None]
+
         self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
 
         bad_phone = False

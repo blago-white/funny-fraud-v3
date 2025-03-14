@@ -1,3 +1,6 @@
+import threading
+import time
+
 from helper20sms.helper20sms import Helper20SMS, BadApiKeyProvidedException
 
 from db.sms import HelperSmsServiceApikeyRepository
@@ -55,13 +58,21 @@ class HelperSMSService(BaseSmsService):
         if not phone_id:
             return True
 
+        time.sleep(3*60)
+
+        threading.Thread(target=self._cancel, args=(phone_id, )).start()
+
+    def _cancel(self, phone_id: int):
+        print(f"CANCELING PHONE {phone_id}")
         try:
             response = self._sms_service.set_order_status(
                 order_id=phone_id,
                 status="CANCEL"
             )
         except Exception as e:
-            return print("CANNOT CANCEL PHONE")
+            return print(f"CANNOT CANCEL PHONE - {e}")
 
         if response.get("status") is True:
             return True
+
+        print(f"CANCELING ERROR - {response}")
