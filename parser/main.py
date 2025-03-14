@@ -163,6 +163,8 @@ class LeadsGenerator:
                     used_phone_id=phone_id,
                     used_phone_number=phone
                 )
+            except IndexError as ie:
+                raise ie
             except Exception as e:
                 self._sms_service.cancel(phone_id=phone_id)
 
