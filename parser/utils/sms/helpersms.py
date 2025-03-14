@@ -63,7 +63,7 @@ class HelperSMSService(BaseSmsService):
         return NumberGettingException(response.get("detail"))
 
     def cancel(self, phone_id: int):
-        print(f"START CANCELING PHONE {phone_id}")
+        print(f"START CANCELING & FINISHING PHONE {phone_id}")
 
         if not phone_id:
             return True
@@ -80,10 +80,10 @@ class HelperSMSService(BaseSmsService):
 
         sms_service = _sms_service_class(api_key=sms_apikey)
 
-        print(f"CANCELING PHONE {phone_id}")
+        print(f"CANCELING & FINISHING PHONE {phone_id}")
 
         for _ in range(6):
-            print(f"CANCEL TRY #{_} {phone_id}")
+            print(f"CANCEL & FINISH TRY #{_} {phone_id}")
             try:
                 response = sms_service.set_order_status(
                     order_id=phone_id,
@@ -97,4 +97,19 @@ class HelperSMSService(BaseSmsService):
                 else:
                     print(f"CANCELING ERROR - {response}")
 
-            time.sleep(random.randint(10, 25))
+            time.sleep(random.randint(10, 15))
+
+            try:
+                response = sms_service.set_order_status(
+                    order_id=phone_id,
+                    status="FINISH"
+                )
+            except Exception as e:
+                print(f"CANNOT FINISH PHONE - {e}")
+            else:
+                if response.get("status") is True:
+                    return
+                else:
+                    print(f"FINISHING ERROR - {response}")
+
+            time.sleep(random.randint(10, 15))
