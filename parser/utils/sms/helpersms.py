@@ -1,3 +1,4 @@
+import random
 import threading
 import time
 
@@ -96,4 +97,4 @@ class HelperSMSService(BaseSmsService):
                 else:
                     print(f"CANCELING ERROR - {response}")
 
-            time.sleep(20)
+            time.sleep(random.randint(10, 25))
