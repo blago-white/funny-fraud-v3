@@ -66,13 +66,11 @@ class HelperSMSService(BaseSmsService):
         if not phone_id:
             return True
 
-        time.sleep(2*60)
-
-        print(f"CONTINUE CANCELING PHONE {phone_id}")
-
         threading.Thread(target=self._cancel, args=(phone_id, )).start()
 
     def _cancel(self, phone_id: int):
+        time.sleep(2*60)
+
         print(f"CANCELING PHONE {phone_id}")
         try:
             response = self._sms_service.set_order_status(
