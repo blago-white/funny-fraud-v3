@@ -9,8 +9,8 @@ from parser.profiles.drivers import WebDriversService
 from .parser.exceptions import (TraficBannedError,
                                 InvalidOtpCodeError,
                                 OTPError,
-                                RegistrationSMSTimeoutError,
                                 BadPhoneError,
+                                RegistrationSMSTimeoutError,
                                 BadSMSService,
                                 InitializingError,
                                 CardDataEnteringBanned)
@@ -76,15 +76,18 @@ class LeadsGenerator:
             initializer: OfferInitializerParser,
             session: LeadsGenerationSession,
             use_phone: list[int, str] = (None, None)):
-        self._check_stopped(initializer, session_id, lead_id)
+        self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
 
         bad_phone = False
 
         for _ in range(self._GLOBAL_RETRIES):
-            self._check_stopped(initializer, session_id, lead_id)
+            self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
 
             for _ in range(self._PHONE_RETRIEVING_RETRIES):
-                self._check_stopped(initializer, session_id, lead_id)
+                self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
+
+                if bad_phone and use_phone:
+                    self._sms_service.cancel(phone_id=use_phone[0])
 
                 use_phone = self._try_get_phone(
                     exists_phone=use_phone if not bad_phone else (None, None),
@@ -106,7 +109,7 @@ class LeadsGenerator:
             print(f"LEAD #{lead_id} PHONE RECEIVED - {phone_id=} {phone=}")
 
             for _ in range(self._SMS_SENDING_INITIALIZING_RETRIES):
-                self._check_stopped(initializer, session_id, lead_id)
+                self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=phone_id)
 
                 try:
                     initializer.init(
@@ -123,7 +126,7 @@ class LeadsGenerator:
                     used_phone_number=phone
                 )
 
-            self._check_stopped(initializer, session_id, lead_id)
+            self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=phone_id)
 
             try:
                 print(f"LEAD #{lead_id} WAIT CODE")
@@ -137,14 +140,29 @@ class LeadsGenerator:
                 break
             except (RegistrationSMSTimeoutError, CardDataEnteringBanned):
                 bad_phone = True
+
+                self._sms_service.cancel(phone_id=phone_id)
+
+                if _ >= self._GLOBAL_RETRIES - 1:
+                    raise BadPhoneError(
+                        used_phone_id=phone_id,
+                        used_phone_number=phone
+                    )
+
                 continue
+
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
+
+                self._sms_service.cancel(phone_id=phone_id)
+
                 raise TraficBannedError(
                     used_phone_id=phone_id,
                     used_phone_number=phone
                 )
             except Exception as e:
+                self._sms_service.cancel(phone_id=phone_id)
+
                 print(f"LEAD #{lead_id} INIT ERROR: {repr(e)} {e}")
                 if _ >= self._GLOBAL_RETRIES - 1:
                     raise InitializingError(
@@ -356,6 +374,13 @@ class LeadsGenerator:
             initializer.driver.close()
         except:
             pass
+
+    def _check_stopped_with_phone(self, *args, phone_id: int = None, **kwargs):
+        try:
+            self._check_stopped(*args, **kwargs)
+        except SystemExit as e:
+            self._sms_service.cancel(phone_id=phone_id)
+            raise e
 
     def _check_stopped(
             self, initializer: OfferInitializerParser,

@@ -50,3 +50,18 @@ class HelperSMSService(BaseSmsService):
             return response.get("data").get("codes")[-1]
 
         return NumberGettingException(response.get("detail"))
+
+    def cancel(self, phone_id: int):
+        if not phone_id:
+            return True
+
+        try:
+            response = self._sms_service.set_order_status(
+                order_id=phone_id,
+                status="CANCEL"
+            )
+        except Exception as e:
+            return print("CANNOT CANCEL PHONE")
+
+        if response.get("status") is True:
+            return True

@@ -24,7 +24,16 @@ class RegistrationSMSTimeoutError(Exception):
 
 
 class BadPhoneError(Exception):
-    pass
+    used_phone_id: int | None
+    used_phone_number: int | None
+
+    def __init__(self, *args,
+                 used_phone_id: int = None,
+                 used_phone_number: int = None):
+        self.used_phone_number = used_phone_number
+        self.used_phone_id = used_phone_id
+
+        super().__init__(*args)
 
 
 class BadSMSService(Exception):

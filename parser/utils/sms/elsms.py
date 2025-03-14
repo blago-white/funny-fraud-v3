@@ -49,3 +49,6 @@ class ElSmsSMSCodesService(BaseSmsService):
             return result["message"]["codes"][-1]
         except:
             return None
+
+    def cancel(self, phone_id: int):
+        pass

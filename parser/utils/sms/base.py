@@ -15,3 +15,6 @@ class BaseSmsService(metaclass=ABCMeta):
     def check_code(self, phone_id: int) -> str | None:
         ...
 
+    @abstractmethod
+    def cancel(self, phone_id: int):
+        ...

@@ -38,3 +38,6 @@ class SmsHubSMSService(BaseSmsService):
             return result.split(":")[-1]
 
         return None
+
+    def cancel(self, phone_id: int):
+        pass
