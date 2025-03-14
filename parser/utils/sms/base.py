@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 class BaseSmsService(metaclass=ABCMeta):
     _apikey: str = None
+    SMS_TIMEOUT: int = 90
 
     def __init__(self, apikey: str = None):
         self._apikey = apikey
