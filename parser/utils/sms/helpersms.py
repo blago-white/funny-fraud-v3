@@ -80,15 +80,19 @@ class HelperSMSService(BaseSmsService):
 
         print(f"CANCELING PHONE {phone_id}")
 
-        try:
-            response = sms_service.set_order_status(
-                order_id=phone_id,
-                status="CANCEL"
-            )
-        except Exception as e:
-            return print(f"CANNOT CANCEL PHONE - {e}")
+        for _ in range(6):
+            print(f"CANCEL TRY #{_} {phone_id}")
+            try:
+                response = sms_service.set_order_status(
+                    order_id=phone_id,
+                    status="CANCEL"
+                )
+            except Exception as e:
+                print(f"CANNOT CANCEL PHONE - {e}")
+            else:
+                if response.get("status") is True:
+                    return
+                else:
+                    print(f"CANCELING ERROR - {response}")
 
-        if response.get("status") is True:
-            return True
-
-        print(f"CANCELING ERROR - {response}")
+            time.sleep(20)
