@@ -6,6 +6,7 @@ from db.sms import ElSmsServiceApikeyRepository
 
 from .base import BaseSmsService
 from .exceptions import NumberGettingException
+from .middleware import SmsRequestsStatMiddleware
 
 
 class ElSmsSMSCodesService(BaseSmsService):
@@ -16,6 +17,7 @@ class ElSmsSMSCodesService(BaseSmsService):
             apikey=apikey or ElSmsServiceApikeyRepository().get_current()
         )
 
+    @SmsRequestsStatMiddleware.counter_receive_phone
     def get_number(self, retries: int = 3) -> str:
         print("ELSMS GET NUMBER")
 
@@ -50,5 +52,6 @@ class ElSmsSMSCodesService(BaseSmsService):
         except:
             return None
 
+    @SmsRequestsStatMiddleware.counter_cancel_phone
     def cancel(self, phone_id: int):
         pass

@@ -20,6 +20,7 @@ from db.sms import (ElSmsServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
+from parser.utils.sms.middleware import SmsRequestsStatMiddleware
 from . import _labels as labels
 from ._utils import all_threads_ended, leads_differences_exists, \
     get_sms_service
@@ -216,7 +217,7 @@ async def approve_session(
 
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
-        text=labels.SESSION_INFO
+        text=labels.SESSION_INFO.format(0, 0, 0)
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
@@ -227,6 +228,8 @@ async def approve_session(
                                "session_id": session_id})
 
     leads, prev_leads, START_POLLING = None, list(), time.time()
+
+    current_stats = SmsRequestsStatMiddleware().all_stats
 
     while True:
         leads = leadsdb.get(session_id=session_id) or []
@@ -241,7 +244,16 @@ async def approve_session(
 
         if req_update:
             try:
-                await replyed.edit_reply_markup(
+                new_stats = [
+                    now-on_start
+                    for now, on_start in zip(
+                        SmsRequestsStatMiddleware().all_stats,
+                        current_stats
+                    )
+                ]
+
+                await replyed.edit_text(
+                    text=labels.SESSION_INFO.format(*new_stats),
                     reply_markup=generate_leads_statuses_kb(leads=leads)
                 )
             except Exception as e:

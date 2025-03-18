@@ -4,6 +4,7 @@ from db.sms import SmsHubServiceApikeyRepository
 
 from .exceptions import NumberGettingException
 from .base import BaseSmsService
+from .middleware import SmsRequestsStatMiddleware
 
 
 class SmsHubSMSService(BaseSmsService):
@@ -12,6 +13,7 @@ class SmsHubSMSService(BaseSmsService):
             apikey=apikey or SmsHubServiceApikeyRepository().get_current()
         )
 
+    @SmsRequestsStatMiddleware.counter_receive_phone
     def get_number(self):
         print("SMSHUB GET NUMBER")
 
@@ -39,5 +41,6 @@ class SmsHubSMSService(BaseSmsService):
 
         return None
 
+    @SmsRequestsStatMiddleware.counter_cancel_phone
     def cancel(self, phone_id: int):
         pass

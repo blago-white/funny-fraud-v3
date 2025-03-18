@@ -8,11 +8,12 @@ from db.sms import HelperSmsServiceApikeyRepository
 
 from .exceptions import NumberGettingException
 from .base import BaseSmsService
+from .middleware import SmsRequestsStatMiddleware
 
 
 class HelperSMSService(BaseSmsService):
     _sms_service: Helper20SMS = None
-    SMS_TIMEOUT = 60*4
+    SMS_TIMEOUT = 60*2
 
     def __init__(self, apikey: str = None,
                  sms_service: Helper20SMS = None):
@@ -29,6 +30,7 @@ class HelperSMSService(BaseSmsService):
         except BadApiKeyProvidedException:
             raise PermissionError("Bad SMS HELPER apikey!")
 
+    @SmsRequestsStatMiddleware.counter_receive_phone
     def get_number(self) -> tuple[str, str]:
         print("HELPER SMS GET NUMBER")
 
@@ -62,6 +64,7 @@ class HelperSMSService(BaseSmsService):
 
         return NumberGettingException(response.get("detail"))
 
+    @SmsRequestsStatMiddleware.counter_cancel_phone
     def cancel(self, phone_id: int):
         print(f"START CANCELING & FINISHING PHONE {phone_id}")
 
@@ -76,8 +79,6 @@ class HelperSMSService(BaseSmsService):
     def _cancel(self, phone_id: int,
                 sms_apikey: str,
                 _sms_service_class: Helper20SMS = Helper20SMS):
-        time.sleep(2*60)
-
         sms_service = _sms_service_class(api_key=sms_apikey)
 
         print(f"CANCELING & FINISHING PHONE {phone_id}")

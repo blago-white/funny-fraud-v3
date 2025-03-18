@@ -287,6 +287,15 @@ class LeadsGenerator:
 
         while code is None:
             if time.time() - start_time > self._sms_service.SMS_TIMEOUT:
+                self._sms_service.cancel(phone_id=phone_id)
+
+                time.sleep(1)
+
+                after_cancel_code = self._sms_service.check_code(phone_id=phone_id)
+
+                if not after_cancel_code:
+                    return after_cancel_code
+
                 raise RegistrationSMSTimeoutError("No receive sms")
 
             code = self._sms_service.check_code(phone_id=phone_id)
