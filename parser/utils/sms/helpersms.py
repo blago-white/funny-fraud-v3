@@ -12,7 +12,7 @@ from .base import BaseSmsService
 
 class HelperSMSService(BaseSmsService):
     _sms_service: Helper20SMS = None
-    SMS_TIMEOUT = 60*3
+    SMS_TIMEOUT = 60*4
 
     def __init__(self, apikey: str = None,
                  sms_service: Helper20SMS = None):
