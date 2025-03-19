@@ -17,6 +17,7 @@ from .parser.exceptions import (TraficBannedError,
 from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession
 from .utils.sms.elsms import ElSmsSMSCodesService
+from .utils.sms.throttling import SmsServiceThrottlingMiddleware
 from .utils.sessions import session_results_commiter
 from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation, \
     CreatePaymentFatalError
@@ -51,6 +52,8 @@ class LeadsGenerator:
         self._db_service.init(session_id=new_session_id)
 
         threads = []
+
+        SmsServiceThrottlingMiddleware.clean_buffer()
 
         for ref_link in data.ref_links:
             threads.extend([threading.Thread(
