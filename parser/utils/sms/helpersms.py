@@ -31,7 +31,7 @@ class HelperSMSService(BaseSmsService):
         except BadApiKeyProvidedException:
             raise PermissionError("Bad SMS HELPER apikey!")
 
-    @SmsServiceThrottlingMiddleware.throttle(rps=10, space="helper")
+    @SmsServiceThrottlingMiddleware.throttle(rps=2, space="helper")
     @SmsRequestsStatMiddleware.counter_receive_phone
     def get_number(self) -> tuple[str, str]:
         print("HELPER SMS GET NUMBER")
@@ -66,7 +66,7 @@ class HelperSMSService(BaseSmsService):
 
         return NumberGettingException(response.get("detail"))
 
-    @SmsServiceThrottlingMiddleware.throttle(rps=10, space="helper")
+    @SmsServiceThrottlingMiddleware.throttle(rps=2, space="helper")
     @SmsRequestsStatMiddleware.counter_cancel_phone
     def cancel(self, phone_id: int):
         print(f"START CANCELING & FINISHING PHONE {phone_id}")
