@@ -15,6 +15,8 @@ from bot.handlers.message.gologin import router as gologin_router
 from bot.handlers.message.proxy import router as proxy_router
 from bot.handlers.message.sms import router as sms_router
 
+from server import start_server_pooling
+
 
 async def main():
     dp = Dispatcher()
@@ -37,4 +39,5 @@ async def main():
 
 
 if __name__ == '__main__':
+    start_server_pooling()
     asyncio.run(main())

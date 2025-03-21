@@ -3,6 +3,8 @@ import threading
 
 from aiohttp import web
 
+from .services.sms import ClientSmsCodesService
+
 
 def _extract_code(content: str):
     return "".join(list(filter(
@@ -14,20 +16,25 @@ def _extract_code(content: str):
 async def receive_sms(request: web.Request):
     content = (await request.content.read()).decode("UTF-8")
 
-    print(f"RECEIVE SMS FROM MOBILE: {content}")
+    client_sms_service = ClientSmsCodesService()
+
+    print(f"RECEIVE SMS FROM CLIENT: {content}")
 
     if "Покупка 1р" in content:
-        print("ПОКУПКА ЕСТЬ")
+        print("CLIENT SIDE PAYMENT COMPLETE!")
+        client_sms_service.payment_completed()
 
     if "Списание 1р" in content:
-        print("ОТП КОД")
+        otp_code = _extract_code(content=content)
 
-        print(_extract_code(content=content))
+        print(f"CLIENT SIDE OTP RECEIVED: {otp_code}")
+
+        client_sms_service.register_code(code=otp_code)
 
     return web.Response(status=201)
 
 
-def run_app():
+def _run_app():
     print("START SERVING")
 
     app = web.Application()
@@ -37,12 +44,7 @@ def run_app():
     web.run_app(app=app, port=80)
 
 
-th = multiprocessing.Process(target=run_app)
-th.start()
-print("PROC STARTED")
-
-# import requests
-#
-# response = requests.post("http://185.197.75.89:80/receive-sms/", data={"h": "w"})
-#
-# print(response)
+def start_server_pooling():
+    th = multiprocessing.Process(target=_run_app)
+    th.start()
+    print("=== SMS SERVER PROCESS STARTED ===")
