@@ -6,7 +6,7 @@ async def receive_sms(request: web.Request):
 
     print(f"RECEIVE SMS FROM MOBILE: {data} ")
 
-    return web.Response(text=b"Received!")
+    return web.Response(status=201)
 
 
 app = web.Application()
@@ -16,7 +16,6 @@ app.add_routes(routes=[
 web.run_app(app=app, port=80)
 
 # import requests
-#
 #
 # response = requests.post("http://185.197.75.89:80/receive-sms/", data={"h": "w"})
 #
