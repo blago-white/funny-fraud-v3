@@ -1,3 +1,4 @@
+import multiprocessing
 import threading
 
 from aiohttp import web
@@ -36,9 +37,9 @@ def run_app():
     web.run_app(app=app, port=80)
 
 
-th = threading.Thread(target=run_app)
+th = multiprocessing.Process(target=run_app)
 th.start()
-print("TH STARTED")
+print("PROC STARTED")
 
 # import requests
 #
