@@ -9,7 +9,7 @@ from .services.sms import ClientSmsCodesService
 def _extract_code(content: str):
     return "".join(list(filter(
         lambda content: content.isdigit(),
-        content.split("message\": \"")[-1]
+        content.split("message")[-1]
     ))[:4])
 
 
