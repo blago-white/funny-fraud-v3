@@ -11,6 +11,13 @@ async def receive_sms(request: web.Request):
 
 app = web.Application()
 app.add_routes(routes=[
-    web.get("/receive-sms/", receive_sms)
+    web.post("/receive-sms/", receive_sms)
 ])
 web.run_app(app=app, port=80)
+
+# import requests
+#
+#
+# response = requests.post("http://185.197.75.89:80/receive-sms/", data={"h": "w"})
+#
+# print(response)
