@@ -41,7 +41,7 @@ def _run_app():
     app.add_routes(routes=[
         web.post("/receive-sms/", receive_sms)
     ])
-    web.run_app(app=app, port=80)
+    web.run_app(app=app, port=8080)
 
 
 def start_server_pooling():
