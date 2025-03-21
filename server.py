@@ -38,6 +38,7 @@ def run_app():
 
 th = threading.Thread(target=run_app)
 th.start()
+print("TH STARTED")
 
 # import requests
 #
