@@ -457,6 +457,19 @@ class OfferInitializerParser:
 
         try:
             WebDriverWait(self._driver, 5).until(
+                expected_conditions.text_to_be_present_in_element(
+                    locator="body",
+                    text_="Продолжить вход с этим номером пока не можем"
+                )
+            )
+        except:
+            if "Продолжить вход с этим номером пока не можем".lower() in self._driver.page_source.lower():
+                raise exceptions.BadPhoneError()
+        else:
+            raise exceptions.BadPhoneError()
+
+        try:
+            WebDriverWait(self._driver, 5).until(
                 expected_conditions.presence_of_element_located(
                     (By.ID, "inputError")
                 )

@@ -123,6 +123,11 @@ class LeadsGenerator:
                         phone=phone
                     )
                     break
+                except BadPhoneError:
+                    print(f"LEAD #{lead_id} CANNOT USE PHONE TO REG")
+
+                    bad_phone = True
+                    continue
                 except Exception as e:
                     print(f"LEAD #{lead_id} CANNOT SEND REG SMS RETRY №{_}")
                     continue
