@@ -115,6 +115,9 @@ class LeadsGenerator:
             print(f"LEAD #{lead_id} PHONE RECEIVED - {phone_id=} {phone=}")
 
             for _ in range(self._SMS_SENDING_INITIALIZING_RETRIES):
+                if bad_phone:
+                    break
+
                 self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=phone_id)
 
                 try:
@@ -132,6 +135,13 @@ class LeadsGenerator:
                     print(f"LEAD #{lead_id} CANNOT SEND REG SMS RETRY №{_}")
                     continue
             else:
+                if bad_phone:
+                    # self._SMS_SERVICE.cancel(phone_id=phone_id)
+
+                    continue
+
+                    # raise BadPhoneError(used_phone_id=phone_id, used_phone_number=phone)
+
                 raise InitializingError(
                     used_phone_id=phone_id,
                     used_phone_number=phone
