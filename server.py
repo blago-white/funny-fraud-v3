@@ -4,7 +4,7 @@ from aiohttp import web
 async def receive_sms(request: web.Request):
     data = await request.post()
 
-    print(f"RECEIVE SMS FROM MOBILE: {data} {request.content.read()}")
+    print(f"RECEIVE SMS FROM MOBILE: {data} {(await request.content.read())}")
 
     return web.Response(status=201)
 
