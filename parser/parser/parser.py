@@ -478,13 +478,15 @@ class OfferInitializerParser:
             )
             print("ENTER PHONE #12")
         except:
+            pass
+        else:
+            print("ENTER PHONE #15")
+            raise exceptions.BadPhoneError()
+        finally:
             print("ENTER PHONE #13")
             if "Продолжить вход с этим номером пока не можем".lower() in self._driver.page_source.lower():
                 print("ENTER PHONE #14")
                 raise exceptions.BadPhoneError()
-        else:
-            print("ENTER PHONE #15")
-            raise exceptions.BadPhoneError()
 
         try:
             WebDriverWait(self._driver, 5).until(
