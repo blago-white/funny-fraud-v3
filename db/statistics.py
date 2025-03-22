@@ -52,8 +52,9 @@ class LeadsGenerationStatisticsService(BaseRedisService):
             link, count = row_params[0], int(row_params[1])
 
             total_count += count
+
             statistics_for_links.update({
-                link: count
+                link: count + statistics_for_links.get(link, 0)
             })
 
         return statistics_for_links, total_count
