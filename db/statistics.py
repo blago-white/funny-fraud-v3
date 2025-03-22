@@ -6,6 +6,8 @@ from .base import BaseRedisService
 
 class LeadsGenerationStatisticsService(BaseRedisService):
     def add(self, session_id: int, link: str, count_leads: int) -> bool:
+        print(f"ADD {session_id} {link} {count_leads}")
+
         today_date = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
 
         date_key = f"daystat:{today_date.day}:{today_date.month}"
@@ -14,7 +16,9 @@ class LeadsGenerationStatisticsService(BaseRedisService):
             current_data = str(
                 self._conn.get(date_key)
             ).decode()
-        except:
+        except Exception as e:
+            print(f"ERROR ADD TODAY STAT: {e}")
+
             current_data = ""
 
         if f"SSID{session_id}" in current_data:
@@ -38,7 +42,8 @@ class LeadsGenerationStatisticsService(BaseRedisService):
             current_data = str(
                 self._conn.get(date_key)
             ).decode()
-        except:
+        except Exception as e:
+            print(f"ERROR GET TODAY STATS: {e}")
             return {}, 0
 
         statistics_for_links, total_count = {}, 0
