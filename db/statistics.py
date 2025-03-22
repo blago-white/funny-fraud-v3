@@ -15,7 +15,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         try:
             current_data = str(
                 self._conn.get(date_key)
-            ).decode()
+            )
         except Exception as e:
             print(f"ERROR ADD TODAY STAT: {e}")
 
@@ -41,7 +41,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         try:
             current_data = str(
                 self._conn.get(date_key)
-            ).decode()
+            )
         except Exception as e:
             print(f"ERROR GET TODAY STATS: {e}")
             return {}, 0
