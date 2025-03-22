@@ -32,7 +32,10 @@ class HelperSMSService(BaseSmsService):
 
     @property
     def balance(self) -> float:
-        response = self._sms_service.get_balance()
+        try:
+            response = self._sms_service.get_balance()
+        except:
+            return ValueError()
 
         print("BALANCE: ", response)
 
