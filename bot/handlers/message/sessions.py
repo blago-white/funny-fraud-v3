@@ -306,9 +306,13 @@ async def _start_session_keyboard_pooling(
     while True:
         leads = leadsdb.get(session_id=session_id) or []
 
+        print("UPD - ", leads)
+
         if not leads:
             await asyncio.sleep(1.1)
             continue
+
+        print("UPD2 - ", leads)
 
         req_update = leads_differences_exists(
             prev_leads=prev_leads,
@@ -316,6 +320,7 @@ async def _start_session_keyboard_pooling(
         )
 
         if req_update or (sms_service.balance != prev_balance):
+            print("UPDATE")
             try:
                 new_stats = [
                     now-on_start
