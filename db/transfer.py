@@ -46,3 +46,9 @@ class LeadGenResult:
 
     def __post_init__(self):
         self.status = STATUS_MAPPING.get(self.status, "f")
+
+
+@dataclass
+class DayStatisticsRow:
+    link: str
+    count: int

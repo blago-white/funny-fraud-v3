@@ -15,9 +15,11 @@ from bot.states.forms import SessionForm, PaymentCodeSettingForm
 from db.gologin import GologinApikeysRepository
 from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
+from db.transfer import LeadGenResultStatus
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
+from db.statistics import LeadsGenerationStatisticsService
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
 from parser.utils.sms.middleware.stats import SmsRequestsStatMiddleware
@@ -233,6 +235,8 @@ async def approve_session(
     await state.set_data(data={"bot_message_id": 0,
                                "session_id": session_id})
 
+    _commit_previous_session(prev_session_id=session_id-1, leadsdb=leadsdb)
+
     await _start_session_keyboard_pooling(
         call_stack=SessionStatusPullingCallStack(
             initiator_message=replyed,
@@ -340,6 +344,11 @@ async def _start_session_keyboard_pooling(
                 print(f"SESSION KB ERROR: {e}")
 
         if all_threads_ended(leads=leads):
+            _commit_session_results(
+                session_id=session_id,
+                leads=leads
+            )
+
             await asyncio.sleep(1)
             return await call_stack.initiator_message.bot.send_message(
                 chat_id=call_stack.initiator_message.chat.id,
@@ -347,7 +356,13 @@ async def _start_session_keyboard_pooling(
             )
 
         if time.time() - START_POLLING > 60 * 60:
+            _commit_session_results(
+                session_id=session_id,
+                leads=leads
+            )
+
             await asyncio.sleep(1)
+
             return await call_stack.initiator_message.bot.send_message(
                 chat_id=call_stack.initiator_message.chat.id,
                 text=f"❌Сессия #{session_id} завершена по 1 часовому "
@@ -357,3 +372,26 @@ async def _start_session_keyboard_pooling(
         prev_leads = leads
 
         await asyncio.sleep(1.1)
+
+
+def _commit_previous_session(prev_session_id: int,
+                             leadsdb: LeadGenerationResultsService):
+    leads = leadsdb.get(session_id=prev_session_id) or []
+
+    if leads:
+        _commit_session_results(session_id=prev_session_id,
+                                leads=leads)
+
+
+def _commit_session_results(session_id: int, leads: list):
+    results = {i.ref_link: len([
+        ref_lead for ref_lead in leads
+        if ref_lead.status == LeadGenResultStatus.SUCCESS and ref_lead.ref_link == i.ref_link
+    ]) for i in leads}
+
+    for link in results:
+        LeadsGenerationStatisticsService().add(
+            session_id=session_id,
+            link=link,
+            count_leads=results[link]
+        )
