@@ -34,7 +34,9 @@ class HelperSMSService(BaseSmsService):
     def balance(self) -> float:
         response = self._sms_service.get_balance()
 
-        if response.get("status") == "true":
+        print("BALANCE: ", response)
+
+        if response.get("status") != "false":
             return float(response.get("data").get("balance"))
 
         raise ValueError()
