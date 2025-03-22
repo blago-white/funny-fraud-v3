@@ -15,6 +15,8 @@ async def show_statistics(
         statsdb: LeadsGenerationStatisticsService):
     today_data, total = statsdb.get_today()
 
+    print(today_data, total)
+
     await message.bot.send_message(
         chat_id=message.chat.id,
         text=f"<b>Статистика лидов за cегодня [{total} Лидов]:</b>\n\n" +

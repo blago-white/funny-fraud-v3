@@ -387,10 +387,18 @@ def _commit_previous_session(prev_session_id: int,
 
 
 def _commit_session_results(session_id: int, leads: list):
-    results = {i.ref_link: len([
-        ref_lead for ref_lead in leads
-        if ref_lead.status == LeadGenResultStatus.SUCCESS and ref_lead.ref_link == i.ref_link
-    ]) for i in leads}
+    results = {}
+
+    for l in leads:
+        if not results.get(l.ref_link):
+            results.update({l.ref_link: 0})
+
+        results[l.ref_link] += int(l.status == LeadGenResultStatus.SUCCESS)
+
+    # results = {i.ref_link: len([
+    #     ref_lead for ref_lead in leads
+    #     if ref_lead.status == LeadGenResultStatus.SUCCESS and ref_lead.ref_link == i.ref_l
+    # ]) for i in leads}
 
     print(f"COMMIT: {results}")
 
