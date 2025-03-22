@@ -8,8 +8,7 @@ from db.sms import HelperSmsServiceApikeyRepository
 
 from .exceptions import NumberGettingException
 from .base import BaseSmsService
-from .middleware import SmsRequestsStatMiddleware
-from .throttling import SmsServiceThrottlingMiddleware
+from .middleware import SmsRequestsStatMiddleware, SmsServiceThrottlingMiddleware
 
 
 class HelperSMSService(BaseSmsService):
