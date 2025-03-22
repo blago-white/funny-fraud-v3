@@ -332,12 +332,12 @@ async def _start_session_keyboard_pooling(
                     sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
 
                 await call_stack.initiator_message.edit_text(
-                    text=labels.SESSION_INFO.format(*(new_stats + (
+                    text=labels.SESSION_INFO.format(*(new_stats + [
                         sms_service_balance,
                         (call_stack.default_sms_service_balance - sms_service_balance)
                         if (type(sms_service_balance) is float)
                         else "..."
-                    ))),
+                    ])),
                     reply_markup=generate_leads_statuses_kb(leads=leads)
                 )
             except Exception as e:
