@@ -299,6 +299,7 @@ async def _start_session_keyboard_pooling(
     leads, prev_leads, START_POLLING = None, list(), time.time()
 
     current_stats = SmsRequestsStatMiddleware().all_stats
+    prev_balance = None
 
     session_id, sms_service = call_stack.session_id, call_stack.sms_service
 
@@ -314,7 +315,7 @@ async def _start_session_keyboard_pooling(
             leads=leads
         )
 
-        if req_update:
+        if req_update or (sms_service.balance != prev_balance):
             try:
                 new_stats = [
                     now-on_start
@@ -330,6 +331,8 @@ async def _start_session_keyboard_pooling(
                     sms_service_balance = "<i>Ошибка получения данных</i>"
                 except (NotImplemented, NotImplementedError):
                     sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
+
+                prev_balance = sms_service_balance
 
                 await call_stack.initiator_message.edit_text(
                     text=labels.SESSION_INFO.format(*(new_stats + [
