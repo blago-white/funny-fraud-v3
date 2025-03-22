@@ -19,7 +19,7 @@ async def show_statistics(
         chat_id=message.chat.id,
         text=f"<b>Статистика лидов за cегодня [{total} Лидов]:</b>\n\n" +
              "\n".join([
-                 f"<i>{link}<i> | <b>+{today_data[link]}</b>"
+                 f"{link} | <b>+{today_data[link]}</b>"
                  for link in today_data
              ])
     )
