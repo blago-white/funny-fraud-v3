@@ -392,6 +392,8 @@ def _commit_session_results(session_id: int, leads: list):
         if ref_lead.status == LeadGenResultStatus.SUCCESS and ref_lead.ref_link == i.ref_link
     ]) for i in leads}
 
+    print(f"COMMIT: {results}")
+
     for link in results:
         LeadsGenerationStatisticsService().add(
             session_id=session_id,
