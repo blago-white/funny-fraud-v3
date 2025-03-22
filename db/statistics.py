@@ -27,6 +27,8 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         else:
             current_data += f"@{link}#{count_leads}#SSID{session_id}"
 
+        print(current_data)
+
         self._conn.set(date_key, current_data)
 
         return True
