@@ -226,7 +226,7 @@ async def approve_session(
 
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
-        text=labels.SESSION_INFO.format(0, 0, 0)
+        text=labels.SESSION_INFO.format(0, 0, 0, "Скоро будет", "...")
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
