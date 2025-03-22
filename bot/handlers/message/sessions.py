@@ -20,10 +20,12 @@ from db.sms import (ElSmsServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
-from parser.utils.sms.middleware import SmsRequestsStatMiddleware
+from parser.utils.sms.middleware.stats import SmsRequestsStatMiddleware
+from parser.utils.sms.base import BaseSmsService
 from . import _labels as labels
 from ._utils import all_threads_ended, leads_differences_exists, \
     get_sms_service
+from ._transfer import SessionStatusPullingCallStack
 from ..common import db_services_provider, leads_service_provider
 
 router = Router(name=__name__)
@@ -210,7 +212,12 @@ async def approve_session(
         count=session_form.get("count_requests"),
     )
 
-    sms_service = get_sms_service(state_data=(dict(await state.get_data())))()
+    sms_service: BaseSmsService = get_sms_service(state_data=(dict(session_form)))()
+
+    try:
+        sms_service_balance = sms_service.balance
+    except:
+        sms_service_balance = None
 
     await state.clear()
     await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
@@ -221,62 +228,19 @@ async def approve_session(
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
-
     session_id = parser_service.mass_generate(data=session_form)
 
     await state.set_data(data={"bot_message_id": 0,
                                "session_id": session_id})
 
-    leads, prev_leads, START_POLLING = None, list(), time.time()
-
-    current_stats = SmsRequestsStatMiddleware().all_stats
-
-    while True:
-        leads = leadsdb.get(session_id=session_id) or []
-
-        if not leads:
-            continue
-
-        req_update = leads_differences_exists(
-            prev_leads=prev_leads,
-            leads=leads
-        )
-
-        if req_update:
-            try:
-                new_stats = [
-                    now-on_start
-                    for now, on_start in zip(
-                        SmsRequestsStatMiddleware().all_stats,
-                        current_stats
-                    )
-                ]
-
-                await replyed.edit_text(
-                    text=labels.SESSION_INFO.format(*new_stats),
-                    reply_markup=generate_leads_statuses_kb(leads=leads)
-                )
-            except Exception as e:
-                print(e)
-
-        if all_threads_ended(leads=leads):
-            await asyncio.sleep(1)
-            return await message.bot.send_message(
-                chat_id=message.chat.id,
-                text=f"✅<b>Сессия #{session_id} завершена</b>"
-            )
-
-        if time.time() - START_POLLING > 60 * 60:
-            await asyncio.sleep(1)
-            return await message.bot.send_message(
-                chat_id=message.chat.id,
-                text=f"❌Сессия #{session_id} завершена по 1 часовому "
-                     "таймауту!"
-            )
-
-        prev_leads = leads
-
-        await asyncio.sleep(1.1)
+    await _start_session_keyboard_pooling(
+        call_stack=SessionStatusPullingCallStack(
+            initiator_message=replyed,
+            sms_service=sms_service,
+            session_id=session_id,
+            default_sms_service_balance=sms_service_balance
+        ),
+    )
 
     await state.clear()
 
@@ -321,3 +285,75 @@ async def set_payment_code(
     await state.set_data(state_data)
 
     leadsdb.send_sms_code(session_id=session_id, sms_code=message.text)
+
+
+@db_services_provider(provide_gologin=False)
+async def _start_session_keyboard_pooling(
+        leadsdb: LeadGenerationResultsService,
+        call_stack: SessionStatusPullingCallStack,
+):
+    leads, prev_leads, START_POLLING = None, list(), time.time()
+
+    current_stats = SmsRequestsStatMiddleware().all_stats
+
+    session_id, sms_service = call_stack.session_id, call_stack.sms_service
+
+    while True:
+        leads = leadsdb.get(session_id=session_id) or []
+
+        if not leads:
+            await asyncio.sleep(1.1)
+            continue
+
+        req_update = leads_differences_exists(
+            prev_leads=prev_leads,
+            leads=leads
+        )
+
+        if req_update:
+            try:
+                new_stats = [
+                    now-on_start
+                    for now, on_start in zip(
+                        SmsRequestsStatMiddleware().all_stats,
+                        current_stats
+                    )
+                ]
+
+                try:
+                    sms_service_balance = sms_service.balance
+                except ValueError:
+                    sms_service_balance = "<i>Ошибка получения данных</i>"
+                except (NotImplemented, NotImplementedError):
+                    sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
+
+                await call_stack.initiator_message.edit_text(
+                    text=labels.SESSION_INFO.format(*(new_stats + (
+                        sms_service_balance,
+                        (call_stack.default_sms_service_balance - sms_service_balance)
+                        if (type(sms_service_balance) is float)
+                        else "..."
+                    ))),
+                    reply_markup=generate_leads_statuses_kb(leads=leads)
+                )
+            except Exception as e:
+                print(f"SESSION KB ERROR: {e}")
+
+        if all_threads_ended(leads=leads):
+            await asyncio.sleep(1)
+            return await call_stack.initiator_message.bot.send_message(
+                chat_id=call_stack.initiator_message.chat.id,
+                text=f"✅<b>Сессия #{session_id} завершена</b>"
+            )
+
+        if time.time() - START_POLLING > 60 * 60:
+            await asyncio.sleep(1)
+            return await call_stack.initiator_message.bot.send_message(
+                chat_id=call_stack.initiator_message.chat.id,
+                text=f"❌Сессия #{session_id} завершена по 1 часовому "
+                     "таймауту!"
+            )
+
+        prev_leads = leads
+
+        await asyncio.sleep(1.1)

@@ -31,6 +31,15 @@ class HelperSMSService(BaseSmsService):
         except BadApiKeyProvidedException:
             raise PermissionError("Bad SMS HELPER apikey!")
 
+    @property
+    def balance(self) -> float:
+        response = self._sms_service.get_balance()
+
+        if response.get("status") == "true":
+            return float(response.get("data").get("balance"))
+
+        raise ValueError()
+
     @SmsServiceThrottlingMiddleware.throttle(rps=2, space="helper")
     @SmsRequestsStatMiddleware.counter_receive_phone
     def get_number(self) -> tuple[str, str]:

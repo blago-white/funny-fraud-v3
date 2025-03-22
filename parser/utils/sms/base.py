@@ -8,6 +8,10 @@ class BaseSmsService(metaclass=ABCMeta):
     def __init__(self, apikey: str = None):
         self._apikey = apikey
 
+    @property
+    def balance(self):
+        raise NotImplemented("Balance method not implemented on this service!")
+
     @abstractmethod
     def get_number(self) -> tuple[str, str]:
         ...
