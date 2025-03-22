@@ -214,7 +214,7 @@ async def approve_session(
         count=session_form.get("count_requests"),
     )
 
-    sms_service: BaseSmsService = get_sms_service(state_data=(dict(session_form)))()
+    sms_service: BaseSmsService = get_sms_service(state_data=(dict(await state.get_data())))()
 
     try:
         sms_service_balance = sms_service.balance
