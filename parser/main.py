@@ -17,7 +17,7 @@ from .parser.exceptions import (TraficBannedError,
 from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession
 from .utils.sms.elsms import ElSmsSMSCodesService
-from .utils.sms.throttling import SmsServiceThrottlingMiddleware
+from .utils.sms.middleware.throttling import SmsServiceThrottlingMiddleware
 from .utils.sessions import session_results_commiter
 from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation, \
     CreatePaymentFatalError
