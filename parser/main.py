@@ -82,15 +82,15 @@ class LeadsGenerator:
         if len(use_phone) != 2:
             use_phone = [None, None]
 
-        self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
+        self._check_stopped_with_phone(session_id, lead_id, phone_id=use_phone[0])
 
         bad_phone = False
 
         for _ in range(self._GLOBAL_RETRIES):
-            self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
+            self._check_stopped_with_phone(session_id, lead_id, phone_id=use_phone[0])
 
             for _ in range(self._PHONE_RETRIEVING_RETRIES):
-                self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=use_phone[0])
+                self._check_stopped_with_phone(session_id, lead_id, phone_id=use_phone[0])
 
                 if bad_phone and use_phone:
                     self._sms_service.cancel(phone_id=use_phone[0])
@@ -118,7 +118,7 @@ class LeadsGenerator:
                 if bad_phone:
                     break
 
-                self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=phone_id)
+                self._check_stopped_with_phone(session_id, lead_id, phone_id=phone_id)
 
                 try:
                     initializer.init(
@@ -136,18 +136,14 @@ class LeadsGenerator:
                     continue
             else:
                 if bad_phone:
-                    # self._SMS_SERVICE.cancel(phone_id=phone_id)
-
                     continue
-
-                    # raise BadPhoneError(used_phone_id=phone_id, used_phone_number=phone)
 
                 raise InitializingError(
                     used_phone_id=phone_id,
                     used_phone_number=phone
                 )
 
-            self._check_stopped_with_phone(initializer, session_id, lead_id, phone_id=phone_id)
+            self._check_stopped_with_phone(session_id, lead_id, phone_id=phone_id)
 
             try:
                 print(f"LEAD #{lead_id} WAIT CODE")
@@ -214,7 +210,7 @@ class LeadsGenerator:
         print(f"LEAD #{lead_id} CAN SUBMIT PAYMENT")
 
         for _ in range(self._CARD_DATA_ENTERING_RETRIES):
-            self._check_stopped(initializer, session_id, lead_id)
+            self._check_stopped(session_id, lead_id)
 
             try:
                 initializer.submit_payment()
@@ -232,7 +228,8 @@ class LeadsGenerator:
 
                 if _ >= self._CARD_DATA_ENTERING_RETRIES - 1:
                     raise CreatePaymentFatalError(
-                        "Failed to send payment request")
+                        "Failed to send payment request"
+                    )
 
                 try:
                     self._try_enter_card_data(initializer=initializer,
@@ -251,10 +248,10 @@ class LeadsGenerator:
         )
 
         for _ in range(3):
-            self._check_stopped(initializer, session_id, lead_id)
+            self._check_stopped(session_id, lead_id)
 
             try:
-                self._check_paid(initializer, session_id, lead_id)
+                self._check_paid(session_id, lead_id)
             except SystemExit:
                 break
 
@@ -340,12 +337,12 @@ class LeadsGenerator:
         USE_FORCE = False
 
         while time.time() - START < 120:
-            print(f"LEAD {lead_id} REFRESH OTP")
-
             lead = self._db_service.get(
                 session_id=session_id,
                 lead_id=lead_id
             )[0]
+
+            print(f"LEAD {lead_id} REFRESH OTP : {sms_code} - {lead.sms_code}")
 
             if lead.status == LeadGenResultStatus.FAILED:
                 raise ClientAbortedOtpValidation("Status FAILED set")
@@ -368,6 +365,9 @@ class LeadsGenerator:
 
             time.sleep(.5)
 
+        if sms_code != "None":
+            return sms_code
+
         raise OtpTimeoutError("Client otp timeout")
 
     def _wait_for_get_payment_code(self, session_id: int, lead_id: int):
@@ -389,7 +389,7 @@ class LeadsGenerator:
             lead_id: int,
             retries: int = 0):
         for _ in range(retries or self._CARD_DATA_ENTERING_RETRIES):
-            self._check_stopped(initializer, session_id, lead_id)
+            self._check_stopped(session_id, lead_id)
             try:
                 initializer.enter_card_data()
 
@@ -413,22 +413,20 @@ class LeadsGenerator:
             raise e
 
     def _check_stopped(
-            self, initializer: OfferInitializerParser,
-            session_id: int, lead_id: int):
+            self, session_id: int, lead_id: int):
         if self._db_service.get(
             session_id=session_id, lead_id=lead_id
         )[0].status == LeadGenResultStatus.FAILED:
             raise SystemExit(0)
 
-    def _check_paid(self, initializer: OfferInitializerParser,
-                    session_id: int, lead_id: int):
+    def _check_paid(self, session_id: int, lead_id: int):
         if self._db_service.get(
             session_id=session_id, lead_id=lead_id
         )[0].status == LeadGenResultStatus.SUCCESS:
             raise SystemExit(0)
 
-    def _try_get_phone(self, exists_phone: tuple[int, str], lead_id: int) -> \
-    tuple[int, str]:
+    def _try_get_phone(self, exists_phone: tuple[int, str],
+                       lead_id: int) -> tuple[int, str]:
         try:
             if not all(exists_phone):
                 exists_phone = self._sms_service.get_number()
