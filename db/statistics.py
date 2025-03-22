@@ -13,9 +13,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         date_key = f"daystat:{today_date.day}:{today_date.month}"
 
         try:
-            current_data = str(
-                self._conn.get(date_key)
-            )
+            current_data = self._conn.get(date_key).decode()
         except Exception as e:
             print(f"ERROR ADD TODAY STAT: {e}")
 
@@ -39,9 +37,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         date_key = f"daystat:{today_date.day}:{today_date.month}"
 
         try:
-            current_data = str(
-                self._conn.get(date_key)
-            )
+            current_data = self._conn.get(date_key).decode()
         except Exception as e:
             print(f"ERROR GET TODAY STATS: {e}")
             return {}, 0
