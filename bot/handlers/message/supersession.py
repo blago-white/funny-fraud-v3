@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.keyboards.inline import generate_sms_service_selection_kb
-from bot.keyboards.reply import APPROVE_KB
+from bot.keyboards.reply import SS_APPROVE_KB
 from bot.states.forms import SuperSessionForm
 from db.gologin import GologinApikeysRepository
 from db.leads import LeadGenerationResultsService
@@ -132,7 +132,7 @@ async def set_duration(message: Message, state: FSMContext):
     await state.set_state(state=SuperSessionForm.approve_session)
 
     await message.reply(text="✅ Отлично, форма заполнена!\n",
-                        reply_markup=APPROVE_KB)
+                        reply_markup=SS_APPROVE_KB)
 
     await message.reply(
         text=f"| Кол-во запросов: "
