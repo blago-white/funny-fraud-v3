@@ -241,7 +241,7 @@ async def approve_session(
     await state.set_data(data={"bot_message_id": 0,
                                "session_id": session_id})
 
-    _commit_previous_session(prev_session_id=session_id - 1, leadsdb=leadsdb)
+    # _commit_previous_session(prev_session_id=session_id - 1, leadsdb=leadsdb)
 
     await _start_session_keyboard_pooling(
         call_stack=SessionStatusPullingCallStack(
