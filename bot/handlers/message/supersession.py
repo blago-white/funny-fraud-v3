@@ -168,7 +168,7 @@ async def approve_super_session(
         link_count_requests = int(data.get("count_requests"))
 
         while link_count_requests > 0:
-            current_session_count_requests = min(10, link_count_requests)
+            current_session_count_requests = min(20, link_count_requests)
 
             link_count_requests -= current_session_count_requests
 
