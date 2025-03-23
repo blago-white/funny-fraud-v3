@@ -161,9 +161,9 @@ async def approve_super_session(
 
     data = await state.get_data()
 
-    total_count_requests = len(data.get("links")) * data.get("count_requests")
+    total_count_requests = len(data.get("ref_links")) * data.get("count_requests")
 
-    for link in data.get("links"):
+    for link in data.get("ref_links"):
         await state.set_data({
             "ref_links": [link],
             "count_requests": min(10, int(data.get("count_requests"))),
