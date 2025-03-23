@@ -154,7 +154,7 @@ async def approve_super_session(
         leadsdb: LeadGenerationResultsService,
         parser_service_class: LeadsGenerator
 ):
-    if message.text != "✅ Запуск Супер Сессии":
+    if message.text != "✅Начать сеанс":
         await message.reply("✅ Отменено")
         await state.clear()
         return

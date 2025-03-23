@@ -20,8 +20,8 @@ APPROVE_KB = ReplyKeyboardMarkup(keyboard=[
 
 SS_APPROVE_KB = ReplyKeyboardMarkup(keyboard=[
     [
-        KeyboardButton(text="✅ Запуск Супер Сессии"),
-        KeyboardButton(text="⛔️ Отмена Супер Сессии")
+        KeyboardButton(text="✅Начать сеанс"),
+        KeyboardButton(text="⛔️Отмена")
     ]
 ], resize_keyboard=True)
 
