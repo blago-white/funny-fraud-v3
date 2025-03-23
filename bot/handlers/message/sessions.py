@@ -208,15 +208,15 @@ async def approve_session(
         await state.clear()
         return
 
-    session_form = await state.get_data()
+    data = await state.get_data()
 
     session_form = LeadsGenerationSession(
-        ref_links=session_form.get("ref_links"),
-        card=session_form.get("payments_card"),
-        count=session_form.get("count_requests"),
+        ref_links=data.get("ref_links"),
+        card=data.get("payments_card"),
+        count=data.get("count_requests"),
     )
 
-    overrided_session_timeout = int(session_form.get("timeout", 60*60))
+    overrided_session_timeout = int(data.get("timeout", 60*60))
 
     sms_service: BaseSmsService = get_sms_service(
         state_data=(dict(await state.get_data())))()
