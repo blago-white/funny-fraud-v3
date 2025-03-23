@@ -340,7 +340,7 @@ async def _start_session_keyboard_pooling(
 
             if req_update or (sms_service_balance != prev_balance):
                 if type(sms_service_balance) is float:
-                    if call_stack.default_sms_service_balance - sms_service_balance > (len(leads) * 9):
+                    if call_stack.default_sms_service_balance - sms_service_balance > (len(leads) * 9 * 2):
                         sms_stat_middleware.freeze_phone_receiving()
                     else:
                         sms_stat_middleware.allow_phone_receiving()
