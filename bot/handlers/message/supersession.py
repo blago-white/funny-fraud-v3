@@ -189,7 +189,8 @@ async def approve_super_session(
 
         await asyncio.sleep(5)
 
-    await message.bot.send_message("✅ Супер-Сессия завершена!")
+    await message.bot.send_message(chat_id=message.chat.id,
+                                   text="✅ Супер-Сессия завершена!")
 
     # current_session_form = dict(await state.get_data())
 
