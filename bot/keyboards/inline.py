@@ -6,7 +6,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                ForceLeadNewSmsData,
                                RestartSessionData,
                                LeadPaidData,
-                               SMSServiceSelectorData)
+                               SMSServiceSelectorData,
+                               UseSupervisorData)
 from db.transfer import LeadGenResult, LeadGenResultStatus
 from parser.utils.sms import mapper
 
@@ -95,24 +96,37 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
     )
 
 
-def generate_sms_service_selection_kb(current: str = mapper.ELSMS.KEY):
+def get_session_presets_kb(
+    current_sms_service: str = mapper.ELSMS.KEY,
+    is_supervised: bool = False
+):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
-                text=f"{"🚩" if current == mapper.SMSHUB.KEY else ""}☎ Sms-Hub",
+                text=f"{
+                    "🚩" if current_sms_service == mapper.SMSHUB.KEY else ""
+                }☎ Sms-Hub",
                 callback_data=SMSServiceSelectorData(
                     sms_service=mapper.SMSHUB.KEY
                 ).pack()
             ), InlineKeyboardButton(
-                text=f"{"🚩" if current == mapper.ELSMS.KEY else ""}☎ Еl-Sms",
+                text=f"{
+                    "🚩" if current_sms_service == mapper.ELSMS.KEY else ""
+                }☎ Еl-Sms",
                 callback_data=SMSServiceSelectorData(
                     sms_service=mapper.ELSMS.KEY
                 ).pack()
             ), InlineKeyboardButton(
-                text=f"{"🚩" if current == mapper.HELPERSMS.KEY else ""}☎ Helper",
+                text=f"{
+                    "🚩" if current_sms_service == mapper.HELPERSMS.KEY else ""
+                }☎ Helper",
                 callback_data=SMSServiceSelectorData(
                     sms_service=mapper.HELPERSMS.KEY
                 ).pack()
+            )],
+            [InlineKeyboardButton(
+                text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
+                callback_data=UseSupervisorData(use=not is_supervised)
             )]
         ]
     )

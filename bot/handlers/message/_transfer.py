@@ -1,5 +1,6 @@
-from aiogram.types import Message
 from dataclasses import dataclass
+
+from aiogram.types import Message
 
 from parser.utils.sms.base import BaseSmsService
 

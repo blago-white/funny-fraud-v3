@@ -9,8 +9,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                ForceLeadNewSmsData,
                                RestartSessionData,
                                LeadPaidData)
-from db.leads import LeadGenerationResultsService
 from bot.states.forms import PaymentCodeSettingForm
+from db.leads import LeadGenerationResultsService
 from ..common import db_services_provider
 
 router = Router(name=__name__)

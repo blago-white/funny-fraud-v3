@@ -1,8 +1,23 @@
-from helper20sms.helper20sms import Helper20SMS, BadApiKeyProvidedException
+import threading
+import time
 
 
-response = Helper20SMS(api_key="bqFKsHTPW46T1J0TyXJb").get_number(service_id=19031, max_price=20)
+class StoppableThread(threading.Thread):
+    """Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition."""
 
-print(response)
+    def __init__(self,  *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
 
-Helper20SMS(api_key="").set_order_status(order_id=1, status="CANCEL")
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+
+def test():
+    for i in range(120):
+        time.sleep(1)
+        print("WOW")

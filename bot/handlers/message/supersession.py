@@ -5,18 +5,16 @@ from aiogram.dispatcher.router import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from bot.keyboards.inline import generate_sms_service_selection_kb
+from bot.keyboards.inline import get_session_presets_kb
 from bot.keyboards.reply import SS_APPROVE_KB
 from bot.states.forms import SuperSessionForm
 from db.gologin import GologinApikeysRepository
-from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
-from parser.main import LeadsGenerator
 from .sessions import approve_session
-from ..common import db_services_provider, leads_service_provider
+from ..common import db_services_provider
 
 router = Router(name=__name__)
 
@@ -53,8 +51,7 @@ async def make_super_session(
 
     await message.reply(
         text="Какое финальное колличество полных заявок "
-             "на каждую ссылку суперсессии?\n\n"
-             "УКАЗЫВАЙТЕ ТОЛЬКО КРАТНОЕ 10",
+             "на каждую ссылку суперсессии?",
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -143,17 +140,13 @@ async def set_duration(message: Message, state: FSMContext):
              f"</code>\n"
              f"| Макс. длительность: "
              f"{duration} ч.\n",
-        reply_markup=generate_sms_service_selection_kb(),
+        reply_markup=get_session_presets_kb(),
     )
 
 
 @router.message(SuperSessionForm.approve_session)
-@db_services_provider(provide_gologin=False)
-@leads_service_provider
 async def approve_super_session(
         message: Message, state: FSMContext,
-        leadsdb: LeadGenerationResultsService,
-        parser_service_class: LeadsGenerator
 ):
     if message.text != "✅Начать сеанс":
         await message.reply("✅ Отменено")
@@ -186,7 +179,7 @@ async def approve_super_session(
                      "сессия в рамках Супер-Сессии</b>",
             )
 
-            session = await approve_session(message=message, state=state)
+            await approve_session(message=message, state=state)
 
             await message.bot.send_message(
                 chat_id=message.chat.id,
@@ -199,17 +192,3 @@ async def approve_super_session(
 
     await message.bot.send_message(chat_id=message.chat.id,
                                    text="✅ Супер-Сессия завершена!")
-
-    # current_session_form = dict(await state.get_data())
-
-    # await message.reply(text="✅ Отлично, форма заполнена!\n",
-    #                     reply_markup=APPROVE_KB)
-    #
-    # await message.reply(
-    #     text=f"| Кол-во запросов: "
-    #          f"{current_session_form.get("count_requests")}\n"
-    #          f"| Реф. ссылки: <code>"
-    #          f"{', '.join(current_session_form.get("ref_links"))}"
-    #          f"</code>\n",
-    #     reply_markup=generate_sms_service_selection_kb(),
-    # )

@@ -8,26 +8,27 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.keyboards.inline import generate_leads_statuses_kb, \
-    generate_sms_service_selection_kb
+    get_session_presets_kb
 from bot.keyboards.reply import APPROVE_KB
 from bot.keyboards.reply import MAIN_MENU_KB
 from bot.states.forms import SessionForm, PaymentCodeSettingForm
 from db.gologin import GologinApikeysRepository
 from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
-from db.transfer import LeadGenResultStatus
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
 from db.statistics import LeadsGenerationStatisticsService
+from db.transfer import LeadGenResultStatus
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
-from parser.utils.sms.middleware.stats import SmsRequestsStatMiddleware
 from parser.utils.sms.base import BaseSmsService
+from parser.utils.sms.middleware.stats import SmsRequestsStatMiddleware
+from supervisor.sessions import SessionSupervisor
 from . import _labels as labels
+from ._transfer import SessionStatusPullingCallStack
 from ._utils import all_threads_ended, leads_differences_exists, \
     get_sms_service
-from ._transfer import SessionStatusPullingCallStack
 from ..common import db_services_provider, leads_service_provider
 
 router = Router(name=__name__)
@@ -191,7 +192,7 @@ async def set_payments_card(message: Message, state: FSMContext):
              f"| Реф. ссылки: <code>"
              f"{', '.join(current_session_form.get("ref_links"))}"
              f"</code>\n",
-        reply_markup=generate_sms_service_selection_kb(),
+        reply_markup=get_session_presets_kb(),
     )
 
 
@@ -236,12 +237,17 @@ async def approve_session(
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
+
     session_id = parser_service.mass_generate(data=session_form)
 
     await state.set_data(data={"bot_message_id": 0,
                                "session_id": session_id})
 
-    # _commit_previous_session(prev_session_id=session_id - 1, leadsdb=leadsdb)
+    if data.get("supervised", False):
+        SessionSupervisor(
+            session_id=session_id,
+            timeout=overrided_session_timeout
+        ).supervise_session()
 
     await _start_session_keyboard_pooling(
         call_stack=SessionStatusPullingCallStack(

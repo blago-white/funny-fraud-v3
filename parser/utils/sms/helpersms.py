@@ -67,8 +67,6 @@ class HelperSMSService(BaseSmsService):
             print("EXCEPTION", e)
             raise NumberGettingException(e)
 
-        print("CHECK", response)
-
         if response.get("status") is True:
             try:
                 return response.get("data").get("codes")[-1]

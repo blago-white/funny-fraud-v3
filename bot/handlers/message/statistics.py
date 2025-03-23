@@ -2,8 +2,8 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from ..common import db_services_provider
 from db.statistics import LeadsGenerationStatisticsService
+from ..common import db_services_provider
 
 router = Router(name=__name__)
 

@@ -30,3 +30,7 @@ class LeadPaidData(CallbackData, prefix="paid"):
 
 class SMSServiceSelectorData(CallbackData, prefix="sms-selector"):
     sms_service: str
+
+
+class UseSupervisorData(CallbackData, prefix="supervised"):
+    use: bool
