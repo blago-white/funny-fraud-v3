@@ -162,10 +162,13 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
     def drop_session(self, session_id: int):
         results = []
 
-        for l in self.get(session_id=session_id):
+        for unsuccess_lead in list(filter(
+            lambda l: l.status != LeadGenResultStatus.SUCCESS,
+            self.get(session_id=session_id)
+        )):
             results.append(self._change_status(
                 session_id=session_id,
-                lead_id=l.lead_id,
+                lead_id=unsuccess_lead.lead_id,
                 status=LeadGenResultStatus.FAILED
             ))
 
