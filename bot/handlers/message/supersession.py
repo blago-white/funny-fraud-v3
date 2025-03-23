@@ -53,7 +53,8 @@ async def make_super_session(
 
     await message.reply(
         text="Какое финальное колличество полных заявок "
-             "на каждую ссылку суперсессии?",
+             "на каждую ссылку суперсессии?\n\n"
+             "УКАЗЫВАЙТЕ ТОЛЬКО КРАТНОЕ 10",
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -164,30 +165,31 @@ async def approve_super_session(
     total_count_requests = len(data.get("ref_links")) * data.get("count_requests")
 
     for link in data.get("ref_links"):
-        await state.set_data({
-            "ref_links": [link],
-            "count_requests": min(10, int(data.get("count_requests"))),
-            "payments_card": data.get("payments_card"),
-            "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
-            "sms-service": data.get("sms-service")
-        })
+        for i in range(max(int(data.get("count_requests")) // 10, 1)):
+            await state.set_data({
+                "ref_links": [link],
+                "count_requests": min(10, int(data.get("count_requests"))),
+                "payments_card": data.get("payments_card"),
+                "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
+                "sms-service": data.get("sms-service")
+            })
 
-        await message.bot.send_message(
-            chat_id=message.chat.id,
-            text="⚠ <b>Скоро начнется автоматизированная "
-                 "сессия в рамках Супер-Сессии</b>",
-        )
+            await message.bot.send_message(
+                chat_id=message.chat.id,
+                text="⚠ <b>Скоро начнется автоматизированная "
+                     "сессия в рамках Супер-Сессии</b>",
+            )
 
-        session = await approve_session(message=message, state=state)
+            session = await approve_session(message=message, state=state)
 
-        await message.bot.send_message(
-            chat_id=message.chat.id,
-            text="⚠ <b>Закончилась сессия в рамках Супер-Сессии</b>",
-        )
+            await message.bot.send_message(
+                chat_id=message.chat.id,
+                text="⚠ <b>Закончилась сессия в рамках Супер-Сессии</b>",
+            )
 
-        await state.clear()
+            await state.clear()
 
-        await asyncio.sleep(5)
+            await asyncio.sleep(5)
 
     await message.bot.send_message(chat_id=message.chat.id,
                                    text="✅ Супер-Сессия завершена!")
