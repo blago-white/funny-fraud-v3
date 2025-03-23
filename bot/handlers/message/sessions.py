@@ -62,28 +62,28 @@ async def start(
         text=f"🏠<b>Меню Парсера</b>\n"
              f"🤖<b>Gologin apikey: {"✅" if apikeys.get("gologin") else "📛"}"
              f"<code>{
-                 apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
-                 if apikeys.get("gologin")
-                 else ""
+             apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
+             if apikeys.get("gologin")
+             else ""
              }</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
              f"— <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
              f"<code>{
-                 apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
-                 if apikeys.get("elsms")
-                 else ""
+             apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
+             if apikeys.get("elsms")
+             else ""
              }</code></b>\n"
              f"— <b>Sms-Hub apikey: {"✅" if apikeys.get("smshub") else "📛"}"
              f"<code>{
-                 apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
-                 if apikeys.get("smshub")
-                 else ""
+             apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
+             if apikeys.get("smshub")
+             else ""
              }</code></b>\n"
              f"— <b>Helper-Sms apikey: {"✅" if apikeys.get("helpersms") else "📛"}"
              f"<code>{
-                 apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
-                 if apikeys.get("helpersms")
-                 else ""
+             apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
+             if apikeys.get("helpersms")
+             else ""
              }</code></b>\n\n"
              f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>",
         reply_markup=MAIN_MENU_KB
@@ -104,7 +104,8 @@ async def new_session(
         smshubdb: SmsHubServiceApikeyRepository,
         helperdb: HelperSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
-    if not (gologindb.exists and (elsmsdb.exists or smshubdb.exists or helperdb.exists)):
+    if not (gologindb.exists and (
+            elsmsdb.exists or smshubdb.exists or helperdb.exists)):
         return await message.reply(
             "⭕Сначала добавьте <b>Gologin apikey</b> и один из"
             "<b>Sms-Service apikey</b>"
@@ -214,7 +215,8 @@ async def approve_session(
         count=session_form.get("count_requests"),
     )
 
-    sms_service: BaseSmsService = get_sms_service(state_data=(dict(await state.get_data())))()
+    sms_service: BaseSmsService = get_sms_service(
+        state_data=(dict(await state.get_data())))()
 
     try:
         sms_service_balance = sms_service.balance
@@ -235,7 +237,7 @@ async def approve_session(
     await state.set_data(data={"bot_message_id": 0,
                                "session_id": session_id})
 
-    _commit_previous_session(prev_session_id=session_id-1, leadsdb=leadsdb)
+    _commit_previous_session(prev_session_id=session_id - 1, leadsdb=leadsdb)
 
     await _start_session_keyboard_pooling(
         call_stack=SessionStatusPullingCallStack(
@@ -296,56 +298,51 @@ async def _start_session_keyboard_pooling(
         leadsdb: LeadGenerationResultsService,
         call_stack: SessionStatusPullingCallStack,
 ):
-    leads, prev_leads, START_POLLING = None, list(), time.time()
+    prev_leads, START_POLLING = list(), time.time()
 
-    current_stats = SmsRequestsStatMiddleware().all_stats
-    prev_balance = None
+    current_stats, prev_balance = (SmsRequestsStatMiddleware().all_stats,
+                                   None)
 
     session_id, sms_service = call_stack.session_id, call_stack.sms_service
 
     while True:
-        leads = leadsdb.get(session_id=session_id) or []
+        print("UPDATE ===========================")
 
-        print("UPD - ", leads)
+        leads = leadsdb.get(session_id=session_id) or []
 
         if not leads:
             await asyncio.sleep(1.1)
             continue
 
-        print("UPD2 - ", leads)
+        try:
+            sms_service_balance = sms_service.balance
+        except ValueError:
+            sms_service_balance = "<i>Ошибка получения данных</i>"
+        except (NotImplemented, NotImplementedError):
+            sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
 
         req_update = leads_differences_exists(
             prev_leads=prev_leads,
             leads=leads
         )
 
-        if req_update or (sms_service.balance != prev_balance):
-            print("UPDATE")
+        if req_update or (sms_service_balance != prev_balance):
             try:
                 new_stats = [
-                    now-on_start
-                    for now, on_start in zip(
-                        SmsRequestsStatMiddleware().all_stats,
-                        current_stats
+                    now - on_start for now, on_start in zip(
+                        SmsRequestsStatMiddleware().all_stats, current_stats
                     )
                 ]
 
-                try:
-                    sms_service_balance = sms_service.balance
-                except ValueError:
-                    sms_service_balance = "<i>Ошибка получения данных</i>"
-                except (NotImplemented, NotImplementedError):
-                    sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
-
-                prev_balance = sms_service_balance
+                balance_delta = (
+                    call_stack.default_sms_service_balance -
+                    sms_service_balance
+                ) if (type(sms_service_balance) is float) else "..."
 
                 await call_stack.initiator_message.edit_text(
-                    text=labels.SESSION_INFO.format(*(new_stats + [
-                        sms_service_balance,
-                        (call_stack.default_sms_service_balance - sms_service_balance)
-                        if (type(sms_service_balance) is float)
-                        else "..."
-                    ])),
+                    text=labels.SESSION_INFO.format(*(
+                        new_stats + [sms_service_balance, balance_delta]
+                    )),
                     reply_markup=generate_leads_statuses_kb(leads=leads)
                 )
             except Exception as e:
@@ -358,6 +355,7 @@ async def _start_session_keyboard_pooling(
             )
 
             await asyncio.sleep(1)
+
             return await call_stack.initiator_message.bot.send_message(
                 chat_id=call_stack.initiator_message.chat.id,
                 text=f"✅<b>Сессия #{session_id} завершена</b>"
@@ -378,12 +376,14 @@ async def _start_session_keyboard_pooling(
             )
 
         prev_leads = leads
+        prev_balance = sms_service_balance
 
         await asyncio.sleep(1.1)
 
 
-def _commit_previous_session(prev_session_id: int,
-                             leadsdb: LeadGenerationResultsService):
+def _commit_previous_session(
+        prev_session_id: int,
+        leadsdb: LeadGenerationResultsService):
     leads = leadsdb.get(session_id=prev_session_id) or []
 
     if leads:
@@ -399,13 +399,6 @@ def _commit_session_results(session_id: int, leads: list):
             results.update({l.ref_link: 0})
 
         results[l.ref_link] += int(l.status == LeadGenResultStatus.SUCCESS)
-
-    # results = {i.ref_link: len([
-    #     ref_lead for ref_lead in leads
-    #     if ref_lead.status == LeadGenResultStatus.SUCCESS and ref_lead.ref_link == i.ref_l
-    # ]) for i in leads}
-
-    print(f"COMMIT: {results}")
 
     for link in results:
         LeadsGenerationStatisticsService().add(

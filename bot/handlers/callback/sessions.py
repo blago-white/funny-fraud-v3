@@ -10,6 +10,7 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                RestartSessionData,
                                LeadPaidData)
 from db.leads import LeadGenerationResultsService
+from bot.states.forms import PaymentCodeSettingForm
 from ..common import db_services_provider
 
 router = Router(name=__name__)
@@ -22,6 +23,8 @@ async def set_otp_code(
         query: CallbackQuery,
         callback_data: CallbackData,
         state: FSMContext):
+    await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
+
     await query.answer(text="❇Отправьте код❇")
 
 

@@ -37,8 +37,6 @@ class HelperSMSService(BaseSmsService):
         except:
             return ValueError()
 
-        print("BALANCE: ", response)
-
         if response.get("status") != "false":
             return float(response.get("data").get("balance"))
 
