@@ -305,79 +305,94 @@ async def _start_session_keyboard_pooling(
 ):
     prev_leads, START_POLLING = list(), time.time()
 
-    current_stats, prev_balance = (SmsRequestsStatMiddleware().all_stats,
+    sms_stat_middleware = SmsRequestsStatMiddleware()
+
+    current_stats, prev_balance = (sms_stat_middleware.all_stats,
                                    None)
 
     session_id, sms_service = call_stack.session_id, call_stack.sms_service
 
+    leads, sms_service_balance = [], None
+
+    sms_stat_middleware.allow_phone_receiving()
+
     while True:
         print("UPDATE ===========================")
 
-        leads = leadsdb.get(session_id=session_id) or []
-
-        if not leads:
-            await asyncio.sleep(1.1)
-            continue
-
         try:
-            sms_service_balance = sms_service.balance
-        except ValueError:
-            sms_service_balance = "<i>Ошибка получения данных</i>"
-        except NotImplementedError:
-            sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
+            leads = leadsdb.get(session_id=session_id) or []
 
-        req_update = leads_differences_exists(
-            prev_leads=prev_leads,
-            leads=leads
-        )
+            if not leads:
+                await asyncio.sleep(1.1)
+                continue
 
-        if req_update or (sms_service_balance != prev_balance):
             try:
-                new_stats = [
-                    now - on_start for now, on_start in zip(
-                        SmsRequestsStatMiddleware().all_stats, current_stats
-                    )
-                ]
+                sms_service_balance = sms_service.balance
+            except ValueError:
+                sms_service_balance = "<i>Ошибка получения данных</i>"
+            except NotImplementedError:
+                sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
 
-                balance_delta = (
+            req_update = leads_differences_exists(
+                prev_leads=prev_leads,
+                leads=leads
+            )
+
+            if req_update or (sms_service_balance != prev_balance):
+                if type(sms_service_balance) is float:
+                    if call_stack.default_sms_service_balance - sms_service_balance > (len(leads) * 9):
+                        sms_stat_middleware.freeze_phone_receiving()
+                    else:
+                        sms_stat_middleware.allow_phone_receiving()
+
+                try:
+                    new_stats = [
+                        now - on_start for now, on_start in zip(
+                            sms_stat_middleware.all_stats, current_stats
+                        )
+                    ]
+
+                    balance_delta = (
                         call_stack.default_sms_service_balance - sms_service_balance
-                ) if (type(sms_service_balance) is float) else "..."
+                    ) if (type(sms_service_balance) is float) else "..."
 
-                await call_stack.initiator_message.edit_text(
-                    text=labels.SESSION_INFO.format(*(
-                            new_stats + [sms_service_balance, balance_delta]
-                    )),
-                    reply_markup=generate_leads_statuses_kb(leads=leads)
+                    await call_stack.initiator_message.edit_text(
+                        text=labels.SESSION_INFO.format(*(
+                                new_stats + [sms_service_balance, balance_delta]
+                        )),
+                        reply_markup=generate_leads_statuses_kb(leads=leads)
+                    )
+                except Exception as e:
+                    print(f"SESSION KB ERROR: {e}")
+
+            if all_threads_ended(leads=leads):
+                _commit_session_results(
+                    session_id=session_id,
+                    leads=leads
                 )
-            except Exception as e:
-                print(f"SESSION KB ERROR: {e}")
 
-        if all_threads_ended(leads=leads):
-            _commit_session_results(
-                session_id=session_id,
-                leads=leads
-            )
+                await asyncio.sleep(1)
 
-            await asyncio.sleep(1)
+                return await call_stack.initiator_message.bot.send_message(
+                    chat_id=call_stack.initiator_message.chat.id,
+                    text=f"✅<b>Сессия #{session_id} завершена</b>"
+                )
 
-            return await call_stack.initiator_message.bot.send_message(
-                chat_id=call_stack.initiator_message.chat.id,
-                text=f"✅<b>Сессия #{session_id} завершена</b>"
-            )
+            if time.time() - START_POLLING > call_stack.session_timeout:
+                _commit_session_results(
+                    session_id=session_id,
+                    leads=leads
+                )
 
-        if time.time() - START_POLLING > call_stack.session_timeout:
-            _commit_session_results(
-                session_id=session_id,
-                leads=leads
-            )
+                await asyncio.sleep(1)
 
-            await asyncio.sleep(1)
-
-            return await call_stack.initiator_message.bot.send_message(
-                chat_id=call_stack.initiator_message.chat.id,
-                text=f"❌Сессия #{session_id} завершена по 1 часовому "
-                     "таймауту!"
-            )
+                return await call_stack.initiator_message.bot.send_message(
+                    chat_id=call_stack.initiator_message.chat.id,
+                    text=f"❌Сессия #{session_id} завершена по 1 часовому "
+                         "таймауту!"
+                )
+        except:
+            pass
 
         prev_leads = leads
         prev_balance = sms_service_balance

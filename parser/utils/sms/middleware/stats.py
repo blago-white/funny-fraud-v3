@@ -1,7 +1,12 @@
+from ..exceptions import NumberGettingException
+
+
 class SmsRequestsStatMiddleware:
     _SUCCESS_RECEIVE = 0
     _FAIL_RECEIVE = 0
     _CANCELED = 0
+
+    _FROZEN = False
 
     _CANCELED_IDS = set()
 
@@ -22,8 +27,19 @@ class SmsRequestsStatMiddleware:
         return self._CANCELED
 
     @classmethod
+    def freeze_phone_receiving(cls):
+        cls._FROZEN = True
+
+    @classmethod
+    def allow_phone_receiving(cls):
+        cls._FROZEN = False
+
+    @classmethod
     def counter_receive_phone(cls, func):
         def wrapped(*args, **kwargs):
+            if cls._FROZEN:
+                raise NumberGettingException("NUMBER RECEIVING IS FROZEN NOW")
+
             try:
                 result = func(*args, **kwargs)
             except Exception as e:
