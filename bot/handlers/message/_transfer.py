@@ -10,3 +10,4 @@ class SessionStatusPullingCallStack:
     sms_service: BaseSmsService
     initiator_message: Message
     default_sms_service_balance: float = None
+    session_timeout: int = 60*60

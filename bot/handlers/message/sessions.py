@@ -62,30 +62,31 @@ async def start(
         text=f"🏠<b>Меню Парсера</b>\n"
              f"🤖<b>Gologin apikey: {"✅" if apikeys.get("gologin") else "📛"}"
              f"<code>{
-             apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
-             if apikeys.get("gologin")
-             else ""
+                apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
+                if apikeys.get("gologin")
+                else ""
              }</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
              f"— <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
              f"<code>{
-             apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
-             if apikeys.get("elsms")
-             else ""
+                apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
+                if apikeys.get("elsms")
+                else ""
              }</code></b>\n"
              f"— <b>Sms-Hub apikey: {"✅" if apikeys.get("smshub") else "📛"}"
              f"<code>{
-             apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
-             if apikeys.get("smshub")
-             else ""
+                apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
+                if apikeys.get("smshub")
+                else ""
              }</code></b>\n"
              f"— <b>Helper-Sms apikey: {"✅" if apikeys.get("helpersms") else "📛"}"
              f"<code>{
-             apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
-             if apikeys.get("helpersms")
-             else ""
+                apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
+                if apikeys.get("helpersms")
+                else ""
              }</code></b>\n\n"
-             f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>",
+             f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>\n\n"
+             f"<b>Статистика за сегодня: /stats</b>",
         reply_markup=MAIN_MENU_KB
     )
 
@@ -215,6 +216,8 @@ async def approve_session(
         count=session_form.get("count_requests"),
     )
 
+    overrided_session_timeout = int(session_form.get("timeout", 60*60))
+
     sms_service: BaseSmsService = get_sms_service(
         state_data=(dict(await state.get_data())))()
 
@@ -244,7 +247,8 @@ async def approve_session(
             initiator_message=replyed,
             sms_service=sms_service,
             session_id=session_id,
-            default_sms_service_balance=sms_service_balance
+            default_sms_service_balance=sms_service_balance,
+            session_timeout=overrided_session_timeout
         ),
     )
 
@@ -335,13 +339,12 @@ async def _start_session_keyboard_pooling(
                 ]
 
                 balance_delta = (
-                    call_stack.default_sms_service_balance -
-                    sms_service_balance
+                        call_stack.default_sms_service_balance - sms_service_balance
                 ) if (type(sms_service_balance) is float) else "..."
 
                 await call_stack.initiator_message.edit_text(
                     text=labels.SESSION_INFO.format(*(
-                        new_stats + [sms_service_balance, balance_delta]
+                            new_stats + [sms_service_balance, balance_delta]
                     )),
                     reply_markup=generate_leads_statuses_kb(leads=leads)
                 )
@@ -361,7 +364,7 @@ async def _start_session_keyboard_pooling(
                 text=f"✅<b>Сессия #{session_id} завершена</b>"
             )
 
-        if time.time() - START_POLLING > 60 * 60:
+        if time.time() - START_POLLING > call_stack.session_timeout:
             _commit_session_results(
                 session_id=session_id,
                 leads=leads
