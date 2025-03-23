@@ -526,7 +526,7 @@ class OfferInitializerParser:
 
     def _click_get_account(self):
         try:
-            WebDriverWait(self._driver, 40).until(
+            WebDriverWait(self._driver, 20).until(
                 expected_conditions.element_to_be_clickable(
                     (By.CSS_SELECTOR, ".css-1tb3n43.e1jyzd9p2")
                 )

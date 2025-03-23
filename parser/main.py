@@ -131,6 +131,11 @@ class LeadsGenerator:
 
                     bad_phone = True
                     continue
+                except TraficBannedError:
+                    raise TraficBannedError(
+                        used_phone_id=phone_id,
+                        used_phone_number=phone
+                    )
                 except Exception as e:
                     print(f"LEAD #{lead_id} CANNOT SEND REG SMS RETRY №{_}")
                     continue
