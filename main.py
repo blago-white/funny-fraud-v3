@@ -15,6 +15,7 @@ from bot.handlers.message.gologin import router as gologin_router
 from bot.handlers.message.proxy import router as proxy_router
 from bot.handlers.message.sms import router as sms_router
 from bot.handlers.message.statistics import router as statistics_router
+from bot.handlers.message.supersession import router as ss_router
 
 from server import start_server_pooling
 
@@ -35,7 +36,8 @@ async def main():
                        sms_router,
                        proxy_router,
                        sms_callback_router,
-                       statistics_router)
+                       statistics_router,
+                       ss_router)
 
     await dp.start_polling(bot)
 
