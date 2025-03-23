@@ -165,10 +165,16 @@ async def approve_super_session(
     total_count_requests = len(data.get("ref_links")) * data.get("count_requests")
 
     for link in data.get("ref_links"):
-        for i in range(max(int(data.get("count_requests")) // 10, 1)):
+        link_count_requests = int(data.get("count_requests"))
+
+        while link_count_requests > 0:
+            current_session_count_requests = min(10, link_count_requests)
+
+            link_count_requests -= current_session_count_requests
+
             await state.set_data({
                 "ref_links": [link],
-                "count_requests": min(10, int(data.get("count_requests"))),
+                "count_requests": current_session_count_requests,
                 "payments_card": data.get("payments_card"),
                 "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
                 "sms-service": data.get("sms-service")
