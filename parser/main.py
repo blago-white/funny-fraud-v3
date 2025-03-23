@@ -313,7 +313,7 @@ class LeadsGenerator:
 
                 after_cancel_code = self._sms_service.check_code(phone_id=phone_id)
 
-                if not after_cancel_code:
+                if after_cancel_code is not None:
                     return after_cancel_code
 
                 raise RegistrationSMSTimeoutError("No receive sms")
@@ -321,6 +321,8 @@ class LeadsGenerator:
             code = self._sms_service.check_code(phone_id=phone_id)
 
             time.sleep(1)
+
+        print(f"CODE: {code}")
 
         return code
 
