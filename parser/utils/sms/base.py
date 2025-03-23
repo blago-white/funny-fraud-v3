@@ -10,7 +10,7 @@ class BaseSmsService(metaclass=ABCMeta):
 
     @property
     def balance(self):
-        raise NotImplemented("Balance method not implemented on this service!")
+        raise NotImplementedError("Balance method not implemented on this service!")
 
     @abstractmethod
     def get_number(self) -> tuple[str, str]:

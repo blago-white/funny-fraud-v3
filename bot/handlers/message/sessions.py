@@ -219,7 +219,8 @@ async def approve_session(
     overrided_session_timeout = int(data.get("timeout", 60*60))
 
     sms_service: BaseSmsService = get_sms_service(
-        state_data=(dict(await state.get_data())))()
+        state_data=(dict(await state.get_data()))
+    )()
 
     try:
         sms_service_balance = sms_service.balance
@@ -322,7 +323,7 @@ async def _start_session_keyboard_pooling(
             sms_service_balance = sms_service.balance
         except ValueError:
             sms_service_balance = "<i>Ошибка получения данных</i>"
-        except (NotImplemented, NotImplementedError):
+        except NotImplementedError:
             sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
 
         req_update = leads_differences_exists(

@@ -167,7 +167,8 @@ async def approve_super_session(
         await state.set_data({
             "ref_links": [link],
             "count_requests": min(10, int(data.get("count_requests"))),
-            "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60
+            "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
+            "sms-service": data.get("sms-service")
         })
 
         await message.bot.send_message(
