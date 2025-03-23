@@ -167,6 +167,7 @@ async def approve_super_session(
         await state.set_data({
             "ref_links": [link],
             "count_requests": min(10, int(data.get("count_requests"))),
+            "payments_card": data.get("payments_card"),
             "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
             "sms-service": data.get("sms-service")
         })
