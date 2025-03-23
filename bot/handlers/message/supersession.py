@@ -141,7 +141,7 @@ async def set_duration(message: Message, state: FSMContext):
              f"{', '.join(data.get("ref_links"))}"
              f"</code>\n"
              f"| Макс. длительность: "
-             f"{data.get("duration")} ч.\n",
+             f"{duration} ч.\n",
         reply_markup=generate_sms_service_selection_kb(),
     )
 
@@ -154,7 +154,7 @@ async def approve_super_session(
         leadsdb: LeadGenerationResultsService,
         parser_service_class: LeadsGenerator
 ):
-    if message.text != "✅ Запуск Супер Сессии!":
+    if message.text != "✅ Запуск Супер Сессии":
         await message.reply("✅ Отменено")
         await state.clear()
         return
