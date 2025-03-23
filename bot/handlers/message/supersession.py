@@ -5,14 +5,18 @@ from aiogram.dispatcher.router import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
+from bot.keyboards.inline import generate_sms_service_selection_kb
+from bot.keyboards.reply import APPROVE_KB
 from bot.states.forms import SuperSessionForm
 from db.gologin import GologinApikeysRepository
+from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
-from ..common import db_services_provider
+from parser.main import LeadsGenerator
 from .sessions import approve_session
+from ..common import db_services_provider, leads_service_provider
 
 router = Router(name=__name__)
 
