@@ -1,6 +1,7 @@
 import threading
 import time
 
+from db.sms import LatestMobileSmsTextService, LatestSmsTypes
 from db.leads import LeadGenerationResultsService, LeadGenResultStatus
 
 
@@ -16,15 +17,18 @@ class SessionSupervisor:
     _is_runned = False
 
     default_leads_db_service = LeadGenerationResultsService
+    default_latest_sms_service = LatestMobileSmsTextService
 
     def __init__(
             self, session_id: int,
             leads_db: LeadGenerationResultsService = None,
-            timeout: int = 60 * 60):
+            timeout: int = 60 * 60,
+            latest_sms_service: LatestMobileSmsTextService = None):
         self._session_id = session_id
         self._timeout = timeout
 
         self._leadsdb = (leads_db or self.default_leads_db_service)()
+        self._latest_codes_service = latest_sms_service or self.default_latest_sms_service
 
     @property
     def is_active(self):
@@ -55,17 +59,15 @@ class SessionSupervisor:
         self._target_lead_id = self.target_lead = None
         self._target_lead_statuses_history = []
 
-        self._latest_codes_service = LatestMobileSmsTextService()
-
         while (self._timeout > _d(self._START_TIME) and
                self._leadsdb.get_count() - 1 == self._session_id):
-            self.leads: list[LeadGenResult] = self._leadsdb.get(
-                session_id=self.session_id
+            self._leads: list[LeadGenResult] = self._leadsdb.get(
+                session_id=self._session_id
             ) or []
 
-            if len([l for l in self.leads if l.status in [
+            if len([l for l in self._leads if l.status in [
                 LeadGenResultStatus.SUCCESS, LeadGenResultStatus.FAILED
-            ]]) == len(self.leads):
+            ]]) == len(self._leads):
                 break
 
             self._process_target_lead()
@@ -82,7 +84,7 @@ class SessionSupervisor:
         if self._target_lead_id:
             try:
                 self.target_lead = [
-                    l for l in self.leads if l.lead_id == self._target_lead_id
+                    l for l in self._leads if l.lead_id == self._target_lead_id
                 ].pop()
             except:
                 pass
@@ -107,13 +109,13 @@ class SessionSupervisor:
             if _d(self._t_target_lead_status_changed) > 60:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [1]")
 
-                self._leadsdb.drop_waiting_lead(session_id=self.session_id)
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
             if (self._target_lead_statuses_history[-2] ==
                     LeadGenResultStatus.CODE_RECEIVED):
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [2]")
 
-                self._leadsdb.drop_waiting_lead(session_id=self.session_id)
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
         if self.target_lead.status == LeadGenResultStatus.WAIT_CODE:
             if (
@@ -129,13 +131,13 @@ class SessionSupervisor:
                     print("MANAGER: WAIT CODE: SEND FORGOTTEN SMS CODE!")
 
                     self._leadsdb.send_sms_code(
-                        session_id=self.session_id, sms_code=latest_sms
+                        session_id=self._session_id, sms_code=latest_sms
                     )
 
             if _d(self._t_target_lead_status_changed) > 3 * 60:
                 print("MANAGER: WAIT CODE: WAIT CODE AFTER 180 SEC. DROP LEAD!")
 
-                self._leadsdb.drop_waiting_lead(session_id=self.session_id)
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
         if self.target_lead.status == LeadGenResultStatus.CODE_RECEIVED and _d(
                 self._t_target_lead_status_changed
@@ -145,26 +147,29 @@ class SessionSupervisor:
             if self._latest_codes_service.get()[0] == LatestSmsTypes.PAYMENT:
                 print("MANAGER: CODE RECEIVED: SET PAID")
 
-                self._leadsdb.set_paid(session_id=self.session_id)
+                self._leadsdb.set_paid(session_id=self._session_id)
             else:
                 print("MANAGER: CODE RECEIVED: DROP LEAD")
 
-                self._leadsdb.drop_waiting_lead(session_id=self.session_id)
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
     def _process_session_dropping_events(self):
         completed, failed, progress = (
-            [l for l in self.leads if l.status == LeadGenResultStatus.SUCCESS],
-            [l for l in self.leads if l.status == LeadGenResultStatus.FAILED],
-            [l for l in self.leads if l.status == LeadGenResultStatus.PROGRESS]
+            [l for l in self._leads if l.status == LeadGenResultStatus.SUCCESS],
+            [l for l in self._leads if l.status == LeadGenResultStatus.FAILED],
+            [l for l in self._leads if l.status == LeadGenResultStatus.PROGRESS]
         )
 
-        if _d(self._START_TIME) <= 90 and len(failed) >= (len(self.leads) * .2):
+        if (
+                _d(self._START_TIME) <= 90 and len(failed) >= (len(self._leads) * (1/3)) or
+                _d(self._START_TIME) <= 20 and len(failed) >= (len(self._leads) * (1/6))
+        ):
             for f in failed:
                 if ("navigator" in f.error.lower()) or (
                         "gologin" in f.error.lower()):
                     print("MANAGER: SESSION: MANY ERRORS ON START - DROPPED")
 
-                    self._leadsdb.drop_session(session_id=self.session_id)
+                    self._leadsdb.drop_session(session_id=self._session_id)
 
         if _d(self._START_TIME) >= 60 * 10 and not len(completed):
             error_msgs = "".join([l.error for l in failed])
@@ -173,37 +178,37 @@ class SessionSupervisor:
                     ("gologin" in error_msgs.lower())):
                 print("MANAGER: SESSION: NOT FOUND SUCCESSED LEADS AFTER 10 MINS.")
 
-                self._leadsdb.drop_session(session_id=self.session_id)
+                self._leadsdb.drop_session(session_id=self._session_id)
 
             if ("sms" not in error_msgs.lower() and
-                    len(failed) >= max(2, len(self.leads) * .1)):
+                    len(failed) >= max(2, len(self._leads) * .1)):
                 print("MANAGER: SESSION: NOT FOUND SMS WORD IN ERROR MESSAGES")
 
-                self._leadsdb.drop_session(session_id=self.session_id)
+                self._leadsdb.drop_session(session_id=self._session_id)
 
         if _d(self._START_TIME) >= (60 * 13) and not len(completed):
             print("MANAGER: SESSION: NOT COMPLETED AFTER 13 MINS")
 
-            self._leadsdb.drop_session(session_id=self.session_id)
+            self._leadsdb.drop_session(session_id=self._session_id)
 
-        if len(failed) > (len(self.leads) * .6):
+        if len(failed) > (len(self._leads) * .6):
             print("MANAGER: SESSION: TOO MANY FAILED")
 
-            self._leadsdb.drop_session(session_id=self.session_id)
+            self._leadsdb.drop_session(session_id=self._session_id)
 
         if (_d(self._t_last_success_lead) > (8 * 60) and
-                len(progress) <= (len(self.leads) * .2)):
+                len(progress) <= (len(self._leads) * .2)):
             print("MANAGER: SESSION: TOO MANY TIME LEFT [1]")
 
-            self._leadsdb.drop_session(session_id=self.session_id)
+            self._leadsdb.drop_session(session_id=self._session_id)
 
         if (_d(self._t_last_success_lead) > (4 * 60) and
-                len(progress) <= (len(self.leads) * .15)):
+                len(progress) <= (len(self._leads) * .15)):
             print("MANAGER: SESSION: TOO MANY TIME LEFT [2]")
 
-            self._leadsdb.drop_session(session_id=self.session_id)
+            self._leadsdb.drop_session(session_id=self._session_id)
 
         if _d(self._t_last_success_lead) > 11 * 60:
             print("MANAGER: SESSION: TOO MANY TIME LEFT [3]")
 
-            self._leadsdb.drop_session(session_id=self.session_id)
+            self._leadsdb.drop_session(session_id=self._session_id)
