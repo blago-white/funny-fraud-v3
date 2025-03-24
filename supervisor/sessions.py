@@ -56,7 +56,7 @@ class SessionSupervisor:
         self._START_TIME = time.time()
 
         self._t_target_lead_status_changed = time.time()
-        self._target_lead_id = self.target_lead = None
+        self._target_lead_id = self._target_lead = None
         self._target_lead_statuses_history = []
 
         while (self._timeout > _d(self._START_TIME) and
@@ -70,44 +70,51 @@ class SessionSupervisor:
             ]]) == len(self._leads):
                 break
 
-            self.target_lead = None
+            self._target_lead = None
 
             self._process_target_lead()
 
             self._process_session_dropping_events()
 
-            self._process_local_leads_events()
+            if self._target_lead:
+                self._process_local_leads_events()
 
             time.sleep(.5)
 
         print(f"MANAGER OF SID: {self._session_id} KILLED!")
 
     def _process_target_lead(self):
-        self._target_lead_id = [l.id for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)]
+        try:
+            self._target_lead = [l for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)][0]
+            if self._target_lead.id != self._target_lead_id:
+                self._target_lead_statuses_history = []
+                self._target_lead_id = self._target_lead.id
+        except:
+            self._target_lead = self._target_lead_id = None
 
         if self._target_lead_id:
             try:
-                self.target_lead = [
+                self._target_lead = [
                     l for l in self._leads if l.lead_id == self._target_lead_id
                 ].pop()
             except:
                 pass
 
-        if self.target_lead:
+        if self._target_lead:
             if not self._target_lead_statuses_history:
                 self._target_lead_statuses_history.append(
-                    self.target_lead.status
+                    self._target_lead.status
                 )
 
-            if self._target_lead_statuses_history[-1] != self.target_lead.status:
+            if self._target_lead_statuses_history[-1] != self._target_lead.status:
                 self._target_lead_statuses_history.append(
-                    self.target_lead.status
+                    self._target_lead.status
                 )
 
             self._t_target_lead_status_changed = time.time()
 
     def _process_local_leads_events(self):
-        if self.target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
+        if self._target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
             if _d(self._t_target_lead_status_changed) > 60:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [1]")
 
@@ -119,7 +126,7 @@ class SessionSupervisor:
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
-        if self.target_lead.status == LeadGenResultStatus.WAIT_CODE:
+        if self._target_lead.status == LeadGenResultStatus.WAIT_CODE:
             if (
                     _d(self._t_target_lead_status_changed) >= 20
             ) or (
@@ -141,7 +148,7 @@ class SessionSupervisor:
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
-        if self.target_lead.status == LeadGenResultStatus.CODE_RECEIVED and _d(
+        if self._target_lead.status == LeadGenResultStatus.CODE_RECEIVED and _d(
                 self._t_target_lead_status_changed
         ) >= 30:
             print("MANAGER: CODE RECEIVED: NOT CHANGING 30 SEC.")
