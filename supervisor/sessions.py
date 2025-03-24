@@ -51,11 +51,11 @@ class SessionSupervisor:
         supervisor_th.start()
 
     def _supervise_session(self):
-        self._t_last_success_lead = 0
+        self._t_last_success_lead = time.time()
 
         self._START_TIME = time.time()
 
-        self._t_target_lead_status_changed = 0
+        self._t_target_lead_status_changed = time.time()
         self._target_lead_id = self.target_lead = None
         self._target_lead_statuses_history = []
 
@@ -69,6 +69,8 @@ class SessionSupervisor:
                 LeadGenResultStatus.SUCCESS, LeadGenResultStatus.FAILED
             ]]) == len(self._leads):
                 break
+
+            self.target_lead = None
 
             self._process_target_lead()
 
@@ -103,8 +105,6 @@ class SessionSupervisor:
             self._t_target_lead_status_changed = time.time()
 
     def _process_local_leads_events(self):
-        self.target_lead = None
-
         if self.target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
             if _d(self._t_target_lead_status_changed) > 60:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [1]")
