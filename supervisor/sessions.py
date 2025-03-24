@@ -83,6 +83,8 @@ class SessionSupervisor:
         print(f"MANAGER OF SID: {self._session_id} KILLED!")
 
     def _process_target_lead(self):
+        self._target_lead_id = [l.id for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)]
+
         if self._target_lead_id:
             try:
                 self.target_lead = [
