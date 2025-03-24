@@ -126,7 +126,7 @@ def get_session_presets_kb(
             )],
             [InlineKeyboardButton(
                 text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
-                callback_data=UseSupervisorData(use=not is_supervised)
+                callback_data=UseSupervisorData(use=not is_supervised).pack()
             )]
         ]
     )
