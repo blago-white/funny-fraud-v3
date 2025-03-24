@@ -65,6 +65,8 @@ class SessionSupervisor:
                 session_id=self._session_id
             ) or []
 
+            print("AI UPDATE =======================")
+
             if len([l for l in self._leads if l.status in [
                 LeadGenResultStatus.SUCCESS, LeadGenResultStatus.FAILED
             ]]) == len(self._leads):

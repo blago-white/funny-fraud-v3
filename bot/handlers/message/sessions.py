@@ -323,8 +323,6 @@ async def _start_session_keyboard_pooling(
     sms_stat_middleware.allow_phone_receiving()
 
     while True:
-        print("UPDATE ===========================")
-
         try:
             leads = leadsdb.get(session_id=session_id) or []
 
