@@ -190,11 +190,11 @@ async def approve_super_session(
             delta_balance = (session_call_stack.default_sms_service_balance -
                              session_call_stack.sms_service.balance)
 
-            data = dict(await state.get_data())
+            after_session_data = dict(await state.get_data())
 
             await state.clear()
 
-            if data.get("stop-supersession"):
+            if after_session_data.get("stop-supersession"):
                 return await message.bot.send_message(
                     chat_id=message.chat.id,
                     text="<b>🚫 Суперсессия прервана</b>"
