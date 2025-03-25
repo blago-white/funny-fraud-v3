@@ -179,7 +179,7 @@ async def approve_super_session(
                      "сессия в рамках Супер-Сессии</b>",
             )
 
-            await approve_session(message=message, state=state)
+            session_call_stack = await approve_session(message=message, state=state)
 
             await message.bot.send_message(
                 chat_id=message.chat.id,
@@ -187,6 +187,12 @@ async def approve_super_session(
             )
 
             await state.clear()
+
+            delta_balance = (session_call_stack.default_sms_service_balance -
+                             session_call_stack.sms_service.balance)
+
+            if delta_balance >= (2 * current_session_count_requests * 8):
+                await asyncio.sleep(60*10)
 
             await asyncio.sleep(5)
 

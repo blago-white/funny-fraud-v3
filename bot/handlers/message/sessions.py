@@ -249,17 +249,21 @@ async def approve_session(
             timeout=overrided_session_timeout
         ).supervise_session()
 
+    call_stack = SessionStatusPullingCallStack(
+        initiator_message=replyed,
+        sms_service=sms_service,
+        session_id=session_id,
+        default_sms_service_balance=sms_service_balance,
+        session_timeout=overrided_session_timeout
+    )
+
     await _start_session_keyboard_pooling(
-        call_stack=SessionStatusPullingCallStack(
-            initiator_message=replyed,
-            sms_service=sms_service,
-            session_id=session_id,
-            default_sms_service_balance=sms_service_balance,
-            session_timeout=overrided_session_timeout
-        ),
+        call_stack=call_stack,
     )
 
     await state.clear()
+
+    return call_stack
 
 
 @router.message(PaymentCodeSettingForm.wait_payment_code)

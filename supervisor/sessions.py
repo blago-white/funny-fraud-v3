@@ -58,6 +58,7 @@ class SessionSupervisor:
         self._t_target_lead_status_changed = time.time()
         self._target_lead_id = self._target_lead = None
         self._target_lead_statuses_history = []
+        self._target_lead_code_resended = False
 
         while (self._timeout > _d(self._START_TIME) and
                self._leadsdb.get_count() - 1 == self._session_id):
@@ -91,6 +92,7 @@ class SessionSupervisor:
             if self._target_lead.id != self._target_lead_id:
                 self._target_lead_statuses_history = []
                 self._target_lead_id = self._target_lead.id
+                self._target_lead_code_resended = False
         except:
             self._target_lead = self._target_lead_id = None
 
@@ -116,8 +118,10 @@ class SessionSupervisor:
             self._t_target_lead_status_changed = time.time()
 
     def _process_local_leads_events(self):
+        print("TARGET LEAD: ", _d(self._t_target_lead_status_changed), self._target_lead.status, self._target_lead_statuses_history)
+
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
-            if _d(self._t_target_lead_status_changed) > 60:
+            if _d(self._t_target_lead_status_changed) > 35:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [1]")
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
@@ -127,6 +131,23 @@ class SessionSupervisor:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [2]")
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
+
+        if self._target_lead.status == LeadGenResultStatus.CODE_INVALID:
+            if self._target_lead_code_resended:
+                print("MANAGER: CODE INVALID: DROP WAITING LEAD")
+
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
+
+            latest_sms_type, latest_sms = self._latest_codes_service.get()
+
+            if latest_sms_type == LatestSmsTypes.CODE:
+                print("MANAGER: CODE INVALID: SEND FORGOTTEN SMS CODE!")
+
+                self._leadsdb.send_sms_code(
+                    session_id=self._session_id, sms_code=latest_sms
+                )
+
+                self._target_lead_code_resended = True
 
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE:
             if (
