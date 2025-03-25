@@ -34,3 +34,7 @@ class SMSServiceSelectorData(CallbackData, prefix="sms-selector"):
 
 class UseSupervisorData(CallbackData, prefix="supervised"):
     use: bool
+
+
+class StopSupersessionData(CallbackData, prefix="supersession-stop"):
+    pass

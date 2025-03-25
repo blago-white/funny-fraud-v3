@@ -7,7 +7,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                RestartSessionData,
                                LeadPaidData,
                                SMSServiceSelectorData,
-                               UseSupervisorData)
+                               UseSupervisorData,
+                               StopSupersessionData)
 from db.transfer import LeadGenResult, LeadGenResultStatus
 from parser.utils.sms import mapper
 
@@ -128,5 +129,16 @@ def get_session_presets_kb(
                 text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
                 callback_data=UseSupervisorData(use=not is_supervised).pack()
             )]
+        ]
+    )
+
+
+def get_supersession_canceling_kb():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            InlineKeyboardButton(
+                text="🚫 Прервать суперсессию",
+                callback_data=StopSupersessionData().pack()
+            )
         ]
     )

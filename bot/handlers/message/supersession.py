@@ -5,7 +5,7 @@ from aiogram.dispatcher.router import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from bot.keyboards.inline import get_session_presets_kb
+from bot.keyboards.inline import get_session_presets_kb, get_supersession_canceling_kb
 from bot.keyboards.reply import SS_APPROVE_KB
 from bot.states.forms import SuperSessionForm
 from db.gologin import GologinApikeysRepository
@@ -177,6 +177,7 @@ async def approve_super_session(
                 chat_id=message.chat.id,
                 text="⚠ <b>Скоро начнется автоматизированная "
                      "сессия в рамках Супер-Сессии</b>",
+                reply_markup=get_supersession_canceling_kb()
             )
 
             session_call_stack = await approve_session(message=message, state=state)
@@ -186,10 +187,18 @@ async def approve_super_session(
                 text="⚠ <b>Закончилась сессия в рамках Супер-Сессии</b>",
             )
 
-            await state.clear()
-
             delta_balance = (session_call_stack.default_sms_service_balance -
                              session_call_stack.sms_service.balance)
+
+            data = dict(await state.get_data())
+
+            await state.clear()
+
+            if data.get("stop-supersession"):
+                return await message.bot.send_message(
+                    chat_id=message.chat.id,
+                    text="<b>🚫 Суперсессия прервана</b>"
+                )
 
             if delta_balance >= (2 * current_session_count_requests * 8):
                 await asyncio.sleep(60*10)

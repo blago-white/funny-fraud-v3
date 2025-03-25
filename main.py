@@ -11,6 +11,7 @@ from aiogram.enums import ParseMode
 from bot.handlers.callback.sms import router as sms_callback_router
 from bot.handlers.callback.sessions import router as callback_router
 from bot.handlers.callback.supervisor import router as supervisor_router
+from bot.handlers.callback.supersessions import router as ss_callback_router
 
 from bot.handlers.message.sessions import router as sessions_router
 from bot.handlers.message.gologin import router as gologin_router
@@ -40,7 +41,8 @@ async def main():
                        sms_callback_router,
                        statistics_router,
                        ss_router,
-                       supervisor_router)
+                       supervisor_router,
+                       ss_callback_router)
 
     await dp.start_polling(bot)
 
