@@ -135,10 +135,10 @@ def get_session_presets_kb(
 
 def get_supersession_canceling_kb():
     return InlineKeyboardMarkup(
-        inline_keyboard=[
+        inline_keyboard=[[
             InlineKeyboardButton(
                 text="🚫 Прервать суперсессию",
                 callback_data=StopSupersessionData().pack()
             )
-        ]
+        ]]
     )
