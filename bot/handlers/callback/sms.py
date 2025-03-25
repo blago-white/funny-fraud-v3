@@ -14,14 +14,18 @@ async def select_sms_service(
     callback_data: SMSServiceSelectorData,
     state: FSMContext
 ):
+    data = dict(await state.get_data())
+
     await state.set_data(
-        data=dict(await state.get_data()) | {"sms-service": callback_data.sms_service}
+        data=data | {"sms-service": callback_data.sms_service}
     )
 
     try:
         await query.message.edit_reply_markup(
             reply_markup=get_session_presets_kb(
-                current_sms_service=callback_data.sms_service)
+                current_sms_service=callback_data.sms_service,
+                is_supervised=data.get("supervised")
+            )
         )
     except:
         pass
