@@ -59,6 +59,7 @@ class SessionSupervisor:
         self._target_lead_id = self._target_lead = None
         self._target_lead_statuses_history = []
         self._target_lead_code_resended = False
+        self._target_lead_changed_at = time.time()
 
         while (self._timeout > _d(self._START_TIME) and
                self._leadsdb.get_count() - 1 == self._session_id):
@@ -91,18 +92,12 @@ class SessionSupervisor:
             self._target_lead = [l for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)][0]
             if self._target_lead.id != self._target_lead_id:
                 self._target_lead_statuses_history = []
-                self._target_lead_id = self._target_lead.id
                 self._target_lead_code_resended = False
+                self._target_lead_changed_at = time.time()
+
+            self._target_lead_id = self._target_lead.id
         except:
             self._target_lead = self._target_lead_id = None
-
-        if self._target_lead_id:
-            try:
-                self._target_lead = [
-                    l for l in self._leads if l.lead_id == self._target_lead_id
-                ].pop()
-            except:
-                pass
 
         if self._target_lead:
             if not self._target_lead_statuses_history:
@@ -121,6 +116,11 @@ class SessionSupervisor:
         print("TARGET LEAD: ", _d(self._t_target_lead_status_changed), self._target_lead.status, self._target_lead_statuses_history)
 
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
+            if _d(self._target_lead_changed_at) > 3*60:
+                print("MANAGER: WAIT CODE FAIL: TOO MANY TIME LEFT")
+
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
+
             if _d(self._t_target_lead_status_changed) > 35:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [1]")
 
@@ -165,6 +165,11 @@ class SessionSupervisor:
                     self._leadsdb.send_sms_code(
                         session_id=self._session_id, sms_code=latest_sms
                     )
+
+            if _d(self._target_lead_changed_at) > 3*60:
+                print("MANAGER: WAIT CODE: TOO MANY TIME LEFT")
+
+                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
             if _d(self._t_target_lead_status_changed) > 3 * 60:
                 print("MANAGER: WAIT CODE: WAIT CODE AFTER 180 SEC. DROP LEAD!")
@@ -223,7 +228,7 @@ class SessionSupervisor:
 
             self._leadsdb.drop_session(session_id=self._session_id)
 
-        if len(failed) > (len(self._leads) * .6):
+        if len(failed) > (len(self._leads) * .6) and _d(self._t_last_success_lead) > 5*60:
             print("MANAGER: SESSION: TOO MANY FAILED")
 
             self._leadsdb.drop_session(session_id=self._session_id)
