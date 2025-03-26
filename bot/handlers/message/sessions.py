@@ -238,7 +238,7 @@ async def approve_session(
     )
 
     await message.bot.delete_message(chat_id=message.chat.id,
-                                     message_id=sended.id)
+                                     message_id=sended.message_id)
 
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
