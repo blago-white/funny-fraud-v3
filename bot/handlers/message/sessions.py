@@ -231,10 +231,18 @@ async def approve_session(
     await state.clear()
     await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
 
+    sended = await message.bot.send_message(
+        chat_id=message.chat.id,
+        text="<b>Ожидайте...</b>",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+    await message.bot.delete_message(chat_id=message.chat.id,
+                                     message_id=sended.id)
+
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
         text=labels.SESSION_INFO.format(0, 0, 0, "Скоро будет", "..."),
-        reply_markup=ReplyKeyboardRemove()
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
