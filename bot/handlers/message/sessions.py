@@ -233,7 +233,8 @@ async def approve_session(
 
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
-        text=labels.SESSION_INFO.format(0, 0, 0, "Скоро будет", "...")
+        text=labels.SESSION_INFO.format(0, 0, 0, "Скоро будет", "..."),
+        reply_markup=ReplyKeyboardRemove()
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
@@ -261,9 +262,11 @@ async def approve_session(
         call_stack=call_stack,
     )
 
+    state_data = dict(await state.get_data())
+
     await state.clear()
 
-    return call_stack
+    return state_data, call_stack
 
 
 @router.message(PaymentCodeSettingForm.wait_payment_code)

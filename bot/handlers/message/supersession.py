@@ -180,7 +180,9 @@ async def approve_super_session(
                 reply_markup=get_supersession_canceling_kb()
             )
 
-            session_call_stack = await approve_session(message=message, state=state)
+            after_session_data, session_call_stack = await approve_session(
+                message=message, state=state
+            )
 
             await message.bot.send_message(
                 chat_id=message.chat.id,
@@ -189,10 +191,6 @@ async def approve_super_session(
 
             delta_balance = (session_call_stack.default_sms_service_balance -
                              session_call_stack.sms_service.balance)
-
-            after_session_data = dict(await state.get_data())
-
-            await state.clear()
 
             if after_session_data.get("stop-supersession"):
                 return await message.bot.send_message(

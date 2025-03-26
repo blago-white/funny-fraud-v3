@@ -98,7 +98,7 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
 
 
 def get_session_presets_kb(
-    current_sms_service: str = mapper.ELSMS.KEY,
+    current_sms_service: str = mapper.HELPERSMS.KEY,
     is_supervised: bool = False
 ):
     return InlineKeyboardMarkup(
