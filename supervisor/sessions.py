@@ -61,6 +61,8 @@ class SessionSupervisor:
         self._target_lead_code_resended = False
         self._target_lead_changed_at = time.time()
 
+        self._count_success_leads = 0
+
         while (self._timeout > _d(self._START_TIME) and
                self._leadsdb.get_count() - 1 == self._session_id):
             self._leads: list[LeadGenResult] = self._leadsdb.get(
@@ -73,6 +75,16 @@ class SessionSupervisor:
                 LeadGenResultStatus.SUCCESS, LeadGenResultStatus.FAILED
             ]]) == len(self._leads):
                 break
+
+            previous_success_leads = self._count_success_leads
+
+            self._count_success_leads = len([
+                l for l in self._leads
+                if l.status == LeadGenResultStatus.SUCCESS
+            ])
+
+            if previous_success_leads < self._count_success_leads:
+                self._t_last_success_lead = time.time()
 
             self._target_lead = None
 
