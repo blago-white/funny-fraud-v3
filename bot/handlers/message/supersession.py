@@ -170,7 +170,8 @@ async def approve_super_session(
                 "count_requests": current_session_count_requests,
                 "payments_card": data.get("payments_card"),
                 "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
-                "sms-service": data.get("sms-service")
+                "sms-service": data.get("sms-service"),
+                "supervised": data.get("supervised")
             })
 
             await message.bot.send_message(
