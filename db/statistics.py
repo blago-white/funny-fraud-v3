@@ -24,7 +24,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         if len(current_data) >= 1:
             data = "@" + data
 
-        self._conn.set(date_key, data)
+        self._conn.set(date_key, current_data + data)
 
         return True
 
