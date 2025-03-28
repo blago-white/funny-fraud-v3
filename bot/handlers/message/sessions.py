@@ -420,8 +420,8 @@ async def _start_session_keyboard_pooling(
                     text=f"❌Сессия #{session_id} завершена по 1 часовому "
                          "таймауту!"
                 )
-        except:
-            pass
+        except Exception as e:
+            raise e
 
         prev_leads = leads
         prev_balance = sms_service_balance

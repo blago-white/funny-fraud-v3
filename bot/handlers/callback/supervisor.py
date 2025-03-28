@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery
 
 from bot.handlers.data import UseSupervisorData
 from bot.keyboards.inline import get_session_presets_kb
+from parser.utils.sms.mapper import HELPERSMS
 
 router = Router(name=__name__)
 
@@ -24,7 +25,7 @@ async def preset_supervisor(
 
     await query.message.edit_reply_markup(
         reply_markup=get_session_presets_kb(
-            current_sms_service=data.get("sms-service"),
+            current_sms_service=data.get("sms-service", HELPERSMS.KEY),
             is_supervised=callback_data.use
         )
     )
