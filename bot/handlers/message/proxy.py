@@ -26,8 +26,9 @@ async def make_reset_apikey(message: Message, state: FSMContext):
 @db_services_provider(provide_leads=False,
                       provide_gologin=False,
                       provide_proxy=True)
-async def set_apikey(message: Message, state: FSMContext,
-                     proxydb: ProxyRepository):
+async def set_apikey(
+        message: Message, state: FSMContext,
+        proxydb: ProxyRepository):
     await state.clear()
 
     print("START")

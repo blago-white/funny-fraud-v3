@@ -24,8 +24,9 @@ async def make_reset_apikey(message: Message, state: FSMContext):
 
 @router.message(GologinApikeySettingForm.wait_apikey)
 @db_services_provider(provide_leads=False)
-async def set_apikey(message: Message, state: FSMContext,
-                     gologindb: GologinApikeysRepository):
+async def set_apikey(
+        message: Message, state: FSMContext,
+        gologindb: GologinApikeysRepository):
     await state.clear()
 
     if not len(message.text.split(".")) == 3:

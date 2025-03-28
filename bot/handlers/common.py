@@ -9,13 +9,14 @@ from db.statistics import LeadsGenerationStatisticsService
 from parser.main import LeadsGenerator
 
 
-def db_services_provider(provide_leads: bool = True,
-                         provide_gologin: bool = True,
-                         provide_elsms: bool = False,
-                         provide_smshub: bool = False,
-                         provide_helper: bool = False,
-                         provide_proxy: bool = False,
-                         provide_stats: bool = False):
+def db_services_provider(
+        provide_leads: bool = True,
+        provide_gologin: bool = True,
+        provide_elsms: bool = False,
+        provide_smshub: bool = False,
+        provide_helper: bool = False,
+        provide_proxy: bool = False,
+        provide_stats: bool = False):
     def wrapper(func):
         @wraps(func)
         async def wrapped(*args, **kwargs):
@@ -45,6 +46,7 @@ def db_services_provider(provide_leads: bool = True,
             return await func(*args, **kwargs, **db_services)
 
         return wrapped
+
     return wrapper
 
 

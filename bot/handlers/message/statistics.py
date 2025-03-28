@@ -9,7 +9,8 @@ router = Router(name=__name__)
 
 
 @router.message(Command("stats"))
-@db_services_provider(provide_leads=False, provide_gologin=False, provide_stats=True)
+@db_services_provider(provide_leads=False, provide_gologin=False,
+                      provide_stats=True)
 async def show_statistics(
         message: Message,
         statsdb: LeadsGenerationStatisticsService):

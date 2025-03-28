@@ -11,9 +11,10 @@ from ..common import db_services_provider
 router = Router(name=__name__)
 
 
-async def _process_change_sms_apikey(message: Message,
-                                     state: FSMContext,
-                                     sms_service_key: str):
+async def _process_change_sms_apikey(
+        message: Message,
+        state: FSMContext,
+        sms_service_key: str):
     await state.set_state(state=SmsServiceApikeySettingForm.wait_apikey)
     await state.set_data(data={"sms-service": sms_service_key})
 

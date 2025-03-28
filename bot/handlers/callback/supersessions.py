@@ -1,10 +1,8 @@
 from aiogram import Router
-
+from aiogram.filters.callback_data import CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.filters.callback_data import CallbackData, CallbackQuery
 
 from bot.handlers.data import StopSupersessionData
-
 
 router = Router(name=__name__)
 

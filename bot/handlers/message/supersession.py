@@ -5,7 +5,8 @@ from aiogram.dispatcher.router import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from bot.keyboards.inline import get_session_presets_kb, get_supersession_canceling_kb
+from bot.keyboards.inline import get_session_presets_kb, \
+    get_supersession_canceling_kb
 from bot.keyboards.reply import SS_APPROVE_KB
 from bot.states.forms import SuperSessionForm
 from db.gologin import GologinApikeysRepository
@@ -155,7 +156,8 @@ async def approve_super_session(
 
     data = await state.get_data()
 
-    total_count_requests = len(data.get("ref_links")) * data.get("count_requests")
+    total_count_requests = len(data.get("ref_links")) * data.get(
+        "count_requests")
 
     for link in data.get("ref_links"):
         link_count_requests = int(data.get("count_requests"))
@@ -169,7 +171,8 @@ async def approve_super_session(
                 "ref_links": [link],
                 "count_requests": current_session_count_requests,
                 "payments_card": data.get("payments_card"),
-                "timeout": float(data.get("duration")) / (total_count_requests / 10) * 60 * 60,
+                "timeout": float(data.get("duration")) / (
+                            total_count_requests / 10) * 60 * 60,
                 "sms-service": data.get("sms-service"),
                 "supervised": data.get("supervised")
             })
@@ -200,7 +203,7 @@ async def approve_super_session(
                 )
 
             if delta_balance >= (2 * current_session_count_requests * 8):
-                await asyncio.sleep(60*10)
+                await asyncio.sleep(60 * 10)
 
             await asyncio.sleep(5)
 

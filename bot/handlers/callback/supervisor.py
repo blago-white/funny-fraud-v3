@@ -10,9 +10,9 @@ router = Router(name=__name__)
 
 @router.callback_query(UseSupervisorData.filter())
 async def preset_supervisor(
-    query: CallbackQuery,
-    callback_data: UseSupervisorData,
-    state: FSMContext,
+        query: CallbackQuery,
+        callback_data: UseSupervisorData,
+        state: FSMContext,
 ):
     await query.answer("🔮🔮🔮")
 

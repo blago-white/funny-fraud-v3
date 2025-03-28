@@ -10,9 +10,9 @@ router = Router(name=__name__)
 
 @router.callback_query(SMSServiceSelectorData.filter())
 async def select_sms_service(
-    query: CallbackQuery,
-    callback_data: SMSServiceSelectorData,
-    state: FSMContext
+        query: CallbackQuery,
+        callback_data: SMSServiceSelectorData,
+        state: FSMContext
 ):
     data = dict(await state.get_data())
 

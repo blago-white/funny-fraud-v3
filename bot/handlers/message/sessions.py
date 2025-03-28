@@ -23,7 +23,6 @@ from db.transfer import LeadGenResultStatus
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
 from parser.utils.sms.base import BaseSmsService
-from parser.utils.sms.middleware.stats import SmsRequestsStatMiddleware
 from supervisor.sessions import SessionSupervisor
 from . import _labels as labels
 from ._transfer import SessionStatusPullingCallStack
@@ -342,7 +341,6 @@ async def _start_session_keyboard_pooling(
         None, sms_stat_middleware.all_stats, None
     )
 
-
     sms_stat_middleware.allow_phone_receiving()
 
     while True:
@@ -351,14 +349,17 @@ async def _start_session_keyboard_pooling(
                 await asyncio.sleep(1.1)
                 continue
 
-            sms_service_balance = _get_sms_service_balance(sms_service=sms_service)
-            req_update = leads_differences_exists(prev_leads=prev_leads, leads=leads)
+            sms_service_balance = _get_sms_service_balance(
+                sms_service=sms_service)
+            req_update = leads_differences_exists(prev_leads=prev_leads,
+                                                  leads=leads)
 
-            if req_update or (sms_service_balance != prev_balance) or ((current_stats := sms_stat_middleware.all_stats) != current_stats):
+            if req_update or (sms_service_balance != prev_balance) or ((
+                                                                       current_stats := sms_stat_middleware.all_stats) != current_stats):
                 if type(sms_service_balance) is float:
                     sms_service_balance_delta = (
-                        call_stack.default_sms_service_balance -
-                        sms_service_balance
+                            call_stack.default_sms_service_balance -
+                            sms_service_balance
                     )
 
                     if sms_service_balance_delta > (len(leads) * 9 * 2):
@@ -384,9 +385,9 @@ async def _start_session_keyboard_pooling(
 
                     await call_stack.initiator_message.edit_text(
                         text=labels.SESSION_INFO.format(*(
-                            new_stats + [
-                                sms_service_balance, balance_delta
-                            ] + call_stack.supervisor_label
+                                new_stats + [
+                            sms_service_balance, balance_delta
+                        ] + call_stack.supervisor_label
                         )),
                         reply_markup=generate_leads_statuses_kb(leads=leads)
                     )
