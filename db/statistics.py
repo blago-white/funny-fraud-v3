@@ -43,6 +43,9 @@ class LeadsGenerationStatisticsService(BaseRedisService):
 
         statistics_for_links, total_count = {}, 0
 
+        if not current_data:
+            return statistics_for_links, total_count
+
         for i in current_data.split("@"):
             row_params = i.split("#")
 
