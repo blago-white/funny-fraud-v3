@@ -207,20 +207,12 @@ class LeadGenerationResultsService(DefaulConcurrentRepository):
         else:
             return False
 
-        if waiting_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
-            self._change_status(
-                status=LeadGenResultStatus.FAILED,
-                session_id=session_id,
-                lead_id=waiting_lead.lead_id,
-                sms_code=sms_code
-            )
-        else:
-            self._change_status(
-                status=LeadGenResultStatus.CODE_RECEIVED,
-                session_id=session_id,
-                lead_id=waiting_lead.lead_id,
-                sms_code=sms_code
-            )
+        self._change_status(
+            status=LeadGenResultStatus.CODE_RECEIVED,
+            session_id=session_id,
+            lead_id=waiting_lead.lead_id,
+            sms_code=sms_code
+        )
 
     def _update_main_lead_status(
             self, session_id: int,
