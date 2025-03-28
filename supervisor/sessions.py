@@ -105,8 +105,6 @@ class SessionSupervisor:
             self._t_target_lead_status_changed = time.time()
 
     def _process_local_leads_events(self):
-        print("TARGET LEAD: ", _d(self._t_target_lead_status_changed), self._target_lead.status, self._target_lead_statuses_history)
-
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
             if _d(self._target_lead_changed_at) > 3*60:
                 print("MANAGER: WAIT CODE FAIL: TOO MANY TIME LEFT")
@@ -142,9 +140,7 @@ class SessionSupervisor:
                 self._target_lead_code_resended = True
 
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE:
-            if (
-                    _d(self._t_target_lead_status_changed) >= 20
-            ) or (
+            if (_d(self._t_target_lead_status_changed) >= 20) or (
                 self._target_lead_statuses_history[-2] == LeadGenResultStatus.CODE_RECEIVED
             ):
                 print("MANAGER: WAIT CODE: WAIT CODE AFTER 20 SEC. OR CODE RECEIVED PREVIOUS CODE!")
@@ -168,19 +164,24 @@ class SessionSupervisor:
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
-        if self._target_lead.status == LeadGenResultStatus.CODE_RECEIVED and _d(
-                self._t_target_lead_status_changed
-        ) >= 30:
+        if self._target_lead.status == LeadGenResultStatus.CODE_RECEIVED:
             print("MANAGER: CODE RECEIVED: NOT CHANGING 30 SEC.")
 
-            if self._latest_codes_service.get()[0] == LatestSmsTypes.PAYMENT:
-                print("MANAGER: CODE RECEIVED: SET PAID")
+            if self._target_lead_statuses_history[-2] == LeadGenResultStatus.WAIT_CODE_FAIL:
+                if _d(self._t_target_lead_status_changed) > 5:
+                    print("MANAGER: CODE RECEIVED: AFTER CODE WAIT FAILED")
 
-                self._leadsdb.set_paid(session_id=self._session_id)
-            else:
-                print("MANAGER: CODE RECEIVED: DROP LEAD")
+                    self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
-                self._leadsdb.drop_waiting_lead(session_id=self._session_id)
+            if _d(self._t_target_lead_status_changed) >= 30:
+                if self._latest_codes_service.get()[0] == LatestSmsTypes.PAYMENT:
+                    print("MANAGER: CODE RECEIVED: SET PAID")
+
+                    self._leadsdb.set_paid(session_id=self._session_id)
+                else:
+                    print("MANAGER: CODE RECEIVED: DROP LEAD")
+
+                    self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
     def _process_session_dropping_events(self):
         completed, failed, progress = (
@@ -195,10 +196,8 @@ class SessionSupervisor:
             self._t_last_success_lead = time.time()
             self._count_success_leads = len(completed)
 
-        if (
-                _d(self._START_TIME) <= 90 and len(failed) >= (len(self._leads) * (1/3)) or
-                _d(self._START_TIME) <= 20 and len(failed) >= (len(self._leads) * (1/6))
-        ):
+        if (_d(self._START_TIME) <= 90 and len(failed) >= (len(self._leads) * (1/3)) or
+                _d(self._START_TIME) <= 20 and len(failed) >= (len(self._leads) * (1/6))):
             for f in failed:
                 if ("navigator" in f.error.lower()) or (
                         "gologin" in f.error.lower()):
