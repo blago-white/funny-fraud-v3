@@ -39,14 +39,17 @@ class LeadsGenerationStatisticsService(BaseRedisService):
             print(f"ERROR GET TODAY STATS: {e}")
             return {}, 0
 
-        print(current_data)
+        print("FFFFFFFFFFFFUCCCL", current_data)
 
         statistics_for_links, total_count = {}, 0
 
         for i in current_data.split("@"):
             row_params = i.split("#")
 
-            link, count = row_params[0], int(row_params[1])
+            try:
+                link, count = row_params[0], int(row_params[1])
+            except:
+                continue
 
             total_count += count
 
