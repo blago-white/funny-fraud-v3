@@ -338,39 +338,38 @@ async def _start_session_keyboard_pooling(
         time.time()
     )
 
-    leads, sms_service_balance, current_stats, prev_balance = (
-        [], None, sms_stat_middleware.all_stats, None
+    sms_service_balance, current_stats, prev_balance = (
+        None, sms_stat_middleware.all_stats, None
     )
+
 
     sms_stat_middleware.allow_phone_receiving()
 
     while True:
         try:
-            leads = leadsdb.get(session_id=session_id) or []
-
-            if not leads:
+            if not (leads := (leadsdb.get(session_id=session_id) or [])):
                 await asyncio.sleep(1.1)
                 continue
 
-            try:
-                sms_service_balance = sms_service.balance
-            except ValueError:
-                sms_service_balance = "<i>Ошибка получения данных</i>"
-            except NotImplementedError:
-                sms_service_balance = "<i>С этим сервисом баланс пока получить нельзя</i>"
+            sms_service_balance = _get_sms_service_balance(sms_service=sms_service)
+            req_update = leads_differences_exists(prev_leads=prev_leads, leads=leads)
 
-            req_update = leads_differences_exists(
-                prev_leads=prev_leads,
-                leads=leads
-            )
-
-            if req_update or (sms_service_balance != prev_balance):
+            if req_update or (sms_service_balance != prev_balance) or ((current_stats := sms_stat_middleware.all_stats) != current_stats):
                 if type(sms_service_balance) is float:
-                    if call_stack.default_sms_service_balance - sms_service_balance > (
-                            len(leads) * 9 * 2):
+                    sms_service_balance_delta = (
+                        call_stack.default_sms_service_balance -
+                        sms_service_balance
+                    )
+
+                    if sms_service_balance_delta > (len(leads) * 9 * 2):
                         sms_stat_middleware.freeze_phone_receiving()
                     else:
                         sms_stat_middleware.allow_phone_receiving()
+
+                received = current_stats[0]
+
+                if received > len(leads) * 3:
+                    sms_stat_middleware.freeze_phone_receiving()
 
                 try:
                     new_stats = [
@@ -454,3 +453,12 @@ def _commit_session_results(session_id: int, leads: list):
             link=link,
             count_leads=results[link]
         )
+
+
+def _get_sms_service_balance(sms_service: BaseSmsService):
+    try:
+        return sms_service.balance
+    except ValueError:
+        return "<i>Ошибка получения данных</i>"
+    except NotImplementedError:
+        return "<i>С этим сервисом баланс пока получить нельзя</i>"

@@ -15,6 +15,8 @@ async def stop_super_session(
         callback_data: StopSupersessionData,
         state: FSMContext,
 ):
+    await query.answer("🚫 Следующих сессий не будет!")
+
     await state.set_data(
         data=dict(await state.get_data()) | {"stop-supersession": True}
     )

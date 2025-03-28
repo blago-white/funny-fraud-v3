@@ -51,17 +51,7 @@ class SessionSupervisor:
         supervisor_th.start()
 
     def _supervise_session(self):
-        self._t_last_success_lead = time.time()
-
-        self._START_TIME = time.time()
-
-        self._t_target_lead_status_changed = time.time()
-        self._target_lead_id = self._target_lead = None
-        self._target_lead_statuses_history = []
-        self._target_lead_code_resended = False
-        self._target_lead_changed_at = time.time()
-
-        self._count_success_leads = 0
+        self._init_parameters()
 
         while (self._timeout > _d(self._START_TIME) and
                self._leadsdb.get_count() - 1 == self._session_id):
@@ -75,16 +65,6 @@ class SessionSupervisor:
                 LeadGenResultStatus.SUCCESS, LeadGenResultStatus.FAILED
             ]]) == len(self._leads):
                 break
-
-            previous_success_leads = self._count_success_leads
-
-            self._count_success_leads = len([
-                l for l in self._leads
-                if l.status == LeadGenResultStatus.SUCCESS
-            ])
-
-            if previous_success_leads < self._count_success_leads:
-                self._t_last_success_lead = time.time()
 
             self._target_lead = None
 
@@ -209,6 +189,12 @@ class SessionSupervisor:
             [l for l in self._leads if l.status == LeadGenResultStatus.PROGRESS]
         )
 
+        previous_success_leads = self._count_success_leads
+
+        if previous_success_leads < len(completed):
+            self._t_last_success_lead = time.time()
+            self._count_success_leads = len(completed)
+
         if (
                 _d(self._START_TIME) <= 90 and len(failed) >= (len(self._leads) * (1/3)) or
                 _d(self._START_TIME) <= 20 and len(failed) >= (len(self._leads) * (1/6))
@@ -261,3 +247,15 @@ class SessionSupervisor:
             print("MANAGER: SESSION: TOO MANY TIME LEFT [3]")
 
             self._leadsdb.drop_session(session_id=self._session_id)
+
+    def _init_parameters(self):
+        self._START_TIME = time.time()
+
+        self._t_last_success_lead = time.time()
+        self._t_target_lead_status_changed = time.time()
+        self._target_lead_id = self._target_lead = None
+        self._target_lead_statuses_history = []
+        self._target_lead_code_resended = False
+        self._target_lead_changed_at = time.time()
+
+        self._count_success_leads = 0
