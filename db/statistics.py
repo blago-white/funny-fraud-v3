@@ -16,10 +16,10 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         except:
             current_data = ""
 
-        if f"SSID{session_id}+{aff_id}" in current_data:
+        if f"SSID{session_id}{aff_id}" in current_data:
             return True
 
-        data = f"{link}#{count_leads}#SSID{session_id}+{aff_id}"
+        data = f"{link}#{count_leads}#SSID{session_id}{aff_id}"
 
         if current_data:
             data = "@" + data
@@ -38,6 +38,8 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         except Exception as e:
             print(f"ERROR GET TODAY STATS: {e}")
             return {}, 0
+
+        print(current_data)
 
         statistics_for_links, total_count = {}, 0
 
