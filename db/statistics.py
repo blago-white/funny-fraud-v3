@@ -21,7 +21,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
 
         data = f"{link}#{count_leads}#SSID{session_id}{aff_id}"
 
-        if current_data:
+        if len(current_data) >= 1:
             data = "@" + data
 
         self._conn.set(date_key, data)
