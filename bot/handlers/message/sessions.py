@@ -387,7 +387,7 @@ async def _start_session_keyboard_pooling(
                         text=labels.SESSION_INFO.format(*(
                                 new_stats + [
                             sms_service_balance, balance_delta
-                        ] + call_stack.supervisor_label
+                        ] + [call_stack.supervisor_label]
                         )),
                         reply_markup=generate_leads_statuses_kb(leads=leads)
                     )
