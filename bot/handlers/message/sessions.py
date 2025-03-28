@@ -354,8 +354,7 @@ async def _start_session_keyboard_pooling(
             req_update = leads_differences_exists(prev_leads=prev_leads,
                                                   leads=leads)
 
-            if req_update or (sms_service_balance != prev_balance) or ((
-                                                                       current_stats := sms_stat_middleware.all_stats) != current_stats):
+            if req_update or (sms_service_balance != prev_balance) or (sms_stat_middleware.all_stats != current_stats):
                 if type(sms_service_balance) is float:
                     sms_service_balance_delta = (
                             call_stack.default_sms_service_balance -
@@ -367,7 +366,7 @@ async def _start_session_keyboard_pooling(
                     else:
                         sms_stat_middleware.allow_phone_receiving()
 
-                received = current_stats[0]
+                received = sms_stat_middleware.all_stats[0]
 
                 if received > len(leads) * 3:
                     sms_stat_middleware.freeze_phone_receiving()
@@ -385,9 +384,9 @@ async def _start_session_keyboard_pooling(
 
                     await call_stack.initiator_message.edit_text(
                         text=labels.SESSION_INFO.format(*(
-                                new_stats + [
-                            sms_service_balance, balance_delta
-                        ] + [call_stack.supervisor_label]
+                            new_stats + [
+                                sms_service_balance, balance_delta
+                            ] + [call_stack.supervisor_label]
                         )),
                         reply_markup=generate_leads_statuses_kb(leads=leads)
                     )
