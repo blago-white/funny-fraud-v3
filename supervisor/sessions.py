@@ -88,8 +88,10 @@ class SessionSupervisor:
                 self._target_lead_changed_at = time.time()
 
             self._target_lead_id = self._target_lead.id
-        except:
+        except Exception as e:
+            print(f"PROCESS TARGET LEAD ERROR: {e} {[l for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)]}")
             self._target_lead = self._target_lead_id = None
+        print("WWW", self._target_lead)
 
         if self._target_lead:
             if not self._target_lead_statuses_history:
@@ -97,12 +99,14 @@ class SessionSupervisor:
                     self._target_lead.status
                 )
 
+                self._t_target_lead_status_changed = time.time()
+
             if self._target_lead_statuses_history[-1] != self._target_lead.status:
                 self._target_lead_statuses_history.append(
                     self._target_lead.status
                 )
 
-            self._t_target_lead_status_changed = time.time()
+                self._t_target_lead_status_changed = time.time()
 
     def _process_local_leads_events(self):
         print("TARGET LEAD", self._target_lead.status, _d(self._target_lead_changed_at), _d(self._t_target_lead_status_changed), self._target_lead_statuses_history)
