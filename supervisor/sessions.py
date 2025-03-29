@@ -82,12 +82,12 @@ class SessionSupervisor:
     def _process_target_lead(self):
         try:
             self._target_lead = [l for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)][0]
-            if self._target_lead.id != self._target_lead_id:
+            if self._target_lead.lead_id != self._target_lead_id:
                 self._target_lead_statuses_history = []
                 self._target_lead_code_resended = False
                 self._target_lead_changed_at = time.time()
 
-            self._target_lead_id = self._target_lead.id
+            self._target_lead_id = self._target_lead.lead_id
         except Exception as e:
             print(f"PROCESS TARGET LEAD ERROR: {e} {[l for l in self._leads if l.status in (LeadGenResultStatus.CODE_RECEIVED, LeadGenResultStatus.WAIT_CODE, LeadGenResultStatus.WAIT_CODE_FAIL, LeadGenResultStatus.CODE_INVALID)]}")
             self._target_lead = self._target_lead_id = None
