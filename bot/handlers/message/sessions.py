@@ -291,7 +291,13 @@ async def set_payment_code(
 ):
     state_data = dict(await state.get_data())
 
-    bot_reply_msg_id, session_id = state_data.values()
+    try:
+        bot_reply_msg_id, session_id = state_data.values()
+    except:
+        return await message.bot.send_message(
+            chat_id=message.chat.id,
+            text="❌<b>Невозможно отправить код :(</b>"
+        )
 
     if bot_reply_msg_id:
         try:
@@ -358,7 +364,8 @@ async def _start_session_keyboard_pooling(
             req_update = leads_differences_exists(prev_leads=prev_leads,
                                                   leads=leads)
 
-            if req_update or (sms_service_balance != prev_balance) or (sms_stat_middleware.all_stats != current_stats):
+            if req_update or (sms_service_balance != prev_balance) or (
+                    sms_stat_middleware.all_stats != current_stats):
                 if type(sms_service_balance) is float:
                     sms_service_balance_delta = (
                             call_stack.default_sms_service_balance -
@@ -388,9 +395,9 @@ async def _start_session_keyboard_pooling(
 
                     await call_stack.initiator_message.edit_text(
                         text=labels.SESSION_INFO.format(*(
-                            new_stats + [
-                                sms_service_balance, balance_delta
-                            ] + [call_stack.supervisor_label]
+                                new_stats + [
+                            sms_service_balance, balance_delta
+                        ] + [call_stack.supervisor_label]
                         )),
                         reply_markup=generate_leads_statuses_kb(leads=leads)
                     )
