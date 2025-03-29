@@ -244,6 +244,8 @@ async def approve_session(
     is_supervised = data.get("supervised", False)
     supervisor_message_label = "🔮 Сессия под управлением ИИ" if is_supervised else ""
 
+    await asyncio.sleep(2)
+
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
         text=labels.SESSION_INFO.format(0, 0, 0, "Скоро будет", "...",
