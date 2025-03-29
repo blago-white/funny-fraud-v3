@@ -105,6 +105,8 @@ class SessionSupervisor:
             self._t_target_lead_status_changed = time.time()
 
     def _process_local_leads_events(self):
+        print("TARGET LEAD", self._target_lead.status, _d(self._target_lead_changed_at), _d(self._t_target_lead_status_changed), self._target_lead_statuses_history)
+
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
             if _d(self._target_lead_changed_at) > 60:
                 print("MANAGER: WAIT CODE FAIL: TOO MANY TIME LEFT")
