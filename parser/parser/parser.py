@@ -194,8 +194,8 @@ class OfferInitializerParser:
             )
         )
 
-        if not is_retry:
-            self._try_exit_profile(override_timeout=.25)
+        # if not is_retry:
+            # self._try_exit_profile(override_timeout=.25)
 
         # if is_retry:
         #     if self._payments_card.number in self._driver.find_element(
