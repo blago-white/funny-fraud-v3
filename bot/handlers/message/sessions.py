@@ -236,6 +236,8 @@ async def approve_session(
         reply_markup=ReplyKeyboardRemove()
     )
 
+    await asyncio.sleep(2)
+
     await message.bot.delete_message(chat_id=message.chat.id,
                                      message_id=sended.message_id)
 
@@ -343,10 +345,12 @@ async def _start_session_keyboard_pooling(
 
     sms_stat_middleware.allow_phone_receiving()
 
+    await asyncio.sleep(1.5)
+
     while True:
         try:
             if not (leads := (leadsdb.get(session_id=session_id) or [])):
-                await asyncio.sleep(1.1)
+                await asyncio.sleep(1.5)
                 continue
 
             sms_service_balance = _get_sms_service_balance(
@@ -425,7 +429,7 @@ async def _start_session_keyboard_pooling(
         prev_leads = leads
         prev_balance = sms_service_balance
 
-        await asyncio.sleep(1.1)
+        await asyncio.sleep(1.5)
 
 
 def _commit_previous_session(
