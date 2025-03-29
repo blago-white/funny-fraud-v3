@@ -106,12 +106,12 @@ class SessionSupervisor:
 
     def _process_local_leads_events(self):
         if self._target_lead.status == LeadGenResultStatus.WAIT_CODE_FAIL:
-            if _d(self._target_lead_changed_at) > 3*60:
+            if _d(self._target_lead_changed_at) > 60:
                 print("MANAGER: WAIT CODE FAIL: TOO MANY TIME LEFT")
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
-            if _d(self._t_target_lead_status_changed) > 35:
+            if _d(self._t_target_lead_status_changed) > 15:
                 print("MANAGER: WAIT CODE FAIL: DROP WAITING LEAD [1]")
 
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
@@ -183,6 +183,9 @@ class SessionSupervisor:
 
                     self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
+        if _d(self._t_target_lead_status_changed) >= 70:
+            self._leadsdb.drop_waiting_lead(session_id=self._session_id)
+
     def _process_session_dropping_events(self):
         completed, failed, progress = (
             [l for l in self._leads if l.status == LeadGenResultStatus.SUCCESS],
@@ -230,13 +233,13 @@ class SessionSupervisor:
 
             self._leadsdb.drop_session(session_id=self._session_id)
 
-        if (_d(self._t_last_success_lead) > (8 * 60) and
+        if (_d(self._t_last_success_lead) > (5 * 60) and
                 len(progress) <= (len(self._leads) * .2)):
             print("MANAGER: SESSION: TOO MANY TIME LEFT [1]")
 
             self._leadsdb.drop_session(session_id=self._session_id)
 
-        if (_d(self._t_last_success_lead) > (4 * 60) and
+        if (_d(self._t_last_success_lead) > (2 * 60) and
                 len(progress) <= (len(self._leads) * .15)):
             print("MANAGER: SESSION: TOO MANY TIME LEFT [2]")
 
