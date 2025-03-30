@@ -68,12 +68,16 @@ class SessionSupervisor:
 
             self._target_lead = None
 
-            self._process_target_lead()
+            try:
+                self._process_target_lead()
 
-            self._process_session_dropping_events()
+                self._process_session_dropping_events()
 
-            if self._target_lead:
-                self._process_local_leads_events()
+                if self._target_lead:
+                    self._process_local_leads_events()
+            except Exception as e:
+                print(f"AI POOLING EXCHEPTION: {e}")
+                pass
 
             time.sleep(.5)
 
