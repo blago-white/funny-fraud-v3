@@ -351,6 +351,8 @@ async def _start_session_keyboard_pooling(
     sms_stat_middleware.allow_phone_receiving()
 
     while True:
+        print("KAYBOARD UPDATE ============================")
+
         try:
             if not (leads := (leadsdb.get(session_id=session_id) or [])):
                 await asyncio.sleep(1.1)
@@ -373,11 +375,6 @@ async def _start_session_keyboard_pooling(
                         sms_stat_middleware.freeze_phone_receiving()
                     else:
                         sms_stat_middleware.allow_phone_receiving()
-
-                received = sms_stat_middleware.all_stats[0]
-
-                if received > len(leads) * 3:
-                    sms_stat_middleware.freeze_phone_receiving()
 
                 try:
                     new_stats = [

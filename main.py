@@ -50,14 +50,3 @@ async def main():
 if __name__ == '__main__':
     start_server_pooling()
     asyncio.run(main())
-
-# https://go.leadgid.ru/aff_c?aff_id=126491&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126492&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126493&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126494&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126495&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126496&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126497&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126498&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126499&offer_id=6397
-# https://go.leadgid.ru/aff_c?aff_id=126500&offer_id=6397
