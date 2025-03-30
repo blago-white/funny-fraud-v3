@@ -28,7 +28,7 @@ class SessionSupervisor:
         self._timeout = timeout
 
         self._leadsdb = (leads_db or self.default_leads_db_service)()
-        self._latest_codes_service = latest_sms_service or self.default_latest_sms_service
+        self._latest_codes_service = (latest_sms_service or self.default_latest_sms_service)()
 
     @property
     def is_active(self):
@@ -175,8 +175,6 @@ class SessionSupervisor:
                 self._leadsdb.drop_waiting_lead(session_id=self._session_id)
 
         if self._target_lead.status == LeadGenResultStatus.CODE_RECEIVED:
-            print("MANAGER: CODE RECEIVED: NOT CHANGING 30 SEC.")
-
             if self._target_lead_statuses_history[-2] == LeadGenResultStatus.WAIT_CODE_FAIL:
                 if _d(self._t_target_lead_status_changed) > 5:
                     print("MANAGER: CODE RECEIVED: AFTER CODE WAIT FAILED")
