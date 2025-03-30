@@ -360,11 +360,10 @@ async def _start_session_keyboard_pooling(
 
             sms_service_balance = _get_sms_service_balance(
                 sms_service=sms_service)
-            req_update = leads_differences_exists(prev_leads=prev_leads,
-                                                  leads=leads)
+            # req_update = leads_differences_exists(prev_leads=prev_leads,
+            #                                       leads=leads)
 
-            if req_update or (sms_service_balance != prev_balance) or (
-                    sms_stat_middleware.all_stats != current_stats):
+            if True:
                 if type(sms_service_balance) is float:
                     sms_service_balance_delta = (
                             call_stack.default_sms_service_balance -
