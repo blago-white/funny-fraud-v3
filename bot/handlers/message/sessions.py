@@ -236,20 +236,17 @@ async def approve_session(
         reply_markup=ReplyKeyboardRemove()
     )
 
-    await asyncio.sleep(2)
-
     await message.bot.delete_message(chat_id=message.chat.id,
                                      message_id=sended.message_id)
 
     is_supervised = data.get("supervised", False)
     supervisor_message_label = "🔮 Сессия под управлением ИИ" if is_supervised else ""
 
-    await asyncio.sleep(2)
-
     replyed = await message.bot.send_message(
         chat_id=message.chat.id,
-        text=labels.SESSION_INFO.format(0, 0, 0, "Скоро будет", "...",
-                                        supervisor_message_label),
+        text=labels.SESSION_INFO.format(
+            0, 0, 0, "Скоро будет", "...", supervisor_message_label
+        ),
     )
 
     parser_service = parser_service_class(sms_service=sms_service)
@@ -353,12 +350,10 @@ async def _start_session_keyboard_pooling(
 
     sms_stat_middleware.allow_phone_receiving()
 
-    await asyncio.sleep(1.5)
-
     while True:
         try:
             if not (leads := (leadsdb.get(session_id=session_id) or [])):
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(1.1)
                 continue
 
             sms_service_balance = _get_sms_service_balance(
@@ -392,14 +387,14 @@ async def _start_session_keyboard_pooling(
                     ]
 
                     balance_delta = (
-                            call_stack.default_sms_service_balance - sms_service_balance
+                            sms_service_balance - call_stack.default_sms_service_balance
                     ) if (type(sms_service_balance) is float) else "..."
 
                     await call_stack.initiator_message.edit_text(
                         text=labels.SESSION_INFO.format(*(
-                                new_stats + [
-                            sms_service_balance, balance_delta
-                        ] + [call_stack.supervisor_label]
+                            new_stats + [
+                                sms_service_balance, balance_delta
+                            ] + [call_stack.supervisor_label]
                         )),
                         reply_markup=generate_leads_statuses_kb(leads=leads)
                     )
@@ -411,6 +406,7 @@ async def _start_session_keyboard_pooling(
                     session_id=session_id,
                     leads=leads
                 )
+                sms_stat_middleware.allow_phone_receiving()
 
                 await asyncio.sleep(1)
 
@@ -424,6 +420,7 @@ async def _start_session_keyboard_pooling(
                     session_id=session_id,
                     leads=leads
                 )
+                sms_stat_middleware.allow_phone_receiving()
 
                 await asyncio.sleep(1)
 
@@ -438,7 +435,7 @@ async def _start_session_keyboard_pooling(
         prev_leads = leads
         prev_balance = sms_service_balance
 
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(1.1)
 
 
 def _commit_previous_session(
