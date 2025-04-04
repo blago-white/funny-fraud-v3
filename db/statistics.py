@@ -30,6 +30,8 @@ class LeadsGenerationStatisticsService(BaseRedisService):
         )
 
     def get_today_sms_delta_balance(self):
+        today_date = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
+
         try:
             current_delta = self._conn.get(
                 f"balancestat:{today_date.day}:{today_date.month}"
