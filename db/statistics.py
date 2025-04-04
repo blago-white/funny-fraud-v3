@@ -5,7 +5,41 @@ from .base import BaseRedisService
 
 
 class LeadsGenerationStatisticsService(BaseRedisService):
-    def add(self, session_id: int, link: str, count_leads: int) -> bool:
+    def add_sms_delta_balance(self, session_id: int, delta: float):
+        today_date = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
+
+        try:
+            current_delta = self._conn.get(
+                f"balancestat:{today_date.day}:{today_date.month}"
+            ).decode()
+        except:
+            current_delta = "0|"
+
+        all_time_delta, sids = current_delta.split("|")
+
+        if f"SSID{session_id}" in sids:
+            return True
+
+        all_time_delta = str(float(all_time_delta) + delta)
+
+        sids += f"SSID{session_id}"
+
+        self._conn.set(
+            f"balancestat:{today_date.day}:{today_date.month}",
+            f"{all_time_delta}|{sids}"
+        )
+
+    def get_today_sms_delta_balance(self):
+        try:
+            current_delta = self._conn.get(
+                f"balancestat:{today_date.day}:{today_date.month}"
+            ).decode().split("|")[0]
+
+            return float(current_delta)
+        except:
+            return 0
+
+    def add_leads_count(self, session_id: int, link: str, count_leads: int) -> bool:
         today_date = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
         date_key = f"daystat:{today_date.day}:{today_date.month}"
 
@@ -28,7 +62,7 @@ class LeadsGenerationStatisticsService(BaseRedisService):
 
         return True
 
-    def get_today(self) -> tuple[dict, int]:
+    def get_today_leads_count(self) -> tuple[dict, int]:
         today_date = datetime.datetime.now(tz=pytz.timezone('Europe/Moscow'))
 
         date_key = f"daystat:{today_date.day}:{today_date.month}"

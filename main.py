@@ -33,13 +33,13 @@ async def main():
         )
     )
 
-    dp.include_routers(callback_router,
+    dp.include_routers(statistics_router,
+                       callback_router,
                        sessions_router,
                        gologin_router,
                        sms_router,
                        proxy_router,
                        sms_callback_router,
-                       statistics_router,
                        ss_router,
                        supervisor_router,
                        ss_callback_router)

@@ -359,7 +359,8 @@ async def _start_session_keyboard_pooling(
                 continue
 
             sms_service_balance = _get_sms_service_balance(
-                sms_service=sms_service)
+                sms_service=sms_service
+            )
             # req_update = leads_differences_exists(prev_leads=prev_leads,
             #                                       leads=leads)
 
@@ -398,13 +399,15 @@ async def _start_session_keyboard_pooling(
                     print(f"SESSION KB ERROR: {e}")
 
             if all_threads_ended(leads=leads):
-                _commit_session_results(
+                await _process_session_finish(
                     session_id=session_id,
-                    leads=leads
+                    leads=leads,
+                    sms_stat_middleware=sms_stat_middleware,
+                    delta_balance=(
+                        call_stack.default_sms_service_balance -
+                        sms_service_balance
+                    )
                 )
-                sms_stat_middleware.allow_phone_receiving()
-
-                await asyncio.sleep(1)
 
                 return await call_stack.initiator_message.bot.send_message(
                     chat_id=call_stack.initiator_message.chat.id,
@@ -412,13 +415,15 @@ async def _start_session_keyboard_pooling(
                 )
 
             if time.time() - START_POLLING > call_stack.session_timeout:
-                _commit_session_results(
+                await _process_session_finish(
                     session_id=session_id,
-                    leads=leads
+                    leads=leads,
+                    sms_stat_middleware=sms_stat_middleware,
+                    delta_balance=(
+                        call_stack.default_sms_service_balance -
+                        sms_service_balance
+                    )
                 )
-                sms_stat_middleware.allow_phone_receiving()
-
-                await asyncio.sleep(1)
 
                 return await call_stack.initiator_message.bot.send_message(
                     chat_id=call_stack.initiator_message.chat.id,
@@ -427,24 +432,31 @@ async def _start_session_keyboard_pooling(
                 )
         except Exception as e:
             raise e
-
-        prev_leads = leads
-        prev_balance = sms_service_balance
+        #
+        # prev_leads = leads
+        # prev_balance = sms_service_balance
 
         await asyncio.sleep(5)
 
 
-def _commit_previous_session(
-        prev_session_id: int,
-        leadsdb: LeadGenerationResultsService):
-    leads = leadsdb.get(session_id=prev_session_id) or []
+async def _process_session_finish(
+        session_id, leads,
+        sms_stat_middleware,
+        delta_balance: float):
+    _commit_session_results(
+        session_id=session_id,
+        leads=leads,
+        delta_balance=delta_balance
+    )
 
-    if leads:
-        _commit_session_results(session_id=prev_session_id,
-                                leads=leads)
+    sms_stat_middleware.allow_phone_receiving()
+
+    await asyncio.sleep(1)
 
 
-def _commit_session_results(session_id: int, leads: list):
+def _commit_session_results(session_id: int,
+                            delta_balance: float,
+                            leads: list):
     results = {}
 
     for l in leads:
@@ -454,11 +466,13 @@ def _commit_session_results(session_id: int, leads: list):
         results[l.ref_link] += int(l.status == LeadGenResultStatus.SUCCESS)
 
     for link in results:
-        LeadsGenerationStatisticsService().add(
+        LeadsGenerationStatisticsService().add_leads_count(
             session_id=session_id,
             link=link,
             count_leads=results[link]
         )
+
+    LeadsGenerationStatisticsService().add_sms_delta_balance(session_id=session_id, delta=delta_balance)
 
 
 def _get_sms_service_balance(sms_service: BaseSmsService):

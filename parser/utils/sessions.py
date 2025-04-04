@@ -52,7 +52,7 @@ def session_results_commiter(func):
         session: LeadsGenerationSession
 
         if lead_id is None:
-            _, lead_id = self._db_service.add(
+            _, lead_id = self._db_service.add_leads_count(
                 session_id=session_id,
                 result=LeadGenResult(
                     session_id=session_id,
