@@ -26,6 +26,7 @@ async def preset_supervisor(
     await query.message.edit_reply_markup(
         reply_markup=get_session_presets_kb(
             current_sms_service=data.get("sms-service", HELPERSMS.KEY),
-            is_supervised=callback_data.use
+            is_supervised=callback_data.use,
+            strict_mode=data.get("use-strict")
         )
     )

@@ -14,6 +14,7 @@ from db.proxy import ProxyRepository
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository)
+from db.statistics import LeadsGenerationStatisticsService
 from .sessions import approve_session
 from ..common import db_services_provider
 
@@ -154,10 +155,79 @@ async def approve_super_session(
         await state.clear()
         return
 
+    async def _process_cooldown():
+        try:
+            delta_balance = (
+                    session_call_stack.default_sms_service_balance -
+                    session_call_stack.sms_service.balance
+            )
+        except:
+            delta_balance = 0
+
+        if delta_balance >= (1.35 * current_session_count_requests * 9):
+            await message.bot.send_message(
+                chat_id=message.chat.id,
+                text="▶ <b>Пауза на 10 мин. из-за высоких трат! [1]</b>"
+            )
+            await asyncio.sleep(60 * 10)
+
+        if delta_balance >= (1.5 * current_session_count_requests * 9):
+            await message.bot.send_message(
+                chat_id=message.chat.id,
+                text="▶ <b>Пауза на 10 мин. из-за высоких трат! [2]</b>"
+            )
+            await asyncio.sleep(60 * 10)
+
+    async def _reduce_leads_gap(before_stats: dict, target_count_leads: int):
+        post_session_links = []
+
+        for target_link in before_stats:
+            count_leads_of_link = before_stats[target_link]
+            leads_delta = target_count_leads - count_leads_of_link
+
+            if count_leads_of_link < target_count_leads and (leads_delta > 5):
+                post_session_links += (target_link, leads_delta)
+
+        for target_link, delta in post_session_links:
+            await state.set_data({
+                "ref_links": [target_link],
+                "count_requests": min(delta+5, 30),
+                "payments_card": data.get("payments_card"),
+                "timeout": min(max(delta*3, 15), 60),
+                "sms-service": data.get("sms-service"),
+                "supervised": data.get("supervised")
+            })
+
+            await message.bot.send_message(
+                chat_id=message.chat.id,
+                text="⚠ <b>Скоро начнется автоматизированная "
+                     "пост-сессия в рамках Супер-Сессии</b>",
+                reply_markup=get_supersession_canceling_kb()
+            )
+
+            after_post_session_data, _ = await approve_session(
+                message=message, state=state
+            )
+
+            await message.bot.send_message(
+                chat_id=message.chat.id,
+                text="⚠ <b>Закончилась пост-сессия в рамках Супер-Сессии</b>",
+            )
+
+            await _process_cooldown()
+
+            await _process_session_shotdown(
+                after_session_data=after_post_session_data,
+                message=message
+            )
+
     data = await state.get_data()
 
     total_count_requests = len(data.get("ref_links")) * data.get(
-        "count_requests")
+        "count_requests"
+    )
+
+    links_stats_before, _ = LeadsGenerationStatisticsService().get_today_leads_count()
 
     for link in data.get("ref_links"):
         link_count_requests = int(data.get("count_requests"))
@@ -172,7 +242,7 @@ async def approve_super_session(
                 "count_requests": current_session_count_requests,
                 "payments_card": data.get("payments_card"),
                 "timeout": float(data.get("duration")) / (
-                            total_count_requests / 10) * 60 * 60,
+                        total_count_requests / 10) * 60 * 60,
                 "sms-service": data.get("sms-service"),
                 "supervised": data.get("supervised")
             })
@@ -193,19 +263,31 @@ async def approve_super_session(
                 text="⚠ <b>Закончилась сессия в рамках Супер-Сессии</b>",
             )
 
-            delta_balance = (session_call_stack.default_sms_service_balance -
-                             session_call_stack.sms_service.balance)
+            await _process_cooldown()
 
-            if after_session_data.get("stop-supersession"):
-                return await message.bot.send_message(
-                    chat_id=message.chat.id,
-                    text="<b>🚫 Суперсессия прервана</b>"
-                )
-
-            if delta_balance >= (2 * current_session_count_requests * 8):
-                await asyncio.sleep(60 * 10)
+            await _process_session_shotdown(
+                after_session_data=after_session_data,
+                message=message
+            )
 
             await asyncio.sleep(5)
 
+    if data.get("use-strict"):
+        await message.bot.send_message(chat_id=message.chat.id,
+                                       text="✅ Начата добивка колличества лидов!")
+
+        await _reduce_leads_gap(
+            before_stats=links_stats_before,
+            target_count_leads=int(data.get("count_requests"))
+        )
+
     await message.bot.send_message(chat_id=message.chat.id,
                                    text="✅ Супер-Сессия завершена!")
+
+
+async def _process_session_shotdown(after_session_data: dict, message: Message):
+    if after_session_data.get("stop-supersession"):
+        return await message.bot.send_message(
+            chat_id=message.chat.id,
+            text="<b>🚫 Суперсессия прервана</b>"
+        )

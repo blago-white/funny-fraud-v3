@@ -24,7 +24,8 @@ async def select_sms_service(
         await query.message.edit_reply_markup(
             reply_markup=get_session_presets_kb(
                 current_sms_service=callback_data.sms_service,
-                is_supervised=data.get("supervised")
+                is_supervised=data.get("supervised"),
+                strict_mode=data.get("use-strict")
             )
         )
     except:

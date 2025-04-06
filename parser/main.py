@@ -351,7 +351,7 @@ class LeadsGenerator:
 
             print(f"LEAD {lead_id} REFRESH OTP : {sms_code} - {lead.sms_code}")
 
-            if lead.status == LeadGenResultStatus.FAILED:
+            if lead.status in (LeadGenResultStatus.FAILED, LeadGenResultStatus.PROGRESS):
                 raise ClientAbortedOtpValidation("Status FAILED set")
 
             if lead.status == LeadGenResultStatus.RESEND_CODE:

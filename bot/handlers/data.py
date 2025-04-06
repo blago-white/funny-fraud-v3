@@ -38,3 +38,7 @@ class UseSupervisorData(CallbackData, prefix="supervised"):
 
 class StopSupersessionData(CallbackData, prefix="supersession-stop"):
     pass
+
+
+class StrictLeadsCountModeData(CallbackData, prefix="strict-count-leads"):
+    use_strict: bool

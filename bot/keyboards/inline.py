@@ -8,7 +8,8 @@ from bot.handlers.data import (LeadStatusCallbackData,
                                LeadPaidData,
                                SMSServiceSelectorData,
                                UseSupervisorData,
-                               StopSupersessionData)
+                               StopSupersessionData,
+                               StrictLeadsCountModeData)
 from db.transfer import LeadGenResult, LeadGenResultStatus
 from parser.utils.sms import mapper
 
@@ -99,7 +100,8 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
 
 def get_session_presets_kb(
         current_sms_service: str = mapper.HELPERSMS.KEY,
-        is_supervised: bool = False
+        is_supervised: bool = False,
+        strict_mode: bool = False,
 ):
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -128,6 +130,12 @@ def get_session_presets_kb(
             [InlineKeyboardButton(
                 text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
                 callback_data=UseSupervisorData(use=not is_supervised).pack()
+            )],
+            [InlineKeyboardButton(
+                text=f"{"✅" if strict_mode else ""}⚠ Четкое соблюд. кол-в'а лидов [СС]",
+                callback_data=StrictLeadsCountModeData(
+                    use_strict=not strict_mode
+                ).pack()
             )]
         ]
     )
