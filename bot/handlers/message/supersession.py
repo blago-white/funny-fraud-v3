@@ -186,7 +186,10 @@ async def approve_super_session(
             leads_delta = target_count_leads - count_leads_of_link
 
             if count_leads_of_link < target_count_leads and (leads_delta > 5):
-                post_session_links += (target_link, leads_delta)
+                post_session_links.append((target_link, leads_delta))
+
+        if not post_session_links:
+            return
 
         for target_link, delta in post_session_links:
             await state.set_data({
