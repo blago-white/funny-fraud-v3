@@ -196,7 +196,7 @@ async def approve_super_session(
                 "ref_links": [target_link],
                 "count_requests": min(delta+5, 30),
                 "payments_card": data.get("payments_card"),
-                "timeout": min(max(delta*3, 15), 60),
+                "timeout": min(max(delta*3, 15), 60) * 60,
                 "sms-service": data.get("sms-service"),
                 "supervised": data.get("supervised")
             })
