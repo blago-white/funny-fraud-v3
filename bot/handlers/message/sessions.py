@@ -406,7 +406,7 @@ async def _start_session_keyboard_pooling(
                     delta_balance=(
                         call_stack.default_sms_service_balance -
                         sms_service_balance
-                    )
+                    ) if call_stack.default_sms_service_balance else None
                 )
 
                 return await call_stack.initiator_message.bot.send_message(
@@ -422,7 +422,7 @@ async def _start_session_keyboard_pooling(
                     delta_balance=(
                         call_stack.default_sms_service_balance -
                         sms_service_balance
-                    )
+                    ) if call_stack.default_sms_service_balance else None
                 )
 
                 return await call_stack.initiator_message.bot.send_message(
@@ -472,7 +472,8 @@ def _commit_session_results(session_id: int,
             count_leads=results[link]
         )
 
-    LeadsGenerationStatisticsService().add_sms_delta_balance(session_id=session_id, delta=delta_balance)
+    if delta_balance:
+        LeadsGenerationStatisticsService().add_sms_delta_balance(session_id=session_id, delta=delta_balance)
 
 
 def _get_sms_service_balance(sms_service: BaseSmsService):
