@@ -22,7 +22,7 @@ class ElSmsSMSCodesService(BaseSmsService):
         print("ELSMS GET NUMBER")
 
         response = requests.get(
-            url=f"https://el-sms.com/api/orderPhone/"
+            url=f"https://el-bot.com/api/orderPhone/"
                 f"?api_key={self._apikey}&v=1.4&country=ru&service=2908"
         )
 
@@ -37,7 +37,7 @@ class ElSmsSMSCodesService(BaseSmsService):
 
     def check_code(self, phone_id: int):
         response = requests.get(
-            url=f"https://el-sms.com/api/getPhoneInfo/"
+            url=f"https://el-bot.com/api/getPhoneInfo/"
                 f"?api_key={self._apikey}&v=1.4"
                 f"&id={phone_id}"
         )
