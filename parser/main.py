@@ -168,9 +168,9 @@ class LeadsGenerator:
                 print("OWNER DATA ENTERED")
 
                 break
-            except (RegistrationSMSTimeoutError, CardDataEnteringBanned):
+            except (RegistrationSMSTimeoutError, CardDataEnteringBanned) as exc:
                 print("OWNER DATA RegistrationSMSTimeoutError CardDataEnteringBanned")
-                if session.strategy == SessionStrategy.DEFAULT:
+                if session.strategy == SessionStrategy.DEFAULT or type(exc) == RegistrationSMSTimeoutError:
                     bad_phone = True
 
                     self._sms_service.cancel(phone_id=phone_id)
