@@ -163,8 +163,11 @@ class LeadsGenerator:
 
                 initializer.enter_registration_code(code=code)
 
+                print("OWNER DATA ENTERED")
+
                 break
             except (RegistrationSMSTimeoutError, CardDataEnteringBanned):
+                print("OWNER DATA RegistrationSMSTimeoutError CardDataEnteringBanned")
                 bad_phone = True
 
                 self._sms_service.cancel(phone_id=phone_id)
@@ -187,6 +190,8 @@ class LeadsGenerator:
                     used_phone_number=phone
                 )
             except Exception as e:
+                print(f"OWNER DATA EXCEPTION: {e}")
+
                 self._sms_service.cancel(phone_id=phone_id)
 
                 print(f"LEAD #{lead_id} INIT ERROR: {repr(e)} {e}")
@@ -206,9 +211,12 @@ class LeadsGenerator:
         print(f"LEAD #{lead_id} CARD DATA ENTER")
 
         if session.strategy == SessionStrategy.SBER_ID:
+            print("OPEN REF LINK")
             self._initializer.open_logined_sber_ref_link(url=session.ref_link)
 
         try:
+            print("ENTERING CARD DATA")
+
             self._try_enter_card_data(initializer=initializer,
                                       session_id=session_id,
                                       lead_id=lead_id)
