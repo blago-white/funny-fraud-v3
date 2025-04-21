@@ -214,7 +214,7 @@ class LeadsGenerator:
 
         if session.strategy == SessionStrategy.SBER_ID:
             print("OPEN REF LINK")
-            self._initializer.open_logined_sber_ref_link(url=session.ref_link)
+            initializer.open_logined_sber_ref_link(url=session.ref_link)
 
         try:
             print("ENTERING CARD DATA")
