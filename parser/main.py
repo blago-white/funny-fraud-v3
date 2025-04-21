@@ -180,6 +180,7 @@ class LeadsGenerator:
                         )
 
                     continue
+                break
 
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
