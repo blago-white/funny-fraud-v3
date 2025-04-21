@@ -74,6 +74,32 @@ class OfferInitializerParser:
 
             raise e
 
+    def init_sber_id(self, phone: str, _retry: bool = False):
+        self._driver.get(
+            url="https://id.sber.ru/profile/me?utm_medium=referral&utm_source=sberbank_ru&utm_campaign=button_create_sberid"
+        )
+
+        self._form_already_inited = True
+
+        try:
+            self._enter_phone(phone=phone)
+        except Exception as e:
+            self._form_already_inited = False
+
+            if not _retry:
+                return self.init_sber_id(phone=phone, _retry=True)
+
+            raise e
+
+    def open_logined_sber_ref_link(self, url: str):
+        self._driver.get(url=url)
+
+        WebDriverWait(self._driver, 50).until(
+            expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[id='pan']")
+            )
+        )
+
     def submit_payment(self):
         self._submit_payment_form()
 
@@ -425,36 +451,24 @@ class OfferInitializerParser:
             ).send_keys(code[i])
 
     def _enter_phone(self, phone: str):
-        # print("ENTER PHONE #1")
         try:
             WebDriverWait(self._driver, 60).until(
                 expected_conditions.presence_of_element_located(
                     (By.CSS_SELECTOR, "input[type='tel']")
                 )
             )
-#             print("ENTER PHONE #2")
         except:
-#             print("ENTER PHONE #3")
             phone_input = self._driver.find_element(
                 By.CSS_SELECTOR, "input[data-testid='phoneNumber-input']"
             )
-#             print("ENTER PHONE #4")
         else:
-#             print("ENTER PHONE #5")
             phone_input = self._driver.find_element(
                 By.CSS_SELECTOR, "input[type='tel']"
             )
-#             print("ENTER PHONE #6")
-
-#         print("ENTER PHONE #7")
 
         phone_input.click()
 
-#         print("ENTER PHONE #8")
-
         phone_input.send_keys(phone[1:])
-
-#         print("ENTER PHONE #9")
 
         WebDriverWait(self._driver, 10).until(
             expected_conditions.element_to_be_clickable(
@@ -462,12 +476,10 @@ class OfferInitializerParser:
                  "button[data-testid='phoneNumber-nextButton']")
             )
         )
-#         print("ENTER PHONE #10")
 
         self._driver.find_element(
             By.CSS_SELECTOR, "button[data-testid='phoneNumber-nextButton']"
         ).click()
-#         print("ENTER PHONE #11")
 
         try:
             WebDriverWait(self._driver, 5).until(
@@ -476,16 +488,12 @@ class OfferInitializerParser:
                     text_="Продолжить вход с этим номером пока не можем"
                 )
             )
-#             print("ENTER PHONE #12")
         except:
             pass
         else:
-#             print("ENTER PHONE #15")
             raise exceptions.BadPhoneError()
         finally:
-#             print("ENTER PHONE #13")
             if "Продолжить вход с этим номером пока не можем".lower() in self._driver.page_source.lower():
-#                 print("ENTER PHONE #14")
                 raise exceptions.BadPhoneError()
 
         try:
@@ -494,12 +502,9 @@ class OfferInitializerParser:
                     (By.ID, "inputError")
                 )
             )
-#             print("ENTER PHONE #16")
         except:
-#             print("ENTER PHONE #17")
             pass
         else:
-#             print("ENTER PHONE #18")
             raise exceptions.BadPhoneError()
 
         try:
@@ -509,18 +514,13 @@ class OfferInitializerParser:
                      "button[data-testid='reinitSessionButton']")
                 )
             )
-#             print("ENTER PHONE #19")
         except:
-#             print("ENTER PHONE #20")
             return
 
-#         print("ENTER PHONE #21")
 
         self._driver.find_element(
             By.CSS_SELECTOR, "button[data-testid='reinitSessionButton']"
         ).click()
-
-#         print("ENTER PHONE #22")
 
         raise ValueError
 

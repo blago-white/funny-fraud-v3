@@ -361,8 +361,6 @@ async def _start_session_keyboard_pooling(
             sms_service_balance = _get_sms_service_balance(
                 sms_service=sms_service
             )
-            # req_update = leads_differences_exists(prev_leads=prev_leads,
-            #                                       leads=leads)
 
             if True:
                 if type(sms_service_balance) is float:
@@ -432,9 +430,6 @@ async def _start_session_keyboard_pooling(
                 )
         except Exception as e:
             raise e
-        #
-        # prev_leads = leads
-        # prev_balance = sms_service_balance
 
         await asyncio.sleep(5)
 

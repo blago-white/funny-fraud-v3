@@ -15,7 +15,7 @@ from .parser.exceptions import (TraficBannedError,
                                 InitializingError,
                                 CardDataEnteringBanned)
 from .parser.parser import OfferInitializerParser
-from .sessions import LeadsGenerationSession
+from .sessions import LeadsGenerationSession, SessionStrategy
 from .utils.sms.elsms import ElSmsSMSCodesService
 from .utils.sms.middleware.throttling import SmsServiceThrottlingMiddleware
 from .utils.sessions import session_results_commiter
@@ -121,10 +121,14 @@ class LeadsGenerator:
                 self._check_stopped_with_phone(session_id, lead_id, phone_id=phone_id)
 
                 try:
-                    initializer.init(
-                        url=session.ref_link,
-                        phone=phone
-                    )
+                    if session.strategy == SessionStrategy.DEFAULT:
+                        initializer.init(
+                            url=session.ref_link,
+                            phone=phone
+                        )
+                    elif session.strategy == SessionStrategy.SBER_ID:
+                        initializer.init_sber_id(phone=phone)
+
                     break
                 except BadPhoneError:
                     print(f"LEAD #{lead_id} CANNOT USE PHONE TO REG")
@@ -200,6 +204,9 @@ class LeadsGenerator:
             )
 
         print(f"LEAD #{lead_id} CARD DATA ENTER")
+
+        if session.strategy == SessionStrategy.SBER_ID:
+            self._initializer.open_logined_sber_ref_link(url=session.ref_link)
 
         try:
             self._try_enter_card_data(initializer=initializer,
@@ -278,8 +285,7 @@ class LeadsGenerator:
                 if type(e) is OtpTimeoutError:
                     print(f"LEAD #{lead_id} OTP TIMEOUT ERROR: {repr(e)}")
                 else:
-                    print(
-                        f"LEAD #{lead_id} ENTER PAYMENT OTP ERROR: {repr(e)}")
+                    print(f"LEAD #{lead_id} ENTER PAYMENT OTP ERROR: {repr(e)}")
 
                 if _ >= 2:
                     error_msg = ("Otp waiting timeout"
