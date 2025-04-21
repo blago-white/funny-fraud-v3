@@ -91,6 +91,11 @@ class OfferInitializerParser:
 
             raise e
 
+    def test_proxy_trafic_for_sberprime(self, url: str):
+        self._driver.get(url=url)
+
+        self._click_get_account()
+
     def open_logined_sber_ref_link(self, url: str):
         self._driver.get(url=url)
 

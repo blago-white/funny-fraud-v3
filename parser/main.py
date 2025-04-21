@@ -127,6 +127,8 @@ class LeadsGenerator:
                             phone=phone
                         )
                     elif session.strategy == SessionStrategy.SBER_ID:
+                        initializer.test_proxy_trafic_for_sberprime(url=session.ref_link)
+
                         initializer.init_sber_id(phone=phone)
 
                     break
