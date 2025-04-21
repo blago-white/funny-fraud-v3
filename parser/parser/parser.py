@@ -94,11 +94,20 @@ class OfferInitializerParser:
     def open_logined_sber_ref_link(self, url: str):
         self._driver.get(url=url)
 
-        WebDriverWait(self._driver, 50).until(
-            expected_conditions.presence_of_element_located(
-                (By.CSS_SELECTOR, "input[id='pan']")
+        try:
+            WebDriverWait(self._driver, 50).until(
+                expected_conditions.presence_of_element_located(
+                    (By.CSS_SELECTOR, "input[id='pan']")
+                )
             )
-        )
+        except:
+            self._click_get_account()
+
+            WebDriverWait(self._driver, 50).until(
+                expected_conditions.presence_of_element_located(
+                    (By.CSS_SELECTOR, "input[id='pan']")
+                )
+            )
 
     def submit_payment(self):
         self._submit_payment_form()
