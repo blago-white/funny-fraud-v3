@@ -168,17 +168,18 @@ class LeadsGenerator:
                 break
             except (RegistrationSMSTimeoutError, CardDataEnteringBanned):
                 print("OWNER DATA RegistrationSMSTimeoutError CardDataEnteringBanned")
-                bad_phone = True
+                if session.strategy == SessionStrategy.DEFAULT:
+                    bad_phone = True
 
-                self._sms_service.cancel(phone_id=phone_id)
+                    self._sms_service.cancel(phone_id=phone_id)
 
-                if _ >= self._GLOBAL_RETRIES - 1:
-                    raise BadPhoneError(
-                        used_phone_id=phone_id,
-                        used_phone_number=phone
-                    )
+                    if _ >= self._GLOBAL_RETRIES - 1:
+                        raise BadPhoneError(
+                            used_phone_id=phone_id,
+                            used_phone_number=phone
+                        )
 
-                continue
+                    continue
 
             except TraficBannedError as e:
                 print(f"LEAD #{lead_id} TRAFIC BANNED ERROR {repr(e)}")
