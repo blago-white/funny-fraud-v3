@@ -100,7 +100,7 @@ class OfferInitializerParser:
         self._driver.get(url=url)
 
         try:
-            WebDriverWait(self._driver, 50).until(
+            WebDriverWait(self._driver, 40).until(
                 expected_conditions.presence_of_element_located(
                     (By.CSS_SELECTOR, "input[id='pan']")
                 )
