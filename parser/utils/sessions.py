@@ -112,6 +112,9 @@ def session_results_commiter(func):
                         raise e
 
                     print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
+
+                else:
+                    raise e
         else:
             print(f"LEAD #{lead_id} CANT RUN GOLOGIN")
             return self._db_service.change_status(
