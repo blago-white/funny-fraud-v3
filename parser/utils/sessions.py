@@ -96,6 +96,9 @@ def session_results_commiter(func):
             except Exception as e:
                 print(f"LEAD #{lead_id} FAILED - {e} {repr(e)}")
 
+                if "proxyerror" in str(e).lower():
+                    return
+
                 try:
                     GologinApikeysRepository().annihilate_current()
                 except Exception as e:
