@@ -1,3 +1,5 @@
+from pydivert.windivert_dll import raise_on_error
+
 from .base import DefaultApikeyRedisRepository
 
 
@@ -28,6 +30,9 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
         self._decrease_count()
 
     def get_current(self) -> str | None:
+        if not self._get_count():
+            return None
+
         return self._conn.get(name=self._current_gologin_apikey_name).decode()
 
     def set(self, new_apikey: str):
