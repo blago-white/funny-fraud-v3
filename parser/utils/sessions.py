@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 from requests.exceptions import JSONDecodeError
 
 from db.transfer import LeadGenResultStatus, LeadGenResult
+from db.gologin import GologinApikeysRepository
+
 from parser.sessions import LeadsGenerationSession
 from parser.exceptions import ClientAbortedOtpValidation, CreatePaymentFatalError
 from parser.parser.exceptions import (TraficBannedError,
@@ -78,14 +80,36 @@ def session_results_commiter(func):
             except JSONDecodeError as e:
                 print(f"LEAD #{lead_id} GOLOGIN RESPONSE FAILED - {e} | {repr(e)}")
 
-                return self._db_service.change_status(
-                    session_id=session_id,
-                    lead_id=lead_id,
-                    status=LeadGenResultStatus.FAILED,
-                    error=f"GOLOGIN RESPONSE FAILED: \n\n{repr(e)}\n\n{e}"
-                )
+                try:
+                    GologinApikeysRepository().annihilate_current()
+                except Exception as e:
+                    self._db_service.change_status(
+                        session_id=session_id,
+                        lead_id=lead_id,
+                        status=LeadGenResultStatus.FAILED,
+                        error=f"GOLOGIN RESPONSE FAILED: \n\n{repr(e)}\n\n{e}"
+                    )
+
+                    raise e
+
+                print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
             except Exception as e:
                 print(f"LEAD #{lead_id} FAILED - {e} {repr(e)}")
+
+                try:
+                    GologinApikeysRepository().annihilate_current()
+                except Exception as e:
+                    self._db_service.change_status(
+                        session_id=session_id,
+                        lead_id=lead_id,
+                        status=LeadGenResultStatus.FAILED,
+                        error=f"GOLOGIN RESPONSE FAILED: \n\n{repr(e)}\n\n{e}"
+                    )
+
+                    raise e
+
+                print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
+
         else:
             print(f"LEAD #{lead_id} CANT RUN GOLOGIN")
             return self._db_service.change_status(
