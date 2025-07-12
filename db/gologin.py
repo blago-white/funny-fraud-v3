@@ -1,3 +1,4 @@
+import time
 from traceback import print_tb
 
 from .base import DefaultApikeyRedisRepository
@@ -6,6 +7,9 @@ from .base import DefaultApikeyRedisRepository
 class GologinApikeysRepository(DefaultApikeyRedisRepository):
     _APIKEY_KEY = "gologin:apikey"
     _APIKEY_COUNTER_KEY = "gologin:counter"
+    _ANNIHILATION_TIMEOUT: int = 90
+
+    _last_annihilation_time: float = 0
     _instance = None
 
     def __new__(cls):
@@ -25,9 +29,14 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
     def annihilate_current(self):
         print("ANNIHILATE CURRENT GOLOGIN")
 
+        if (time.time() - self._last_annihilation_time) < self._ANNIHILATION_TIMEOUT:
+            return
+
         self._conn.delete(self._current_gologin_apikey_name)
 
         self._decrease_count()
+
+        self._last_annihilation_time = time.time()
 
     def get_current(self) -> str | None:
         if not self._get_count():
