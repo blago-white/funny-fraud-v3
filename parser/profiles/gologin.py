@@ -14,6 +14,9 @@ class GologinProfilesManager:
     def __init__(self, token: str = None):
         self._TOKEN = token or self._gologin_repository.get_current()
 
+        if self._TOKEN is None:
+            self._TOKEN = type(self._gologin_repository)().get_current()
+
         self._manager = GoLogin(options={
             "token": self._TOKEN,
             "spawn_browser": False
@@ -70,9 +73,9 @@ class GologinProfilesManager:
         self._manager.stop()
 
     def _get_gologin_debugger(self, pid: str, worker_id: int) -> str:
-        print(f"USED PORT: {10000+(worker_id%10000)}")
+        print(f"USED PORT: {10000+(worker_id % 10000)}")
         return GoLogin({
             "token": self._TOKEN,
             "profile_id": pid,
-            "port": 10000+(worker_id%10000)
+            "port": 10000+(worker_id % 10000)
         }).start()

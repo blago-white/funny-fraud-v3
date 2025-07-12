@@ -1,19 +1,16 @@
 from aiogram import F
 from aiogram.dispatcher.router import Router
-from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.states.forms import ProxySettingForm
 from db.proxy import ProxyRepository
-
 from ..common import db_services_provider
-
 
 router = Router(name=__name__)
 
 
-@router.message(F.text == "🔄Указать Прокси")
+@router.message(F.text == "🔐 Изменить Прокси")
 async def make_reset_apikey(message: Message, state: FSMContext):
     await state.set_state(state=ProxySettingForm.wait_base_proxy)
 
@@ -29,8 +26,9 @@ async def make_reset_apikey(message: Message, state: FSMContext):
 @db_services_provider(provide_leads=False,
                       provide_gologin=False,
                       provide_proxy=True)
-async def set_apikey(message: Message, state: FSMContext,
-                     proxydb: ProxyRepository):
+async def set_apikey(
+        message: Message, state: FSMContext,
+        proxydb: ProxyRepository):
     await state.clear()
 
     print("START")

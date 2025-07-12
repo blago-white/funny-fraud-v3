@@ -2,23 +2,27 @@ import os
 
 import requests
 
-from db.sms import SmsServiceApikeyRepository
+from db.sms import ElSmsServiceApikeyRepository
 
+from .base import BaseSmsService
 from .exceptions import NumberGettingException
+from .middleware import SmsRequestsStatMiddleware
 
 
-class SmsCodesService:
+class ElSmsSMSCodesService(BaseSmsService):
     _id: str
-    _apikey: str = None
 
     def __init__(self, apikey: str = None):
-        self._apikey = apikey or SmsServiceApikeyRepository().get_current()
+        super().__init__(
+            apikey=apikey or ElSmsServiceApikeyRepository().get_current()
+        )
 
+    @SmsRequestsStatMiddleware.counter_receive_phone
     def get_number(self, retries: int = 3) -> str:
-        print("SMS_APIKEY", self._apikey)
+        print("ELSMS GET NUMBER")
 
         response = requests.get(
-            url=f"https://el-sms.com/api/orderPhone/"
+            url=f"https://el-bot.com/api/orderPhone/"
                 f"?api_key={self._apikey}&v=1.4&country=ru&service=2908"
         )
 
@@ -33,7 +37,7 @@ class SmsCodesService:
 
     def check_code(self, phone_id: int):
         response = requests.get(
-            url=f"https://el-sms.com/api/getPhoneInfo/"
+            url=f"https://el-bot.com/api/getPhoneInfo/"
                 f"?api_key={self._apikey}&v=1.4"
                 f"&id={phone_id}"
         )
@@ -47,3 +51,7 @@ class SmsCodesService:
             return result["message"]["codes"][-1]
         except:
             return None
+
+    @SmsRequestsStatMiddleware.counter_cancel_phone
+    def cancel(self, phone_id: int):
+        pass

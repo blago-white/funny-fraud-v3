@@ -1,19 +1,16 @@
 from aiogram import F
 from aiogram.dispatcher.router import Router
-from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.states.forms import GologinApikeySettingForm
 from db.gologin import GologinApikeysRepository
-
 from ..common import db_services_provider
-
 
 router = Router(name=__name__)
 
 
-@router.message(F.text == "🔄Указать Gologin Apikey")
+@router.message(F.text == "🟩 Gologin Apikey")
 async def make_reset_apikey(message: Message, state: FSMContext):
     await state.set_state(state=GologinApikeySettingForm.wait_apikey)
 
@@ -27,8 +24,9 @@ async def make_reset_apikey(message: Message, state: FSMContext):
 
 @router.message(GologinApikeySettingForm.wait_apikey)
 @db_services_provider(provide_leads=False)
-async def set_apikey(message: Message, state: FSMContext,
-                     gologindb: GologinApikeysRepository):
+async def set_apikey(
+        message: Message, state: FSMContext,
+        gologindb: GologinApikeysRepository):
     await state.clear()
 
     if not len(message.text.split(".")) == 3:

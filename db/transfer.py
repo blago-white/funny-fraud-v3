@@ -40,8 +40,15 @@ class LeadGenResult:
     error: str | None = None
     proxy: str | None = None
     sms_code: str | None = None
+    ref_link: str | None = None
 
     lead_id: int | None = None
 
     def __post_init__(self):
         self.status = STATUS_MAPPING.get(self.status, "f")
+
+
+@dataclass
+class DayStatisticsRow:
+    link: str
+    count: int

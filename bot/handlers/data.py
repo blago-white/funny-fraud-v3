@@ -22,3 +22,23 @@ class ForceLeadNewSmsData(CallbackData, prefix="new_sms"):
 
 class RestartSessionData(CallbackData, prefix="restart"):
     session_id: int
+
+
+class LeadPaidData(CallbackData, prefix="paid"):
+    session_id: int
+
+
+class SMSServiceSelectorData(CallbackData, prefix="sms-selector"):
+    sms_service: str
+
+
+class UseSupervisorData(CallbackData, prefix="supervised"):
+    use: bool
+
+
+class StopSupersessionData(CallbackData, prefix="supersession-stop"):
+    pass
+
+
+class StrictLeadsCountModeData(CallbackData, prefix="strict-count-leads"):
+    use_strict: bool

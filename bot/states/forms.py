@@ -8,6 +8,14 @@ class SessionForm(StatesGroup):
     approve_session = State()
 
 
+class SuperSessionForm(StatesGroup):
+    set_count_complete_requests = State()
+    set_ref_link = State()
+    set_card_number = State()
+    set_duration = State()
+    approve_session = State()
+
+
 class GologinApikeySettingForm(StatesGroup):
     wait_apikey = State()
 

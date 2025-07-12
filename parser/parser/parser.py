@@ -13,6 +13,7 @@ class OfferInitializerParser:
     _form_already_inited: bool = False
     _card_data_already_entered: bool = False
     _card_data_page_path: str = None
+    _account_not_logined: bool = None
 
     _OWNER_DATA_FIELDS_IDS = [
         "input[name='firstName']",
@@ -73,6 +74,46 @@ class OfferInitializerParser:
 
             raise e
 
+    def init_sber_id(self, phone: str, _retry: bool = False):
+        self._driver.get(
+            url="https://id.sber.ru/profile/me?utm_medium=referral&utm_source=sberbank_ru&utm_campaign=button_create_sberid"
+        )
+
+        self._form_already_inited = True
+
+        try:
+            self._enter_phone(phone=phone)
+        except Exception as e:
+            self._form_already_inited = False
+
+            if not _retry:
+                return self.init_sber_id(phone=phone, _retry=True)
+
+            raise e
+
+    def test_proxy_trafic_for_sberprime(self, url: str):
+        self._driver.get(url=url)
+
+        self._click_get_account()
+
+    def open_logined_sber_ref_link(self, url: str):
+        self._driver.get(url=url)
+
+        try:
+            WebDriverWait(self._driver, 40).until(
+                expected_conditions.presence_of_element_located(
+                    (By.CSS_SELECTOR, "input[id='pan']")
+                )
+            )
+        except:
+            self._click_get_account()
+
+            WebDriverWait(self._driver, 50).until(
+                expected_conditions.presence_of_element_located(
+                    (By.CSS_SELECTOR, "input[id='pan']")
+                )
+            )
+
     def submit_payment(self):
         self._submit_payment_form()
 
@@ -105,16 +146,38 @@ class OfferInitializerParser:
                 )
             )
         except:
-            try:
-                WebDriverWait(self._driver, 60).until(
-                    expected_conditions.presence_of_element_located(
-                        (By.CSS_SELECTOR, "p[class='css-dth2xi']")
-                    )
-                )
-                return True
-            except:
-                raise exceptions.OTPError("Success page not opened but "
-                                          "code is ok")
+            for _ in range(3):
+                try:
+                    for _ in range(35):
+                        if (("подписка" in self._driver.page_source.lower())
+                                and (
+                                        "оформлена" in self._driver.page_source.lower())):
+                            print("CONFIRM WORDS IN PAGE SOURCE")
+                            return True
+
+                        if "no_spasibo_registration" in self._driver.current_url:
+                            print("CONFIRM ARGUMENT IN URL")
+                            return True
+
+                        try:
+                            WebDriverWait(self._driver, 1).until(
+                                expected_conditions.presence_of_element_located(
+                                    (By.CSS_SELECTOR, "p[class='css-dth2xi']")
+                                )
+                            )
+                            print("CONFIRM BUTTON EXISTS")
+                            return True
+                        except:
+                            print(
+                                f"NEXT CYCLE CONFIRMATION: {"no_spasibo_registration" in self._driver.current_url} {self._driver.current_url}")
+                            continue
+                    raise TimeoutError("Cannot find success flags")
+                except:
+                    self._driver.execute_script(
+                        "location.href = location.href;")
+            else:
+                raise exceptions.OTPError(
+                    "Success page not opened but code is ok")
 
         raise exceptions.InvalidOtpCodeError("Invalid otp code received")
 
@@ -130,7 +193,24 @@ class OfferInitializerParser:
             self._try_go_to_payment()
 
         self._card_data_already_entered = True
-        self._enter_card()
+
+        for _ in range(4):
+            try:
+                self._enter_card()
+                return
+            except:
+                try:
+                    self._click_subscription_button()
+                except:
+                    pass
+
+                if self._card_data_already_entered:
+                    self._driver.get(self._card_data_page_path)
+                else:
+                    self._driver.execute_script(
+                        f"location.href = location.href"
+                    )
+        raise Exception("Cannot enter card!")
 
     def resend_otp(self):
         try:
@@ -146,14 +226,23 @@ class OfferInitializerParser:
         except:
             print("CANNOT RESEND CODE")
 
-    def _enter_card(self):
-        WebDriverWait(self._driver, 120).until(
+    def _enter_card(
+            self, is_retry: bool = False, overrided_timeout: int = 120):
+        WebDriverWait(self._driver, overrided_timeout).until(
             expected_conditions.presence_of_element_located(
                 (By.CSS_SELECTOR, "input[id='pan']")
             )
         )
 
-        self._try_exit_profile()
+        # if not is_retry:
+            # self._try_exit_profile(override_timeout=.25)
+
+        # if is_retry:
+        #     if self._payments_card.number in self._driver.find_element(
+        #         By.CSS_SELECTOR,
+        #         self._PAYMENT_CARD_FIELDS_IDS[0]
+        #     ).text:
+        #
 
         for field_id, field_value in zip(self._PAYMENT_CARD_FIELDS_IDS,
                                          (self._payments_card.number,
@@ -170,58 +259,153 @@ class OfferInitializerParser:
 
             field.send_keys(field_value)
 
-    def _submit_payment_form(self):
-        WebDriverWait(self._driver, 10).until(
-            expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button[data-test-id='submit-payment']")
-            )
-        )
-
-        self._card_data_page_path = self._driver.current_url
-
-        self._driver.find_element(
-            By.CSS_SELECTOR,
-            "button[data-test-id='submit-payment']"
-        ).click()
-
-        print("WAIT FOR OTP PASSWORD")
-
-        START = time.time()
-
-        while True:
-            if time.time() - START > 20:
-                print("PAYMENT URL DONT CHANGES")
-
-                raise Exception("Cannot submit form")
-
-            if self._driver.current_url != self._card_data_page_path:
-                break
-
-        print("PAYMENT URL CHANGES")
-
-        try:
-            WebDriverWait(self._driver, 60).until(
-                expected_conditions.presence_of_element_located(
-                    (By.ID, "passwordEdit")
-                )
-            )
-        except:
-            WebDriverWait(self._driver, 10).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button[class='css-kbwmb3']")
-                )
-            )
-
-            self._driver.find_element(
-                By.CSS_SELECTOR, "button[class='css-kbwmb3']"
-            ).click()
+    def _submit_payment_form(
+            self, _need_reenter_card: bool = False,
+            _reenter_card_optional: bool = False,
+            _need_click_submit: bool = True,
+            _retry_count: int = 6):
+        if not _retry_count:
             self._card_data_already_entered = False
 
             print("ERROR GETTING OTP CODE PAGE")
 
             raise exceptions.OTPError("Error getting otp page")
 
-        print("OTP PASSWORD REQUEST COMPLETE")
+        print(
+            f"CALL _submit_payment_form({_need_click_submit=}, {_need_reenter_card=})")
+
+        if _need_reenter_card:
+            self._card_data_already_entered = False
+
+            try:
+                self._enter_card(overrided_timeout=15)
+            except:
+                raise Exception("Cannot submit, maybe sub page opens!")
+
+        try:
+            if _need_click_submit:
+                self._click_submit_payment_form()
+            else:
+                self._click_submit_payment_form(override_timeout=3)
+        except:
+            pass
+
+        print("WAIT FOR OTP PASSWORD")
+
+        if _need_click_submit:
+            START = time.time()
+
+            while True:
+                if "Не удалось инициализировать" in self._driver.page_source:
+                    self._driver.execute_script(
+                        "location.href = location.href;")
+
+                    return self._submit_payment_form(
+                        _need_reenter_card=True,
+                        _retry_count=_retry_count - 1
+                    )
+
+                elif "Сервис недоступен" in self._driver.page_source:
+                    self._driver.execute_script(
+                        "location.href = location.href;")
+
+                    return self._submit_payment_form(
+                        _need_reenter_card=True,
+                        _retry_count=_retry_count - 1
+                    )
+
+                if time.time() - START > 19:
+                    print("PAYMENT URL DONT CHANGES")
+
+                    raise Exception("Cannot submit form")
+
+                if self._driver.current_url != self._card_data_page_path:
+                    break
+
+                try:
+                    self._enter_card(overrided_timeout=2)
+                except:
+                    pass
+
+                try:
+                    self._click_submit_payment_form(override_timeout=2)
+                except:
+                    pass
+
+            print("PAYMENT URL CHANGES")
+
+        try:
+            WebDriverWait(self._driver, 15).until(
+                expected_conditions.presence_of_element_located(
+                    (By.ID, "passwordEdit")
+                )
+            )
+
+            print("OTP PASSWORD REQUEST COMPLETE")
+
+            return
+        except:
+            print("OTP PASSWORDS FIELD FIND ERROR 1")
+
+            try:
+                if not (self._driver.current_url.endswith("payment/") or self._driver.current_url.endswith("payment")):
+                    raise Exception("Is not sub page, skip!")
+
+                self._click_subscription_button()
+
+                print("CLICK GET SUB №1 | REENTER CARD")
+
+                return self._submit_payment_form(
+                    _need_reenter_card=True,
+                    _retry_count=_retry_count - 1
+                )
+            except:
+                print("CANNOT CLICK GET SUB №1")
+
+                if "не удалось инициализировать" in self._driver.page_source.lower():
+                    print("RED CROSS EXISTS")
+
+                    self._driver.execute_script(
+                        "location.href = location.href;"
+                    )
+                    return self._submit_payment_form(
+                        _need_click_submit=False,
+                        _retry_count=_retry_count - 1
+                    )
+
+        try:
+            WebDriverWait(self._driver, 13).until(
+                expected_conditions.presence_of_element_located(
+                    (By.ID, "passwordEdit")
+                )
+            )
+
+            print("OTP PASSWORD REQUEST COMPLETE")
+
+            return
+        except:
+            try:
+                if not (self._driver.current_url.endswith("payment/") or self._driver.current_url.endswith("payment")):
+                    raise Exception("Is not sub page, skip!")
+
+                self._click_subscription_button()
+
+                print("CLICK GET SUB №2 | REENTER CARD")
+
+                return self._submit_payment_form(
+                    _need_reenter_card=True,
+                    _retry_count=_retry_count - 1
+                )
+            except:
+                self._click_subscription_button()
+
+                print("CANNOT CLICK GET SUB №2 | NEED RETRY")
+
+        self._driver.execute_script("location.href = location.href;")
+        time.sleep(1)
+
+        return self._submit_payment_form(_need_click_submit=False,
+                                         _retry_count=_retry_count - 1)
 
     def _try_go_to_payment(self):
         pass
@@ -302,13 +486,29 @@ class OfferInitializerParser:
 
         WebDriverWait(self._driver, 10).until(
             expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, "button[data-testid='phoneNumber-nextButton']")
+                (By.CSS_SELECTOR,
+                 "button[data-testid='phoneNumber-nextButton']")
             )
         )
 
         self._driver.find_element(
             By.CSS_SELECTOR, "button[data-testid='phoneNumber-nextButton']"
         ).click()
+
+        try:
+            WebDriverWait(self._driver, 5).until(
+                expected_conditions.text_to_be_present_in_element(
+                    locator="body",
+                    text_="Продолжить вход с этим номером пока не можем"
+                )
+            )
+        except:
+            pass
+        else:
+            raise exceptions.BadPhoneError()
+        finally:
+            if "Продолжить вход с этим номером пока не можем".lower() in self._driver.page_source.lower():
+                raise exceptions.BadPhoneError()
 
         try:
             WebDriverWait(self._driver, 5).until(
@@ -319,7 +519,7 @@ class OfferInitializerParser:
         except:
             pass
         else:
-            raise Exception
+            raise exceptions.BadPhoneError()
 
         try:
             WebDriverWait(self._driver, 10).until(
@@ -330,6 +530,7 @@ class OfferInitializerParser:
             )
         except:
             return
+
 
         self._driver.find_element(
             By.CSS_SELECTOR, "button[data-testid='reinitSessionButton']"
@@ -345,7 +546,7 @@ class OfferInitializerParser:
                 )
             )
         except:
-            raise exceptions.TraficBannedError("Change proxy, banned!")
+            raise exceptions.TraficBannedError()
 
         self._driver.find_element(
             By.CSS_SELECTOR, ".css-1tb3n43.e1jyzd9p2"
@@ -391,14 +592,19 @@ class OfferInitializerParser:
         tel_field.send_keys(Keys.CONTROL + "a")
         tel_field.send_keys(Keys.DELETE)
 
-    def _try_exit_profile(self):
+    def _try_exit_profile(self, override_timeout: int = 20):
+        if self._account_not_logined:
+            return
+
         try:
-            WebDriverWait(self._driver, 20).until(
+            WebDriverWait(self._driver, override_timeout).until(
                 expected_conditions.element_to_be_clickable(
                     (By.CSS_SELECTOR, "button[data-test-id='profile-toggle']")
                 )
             )
         except:
+            self._account_not_logined = True
+
             print("ACCOUNT NOT LOGINED")
             return
 
@@ -409,10 +615,12 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 5).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button[data-test-id='profile-popup-exit']")
+                    (By.CSS_SELECTOR,
+                     "button[data-test-id='profile-popup-exit']")
                 )
             )
         except:
+            self._account_not_logined = False
             print("POPUP DONT OPEN")
             return
             # raise Exception("Popup dont opened")
@@ -426,3 +634,28 @@ class OfferInitializerParser:
                 (By.CSS_SELECTOR, "input[id='pan']")
             )
         )
+
+    def _click_submit_payment_form(self, override_timeout: int = 10):
+        WebDriverWait(self._driver, override_timeout).until(
+            expected_conditions.element_to_be_clickable(
+                (By.CSS_SELECTOR, "button[data-test-id='submit-payment']")
+            )
+        )
+
+        self._card_data_page_path = self._driver.current_url
+
+        self._driver.find_element(
+            By.CSS_SELECTOR,
+            "button[data-test-id='submit-payment']"
+        ).click()
+
+    def _click_subscription_button(self, override_timeout: int = 3):
+        WebDriverWait(self._driver, override_timeout).until(
+            expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, "button[class='css-kbwmb3']")
+            )
+        )
+
+        self._driver.find_element(
+            By.CSS_SELECTOR, "button[class='css-kbwmb3']"
+        ).click()

@@ -15,7 +15,7 @@ class WebDriversService:
                 os=["windows"],
                 platforms=["pc"]
             ),
-            gologin_manager: GologinProfilesManager = GologinProfilesManager(),
+            gologin_manager: GologinProfilesManager = GologinProfilesManager,
             driver_path: str = None):
         self._default_driver = default_driver
         self._default_opts_class = default_opts_class
@@ -23,7 +23,11 @@ class WebDriversService:
         self._driver_path = driver_path or os.environ.get("CHROME_DRIVER_PATH")
         self._gologin_manager = gologin_manager
 
-    def get_desctop(self, worker_id: str, proxy: str = None):
+    @property
+    def gologin_manager(self) -> GologinProfilesManager:
+        return self._gologin_manager()
+
+    def get_desctop(self, worker_id: str, proxy: str = None) -> tuple[str, Chrome]:
         return self.get(
             proxy=proxy,
             agent=type(self._agent_service)(
@@ -35,7 +39,7 @@ class WebDriversService:
 
     def get(self, worker_id: str,
             proxy: str = None,
-            agent: str = None) -> Chrome:
+            agent: str = None) -> tuple[str, Chrome]:
         agent = agent or self._get_agent()
 
         return self._get_driver(
@@ -50,14 +54,16 @@ class WebDriversService:
     def _get_driver(self, opts: ChromeOptions,
                     agent: str,
                     proxy: str,
-                    worker_id: str):
-        return self._default_driver(
+                    worker_id: str) -> tuple[str, Chrome]:
+        pid = self.gologin_manager.get_profile_id(
+            useragent=agent,
+            proxy=proxy
+        )
+
+        return pid, self._default_driver(
             service=Service(executable_path=self._driver_path),
-            options=self._gologin_manager.use_profile(
-                pid=self._gologin_manager.get_profile_id(
-                    useragent=agent,
-                    proxy=proxy
-                ),
+            options=self.gologin_manager.use_profile(
+                pid=pid,
                 driver_options=opts,
                 worker_id=worker_id
             )

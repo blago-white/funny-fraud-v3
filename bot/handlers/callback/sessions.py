@@ -1,21 +1,17 @@
-import asyncio
-import random
-
 from aiogram import F
 from aiogram.dispatcher.router import Router
 from aiogram.filters.callback_data import CallbackData, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
 
 from bot.handlers.data import (LeadStatusCallbackData,
                                LeadCallbackAction,
                                LeadStatusReverseData,
                                ForceLeadNewSmsData,
-                               RestartSessionData)
-from db.leads import LeadGenerationResultsService
-from db.transfer import LeadGenResultStatus
+                               RestartSessionData,
+                               LeadPaidData)
 from bot.states.forms import PaymentCodeSettingForm
-from ..common import db_services_provider, leads_service_provider
+from db.leads import LeadGenerationResultsService
+from ..common import db_services_provider
 
 router = Router(name=__name__)
 
@@ -27,15 +23,9 @@ async def set_otp_code(
         query: CallbackQuery,
         callback_data: CallbackData,
         state: FSMContext):
-    await query.answer(text="❇Отправьте код❇")
-
     await state.set_state(state=PaymentCodeSettingForm.wait_payment_code)
 
-    await state.set_data(data={
-        "bot_message_id": 0,
-        "session_id": callback_data.session_id,
-        "lead_id": callback_data.lead_id
-    })
+    await query.answer(text="❇Отправьте код❇")
 
 
 @router.callback_query(LeadStatusCallbackData.filter(
@@ -131,3 +121,18 @@ async def drop_session(
         await query.answer("⚠Не удалось⚠")
     else:
         await query.answer("✅Сессия сброшена✅")
+
+
+@router.callback_query(LeadPaidData.filter())
+@db_services_provider(provide_gologin=False)
+async def set_lead_paid(
+        query: CallbackQuery,
+        callback_data: LeadPaidData,
+        leadsdb: LeadGenerationResultsService
+):
+    try:
+        leadsdb.set_paid(session_id=callback_data.session_id)
+    except:
+        await query.answer("❌ Ошибка изменения статуса")
+    else:
+        await query.answer("✅ Готово")

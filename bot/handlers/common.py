@@ -1,17 +1,22 @@
 from functools import wraps
 
-from parser.main import LeadsGenerator
-from db.leads import LeadGenerationResultsService
 from db.gologin import GologinApikeysRepository
-from db.sms import SmsServiceApikeyRepository
+from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
-from parser.utils.sms.services import SmsCodesService
+from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository, \
+    HelperSmsServiceApikeyRepository
+from db.statistics import LeadsGenerationStatisticsService
+from parser.main import LeadsGenerator
 
 
-def db_services_provider(provide_leads: bool = True,
-                         provide_gologin: bool = True,
-                         provide_sms: bool = False,
-                         provide_proxy: bool = False):
+def db_services_provider(
+        provide_leads: bool = True,
+        provide_gologin: bool = True,
+        provide_elsms: bool = False,
+        provide_smshub: bool = False,
+        provide_helper: bool = False,
+        provide_proxy: bool = False,
+        provide_stats: bool = False):
     def wrapper(func):
         @wraps(func)
         async def wrapped(*args, **kwargs):
@@ -23,21 +28,31 @@ def db_services_provider(provide_leads: bool = True,
             if provide_gologin:
                 db_services.update(gologindb=GologinApikeysRepository())
 
-            if provide_sms:
-                db_services.update(smsdb=SmsServiceApikeyRepository())
+            if provide_elsms:
+                db_services.update(elsmsdb=ElSmsServiceApikeyRepository())
+
+            if provide_smshub:
+                db_services.update(smshubdb=SmsHubServiceApikeyRepository())
+
+            if provide_helper:
+                db_services.update(helperdb=HelperSmsServiceApikeyRepository())
 
             if provide_proxy:
                 db_services.update(proxydb=ProxyRepository())
 
+            if provide_stats:
+                db_services.update(statsdb=LeadsGenerationStatisticsService())
+
             return await func(*args, **kwargs, **db_services)
 
         return wrapped
+
     return wrapper
 
 
 def leads_service_provider(func):
     @wraps(func)
     async def wrapped(*args, **kwargs):
-        return await func(*args, **kwargs, parser_service=LeadsGenerator())
+        return await func(*args, **kwargs, parser_service_class=LeadsGenerator)
 
     return wrapped
