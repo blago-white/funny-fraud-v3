@@ -40,9 +40,9 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
     def set(self, new_apikey: str):
         print("SET NEW GOLOGIN APIKEY")
 
-        self._conn.set(name=self._current_gologin_apikey_name, value=new_apikey)
-
         self._increase_count()
+
+        self._conn.set(name=self._current_gologin_apikey_name, value=new_apikey)
 
         return new_apikey
 
