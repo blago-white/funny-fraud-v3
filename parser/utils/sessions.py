@@ -98,21 +98,20 @@ def session_results_commiter(func):
 
                 if "proxyerror" in str(e).lower():
                     continue
+                if "json" in str(e).lower():
+                    try:
+                        GologinApikeysRepository().annihilate_current()
+                    except Exception as e:
+                        self._db_service.change_status(
+                            session_id=session_id,
+                            lead_id=lead_id,
+                            status=LeadGenResultStatus.FAILED,
+                            error=f"GOLOGIN RESPONSE FAILED: \n\n{repr(e)}\n\n{e}"
+                        )
 
-                try:
-                    GologinApikeysRepository().annihilate_current()
-                except Exception as e:
-                    self._db_service.change_status(
-                        session_id=session_id,
-                        lead_id=lead_id,
-                        status=LeadGenResultStatus.FAILED,
-                        error=f"GOLOGIN RESPONSE FAILED: \n\n{repr(e)}\n\n{e}"
-                    )
+                        raise e
 
-                    raise e
-
-                print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
-
+                    print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
         else:
             print(f"LEAD #{lead_id} CANT RUN GOLOGIN")
             return self._db_service.change_status(
