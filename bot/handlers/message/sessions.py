@@ -55,6 +55,8 @@ async def start(
         "helpersms": helperdb.get_current(),
     }
 
+    gologin_count_apikeys = gologindb.get_count()
+
     proxy_ok, _ = proxydb.can_use
 
     await message.bot.send_message(
@@ -65,7 +67,7 @@ async def start(
              apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
              if apikeys.get("gologin")
              else ""
-             }</code></b>\n\n"
+             } [кол-во: {gologin_count_apikeys}]</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
              f"— <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
              f"<code>{
