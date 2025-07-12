@@ -26,17 +26,18 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
     def _current_gologin_apikey_name(self):
         return self._APIKEY_KEY+str(self._get_count())
 
-    def annihilate_current(self):
+    def annihilate_current(self, _forced: bool = False):
         print("ANNIHILATE CURRENT GOLOGIN")
 
-        if (time.time() - self._last_annihilation_time) < self._ANNIHILATION_TIMEOUT:
+        if (not _forced) and (time.time() - self._last_annihilation_time) < self._ANNIHILATION_TIMEOUT:
             return
 
         self._conn.delete(self._current_gologin_apikey_name)
 
         self._decrease_count()
 
-        self._last_annihilation_time = time.time()
+        if not _forced:
+            self._last_annihilation_time = time.time()
 
     def get_current(self) -> str | None:
         print("GET CURRENT GOLOGIN")
