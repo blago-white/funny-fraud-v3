@@ -39,6 +39,8 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
         self._last_annihilation_time = time.time()
 
     def get_current(self) -> str | None:
+        print("GET CURRENT GOLOGIN")
+
         if not self._get_count():
             return None
 
