@@ -1,3 +1,5 @@
+from traceback import print_tb
+
 from .base import DefaultApikeyRedisRepository
 
 
@@ -29,6 +31,8 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
         if not self._get_count():
             return None
 
+        print(f"GET CURRENT GOLOGIN APIKEY [COUNTER: {self._get_count()}]")
+
         return self._conn.get(name=self._current_gologin_apikey_name).decode()
 
     def set(self, new_apikey: str):
@@ -48,9 +52,13 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
             return self._get_count()
 
     def _increase_count(self):
+        print("INCREASE COUNT")
+
         self._conn.set(self._APIKEY_COUNTER_KEY, self._get_count()+1)
 
     def _decrease_count(self):
+        print("DECREASE COUNT")
+
         if self._get_count() == 0:
             raise ValueError(f"{"=|"*30}\n\n\nGOLOGIN APIKEYS ENDED [ОБНОВИ АПИКЛЮЧИ ГОЛОГИНА]\n\n\n{"=|"*30}")
 
