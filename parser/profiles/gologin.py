@@ -14,6 +14,9 @@ class GologinProfilesManager:
     def __init__(self, token: str = None):
         self._TOKEN = token or self._gologin_repository.get_current()
 
+        if self._TOKEN is None:
+            self._TOKEN = type(self._gologin_repository)().get_current()
+
         self._manager = GoLogin(options={
             "token": self._TOKEN,
             "spawn_browser": False
