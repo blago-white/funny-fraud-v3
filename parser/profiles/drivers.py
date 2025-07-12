@@ -21,11 +21,11 @@ class WebDriversService:
         self._default_opts_class = default_opts_class
         self._agent_service = agent_service
         self._driver_path = driver_path or os.environ.get("CHROME_DRIVER_PATH")
-        self._gologin_manager = gologin_manager()
+        self._gologin_manager = gologin_manager
 
     @property
     def gologin_manager(self) -> GologinProfilesManager:
-        return self._gologin_manager
+        return self._gologin_manager()
 
     def get_desctop(self, worker_id: str, proxy: str = None) -> tuple[str, Chrome]:
         return self.get(
@@ -55,14 +55,14 @@ class WebDriversService:
                     agent: str,
                     proxy: str,
                     worker_id: str) -> tuple[str, Chrome]:
-        pid = self._gologin_manager.get_profile_id(
+        pid = self.gologin_manager.get_profile_id(
             useragent=agent,
             proxy=proxy
         )
 
         return pid, self._default_driver(
             service=Service(executable_path=self._driver_path),
-            options=self._gologin_manager.use_profile(
+            options=self.gologin_manager.use_profile(
                 pid=pid,
                 driver_options=opts,
                 worker_id=worker_id
