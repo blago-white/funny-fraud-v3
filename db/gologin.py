@@ -18,7 +18,7 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
 
     @property
     def _current_gologin_apikey_name(self):
-        if self._get_count() == -1:
+        if self._get_count() > 0:
             raise ValueError(f"{"=|"*30}\n\n\nGOLOGIN APIKEYS ENDED [ОБНОВИ АПИКЛЮЧИ ГОЛОГИНА]\n\n\n{"=|"*30}")
         return self._APIKEY_KEY+str(self._get_count())
 
@@ -39,8 +39,10 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
 
     def _get_count(self):
         try:
+            print("_GET_COUNT SUCCESS")
             return int((self._conn.get(self._APIKEY_COUNTER_KEY)).decode())
         except:
+            print("_GET_COUNT EXCEPT")
             self._conn.set(self._APIKEY_COUNTER_KEY, 0)
             return self._get_count()
 
