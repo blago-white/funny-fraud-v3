@@ -97,7 +97,7 @@ def session_results_commiter(func):
                 print(f"LEAD #{lead_id} FAILED - {e} {repr(e)}")
 
                 if "proxyerror" in str(e).lower():
-                    return
+                    continue
 
                 try:
                     GologinApikeysRepository().annihilate_current()
