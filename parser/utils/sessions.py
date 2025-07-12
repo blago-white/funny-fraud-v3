@@ -98,7 +98,7 @@ def session_results_commiter(func):
 
                 if "proxyerror" in str(e).lower():
                     continue
-                elif "expecting value" in str(e).lower():
+                elif "expecting value" in str(e).lower() or "navigator" in str(e).lower():
                     try:
                         GologinApikeysRepository().annihilate_current()
                     except Exception as e:
