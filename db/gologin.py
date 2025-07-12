@@ -1,5 +1,3 @@
-from pydivert.windivert_dll import raise_on_error
-
 from .base import DefaultApikeyRedisRepository
 
 
