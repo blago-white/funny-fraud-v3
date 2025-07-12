@@ -3,3 +3,52 @@ from .base import DefaultApikeyRedisRepository
 
 class GologinApikeysRepository(DefaultApikeyRedisRepository):
     _APIKEY_KEY = "gologin:apikey"
+    _APIKEY_COUNTER_KEY = "gologin:counter"
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(GologinApikeysRepository, cls).__new__(cls)
+
+        return cls._instance
+
+    @property
+    def _current_gologin_apikey_name(self):
+        if self._get_count() == -1:
+            raise ValueError(f"{"=|"*30}\n\n\nGOLOGIN APIKEYS ENDED [ОБНОВИ АПИКЛЮЧИ ГОЛОГИНА]\n\n\n{"=|"*30}")
+        return self._APIKEY_KEY+str(self._get_count())
+
+    @property
+    def exists(self):
+        return bool(self.get_current())
+
+    def annihilate_current(self):
+        self._conn.delete(self._current_gologin_apikey_name)
+
+        self._decrease_count()
+
+    def get_current(self) -> str | None:
+        return self._conn.get(name=self._current_gologin_apikey_name or b"").decode()
+
+    def set(self, new_apikey: str):
+        self._conn.set(name=self._current_gologin_apikey_name, value=new_apikey)
+
+        self._increase_count()
+
+        return new_apikey
+
+    def _get_count(self):
+        try:
+            return int((self._conn.get(self._APIKEY_COUNTER_KEY) or b"").decode())
+        except:
+            self._conn.set(self._APIKEY_COUNTER_KEY, 0)
+            return self._get_count()
+
+    def _increase_count(self):
+        self._conn.set(self._APIKEY_COUNTER_KEY, self._get_count()+1)
+
+    def _decrease_count(self):
+        if self._get_count() == 0:
+            raise ValueError(f"{"=|"*30}\n\n\nGOLOGIN APIKEYS ENDED [ОБНОВИ АПИКЛЮЧИ ГОЛОГИНА]\n\n\n{"=|"*30}")
+            return
+
+        self._conn.set(self._APIKEY_COUNTER_KEY, self._get_count()-1)
