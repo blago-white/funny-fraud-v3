@@ -98,7 +98,7 @@ def session_results_commiter(func):
 
                 if "proxyerror" in str(e).lower():
                     continue
-                if "json" in str(e).lower():
+                elif "jsondecode" in str(e).lower():
                     try:
                         GologinApikeysRepository().annihilate_current()
                     except Exception as e:
@@ -114,6 +114,8 @@ def session_results_commiter(func):
                     print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
 
                 else:
+                    print(f"ERROR STR LOWER : {str(e).lower()}")
+
                     raise e
         else:
             print(f"LEAD #{lead_id} CANT RUN GOLOGIN")
