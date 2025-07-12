@@ -23,6 +23,8 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
         return self._APIKEY_KEY+str(self._get_count())
 
     def annihilate_current(self):
+        print("ANNIHILATE CURRENT GOLOGIN")
+
         self._conn.delete(self._current_gologin_apikey_name)
 
         self._decrease_count()
@@ -36,6 +38,8 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
         return self._conn.get(name=self._current_gologin_apikey_name).decode()
 
     def set(self, new_apikey: str):
+        print("SET NEW GOLOGIN APIKEY")
+
         self._conn.set(name=self._current_gologin_apikey_name, value=new_apikey)
 
         self._increase_count()
