@@ -28,7 +28,7 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
         self._decrease_count()
 
     def get_current(self) -> str | None:
-        return self._conn.get(name=self._current_gologin_apikey_name or b"").decode()
+        return self._conn.get(name=self._current_gologin_apikey_name).decode()
 
     def set(self, new_apikey: str):
         self._conn.set(name=self._current_gologin_apikey_name, value=new_apikey)
@@ -39,7 +39,7 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
 
     def _get_count(self):
         try:
-            return int((self._conn.get(self._APIKEY_COUNTER_KEY) or b"").decode())
+            return int((self._conn.get(self._APIKEY_COUNTER_KEY)).decode())
         except:
             self._conn.set(self._APIKEY_COUNTER_KEY, 0)
             return self._get_count()
