@@ -13,4 +13,4 @@ class LeadsGenerationSession:
     count: int = 1
     ref_links: list[str] = None
     ref_link: str = None
-    strategy: SessionStrategy = SessionStrategy.SBER_ID
+    strategy: SessionStrategy = SessionStrategy.DEFAULT
