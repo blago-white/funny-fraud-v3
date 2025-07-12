@@ -15,13 +15,13 @@ class WebDriversService:
                 os=["windows"],
                 platforms=["pc"]
             ),
-            gologin_manager: GologinProfilesManager = GologinProfilesManager(),
+            gologin_manager: GologinProfilesManager = GologinProfilesManager,
             driver_path: str = None):
         self._default_driver = default_driver
         self._default_opts_class = default_opts_class
         self._agent_service = agent_service
         self._driver_path = driver_path or os.environ.get("CHROME_DRIVER_PATH")
-        self._gologin_manager = gologin_manager
+        self._gologin_manager = gologin_manager()
 
     @property
     def gologin_manager(self) -> GologinProfilesManager:
