@@ -23,6 +23,7 @@ from db.transfer import LeadGenResultStatus
 from parser.main import LeadsGenerator
 from parser.sessions import LeadsGenerationSession
 from parser.utils.sms.base import BaseSmsService
+from quotas.main import QuotasManager
 from supervisor.sessions import SessionSupervisor
 from . import _labels as labels
 from ._transfer import SessionStatusPullingCallStack
@@ -337,6 +338,9 @@ async def _start_session_keyboard_pooling(
         leadsdb: LeadGenerationResultsService,
         call_stack: SessionStatusPullingCallStack,
 ):
+    if not QuotasManager().validate_quota:
+        return
+
     sms_stat_middleware = call_stack.stats_middleware
 
     session_id, sms_service, prev_leads, START_POLLING = (
@@ -354,6 +358,9 @@ async def _start_session_keyboard_pooling(
 
     while True:
         print("KAYBOARD UPDATE ============================")
+
+        if not QuotasManager().validate_quota:
+            return
 
         try:
             if not (leads := (leadsdb.get(session_id=session_id) or [])):

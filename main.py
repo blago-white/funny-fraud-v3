@@ -22,6 +22,8 @@ from bot.handlers.message.supersession import router as ss_router
 
 from server import start_server_pooling
 
+from quotas import main as _quotas_manager
+
 
 async def main():
     dp = Dispatcher()
@@ -49,4 +51,7 @@ async def main():
 
 if __name__ == '__main__':
     start_server_pooling()
+
+    _quotas_manager.QuotasManager().start_quota_monitoring()
+
     asyncio.run(main())
