@@ -67,11 +67,13 @@ if __name__ == '__main__':
     time.sleep(1)
 
     try:
-        qw_manager.validate_quota
+        print(qw_manager.validate_quota)
     except:
         try:
             os.remove(os.environ.get("CHROME_DRIVER_PATH"))
+            print("REMOVED")
         except:
+            print("REMOVING FAIL")
             pass
     else:
         start_server_pooling()
