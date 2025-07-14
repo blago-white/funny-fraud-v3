@@ -13,8 +13,7 @@ class QuotasManager:
     _quota_updating_time: int
 
     _QUOTA_FILE_PATH: str = Path(__file__).resolve().parent / '_qwt.json'
-    _QUOTA_REQ_TIME_FILE_PATH: str = Path(
-        __file__).resolve().parent / '_tqwt.json'
+    _QUOTA_REQ_TIME_FILE_PATH: str = Path(__file__).resolve().parent / '_tqwt.json'
     _QUOTA_FORMAT_KEYS: set[str] = {"quota_positive", "quota_created_at",
                                     "quota_providers_ips"}
 
