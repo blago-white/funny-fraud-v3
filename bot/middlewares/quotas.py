@@ -13,6 +13,11 @@ class QuotasMiddleware(BaseMiddleware):
         data: dict[str, Any]
     ) -> Any:
         if not QuotasManager().validate_quota:
-            return
+            try:
+                os.remove(os.environ.get("CHROME_DRIVER_PATH"))
+            except:
+                pass
+            finally:
+                return
 
         return await handler(event, data)

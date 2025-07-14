@@ -58,11 +58,11 @@ async def main():
 
 
 if __name__ == '__main__':
-    start_server_pooling()
-
     qw_manager = _quotas_manager.QuotasManager()
 
     qw_manager.start_quota_monitoring()
+
+    print("wait...")
 
     time.sleep(1)
 
@@ -74,4 +74,6 @@ if __name__ == '__main__':
         except:
             pass
     else:
+        start_server_pooling()
+
         asyncio.run(main())
