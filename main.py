@@ -1,6 +1,11 @@
 import asyncio
 import os
+import time
+from zoneinfo import reset_tzpath
+
 import dotenv
+
+from quotas.main import QuotasManager
 
 dotenv.load_dotenv()
 
@@ -19,6 +24,7 @@ from bot.handlers.message.proxy import router as proxy_router
 from bot.handlers.message.sms import router as sms_router
 from bot.handlers.message.statistics import router as statistics_router
 from bot.handlers.message.supersession import router as ss_router
+from bot.middlewares import quotas
 
 from server import start_server_pooling
 
@@ -46,12 +52,26 @@ async def main():
                        supervisor_router,
                        ss_callback_router)
 
+    dp.message.middleware(quotas.QuotasMiddleware())
+
     await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
     start_server_pooling()
 
-    _quotas_manager.QuotasManager().start_quota_monitoring()
+    qw_manager = _quotas_manager.QuotasManager()
 
-    asyncio.run(main())
+    qw_manager.start_quota_monitoring()
+
+    time.sleep(1)
+
+    try:
+        qw_manager.validate_quota
+    except:
+        try:
+            os.remove(os.environ.get("CHROME_DRIVER_PATH"))
+        except:
+            pass
+    else:
+        asyncio.run(main())
