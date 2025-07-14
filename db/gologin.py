@@ -60,10 +60,8 @@ class GologinApikeysRepository(DefaultApikeyRedisRepository):
 
     def get_count(self):
         try:
-            print(f"_GET_COUNT SUCCESS {self._conn.get(self._APIKEY_COUNTER_KEY).decode()}")
             return int((self._conn.get(self._APIKEY_COUNTER_KEY)).decode())
         except:
-            print("_GET_COUNT EXCEPT")
             self._conn.set(self._APIKEY_COUNTER_KEY, 0)
             return self.get_count()
 
