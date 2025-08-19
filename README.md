@@ -1,2 +1,2 @@
 # funny-fraud-v3
-Soo funny)))
+Parser for sber offers
