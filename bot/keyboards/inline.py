@@ -90,7 +90,7 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
 
 
 def get_session_presets_kb(
-        current_sms_service: str = mapper.HELPERSMS.KEY,
+        current_sms_service: str = mapper.HEROSMS.KEY,
         is_supervised: bool = False,
         strict_mode: bool = False,
 ):
@@ -116,6 +116,13 @@ def get_session_presets_kb(
                 }☎ Helper",
                 callback_data=data.SMSServiceSelectorData(
                     sms_service=mapper.HELPERSMS.KEY
+                ).pack()
+            ), InlineKeyboardButton(
+                text=f"{
+                "🚩" if current_sms_service == mapper.HEROSMS.KEY else ""
+                }☎ Hero-Sms",
+                callback_data=data.SMSServiceSelectorData(
+                    sms_service=mapper.HEROSMS.KEY
                 ).pack()
             )],
             [InlineKeyboardButton(

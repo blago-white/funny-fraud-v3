@@ -22,6 +22,10 @@ class HelperSmsServiceApikeyRepository(DefaultApikeyRedisRepository):
     _APIKEY_KEY = "sms:helper-sms-apikey"
 
 
+class HeroSmsServiceApikeyRepository(DefaultApikeyRedisRepository):
+    _APIKEY_KEY = "sms:hero-sms-apikey"
+
+
 class LatestMobileSmsTextService(BaseRedisService):
     def get(self) -> tuple[LatestSmsTypes, str]:
         latest_sms_text = self._conn.get("sms:latest-sms")

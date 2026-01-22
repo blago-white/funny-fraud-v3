@@ -442,7 +442,7 @@ class OfferInitializerParser:
 
     def _check_registration_code_correct(self):
         try:
-            WebDriverWait(self._driver, 10).until(
+            WebDriverWait(self._driver, 60).until(
                 expected_conditions.presence_of_element_located(
                     (By.CSS_SELECTOR, self._OWNER_DATA_FIELDS_IDS[0])
                 )
@@ -542,14 +542,14 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 40).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, ".css-1tb3n43.e1jyzd9p2")
+                    (By.CSS_SELECTOR, ".dk-sbol-button.dk-sbol-button_type_primary.dk-sbol-button_size_md.dk-sbol-button_inline.PrimeMP-teaser-banner__button.PrimeMP-teaser-banner__button_primary")
                 )
             )
         except:
             raise exceptions.TraficBannedError()
 
         self._driver.find_element(
-            By.CSS_SELECTOR, ".css-1tb3n43.e1jyzd9p2"
+            By.CSS_SELECTOR, ".dk-sbol-button.dk-sbol-button_type_primary.dk-sbol-button_size_md.dk-sbol-button_inline.PrimeMP-teaser-banner__button.PrimeMP-teaser-banner__button_primary"
         ).click()
 
     def _try_drop_form(self):

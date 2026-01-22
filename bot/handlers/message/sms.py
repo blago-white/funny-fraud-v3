@@ -5,7 +5,7 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 from bot.states.forms import SmsServiceApikeySettingForm
 from parser.utils.sms.mapper import ELSMS, SMSHUB, HELPERSMS, \
-    SMS_DB_REPOSITORY_MAPPER
+    SMS_DB_REPOSITORY_MAPPER, HEROSMS
 from ..common import db_services_provider
 
 router = Router(name=__name__)
@@ -50,6 +50,15 @@ async def make_reset_smshub_apikey(message: Message, state: FSMContext):
         message=message,
         state=state,
         sms_service_key=HELPERSMS.KEY
+    )
+
+
+@router.message(F.text == "☎ Hero-Sms Apikey")
+async def make_reset_herosms_apikey(message: Message, state: FSMContext):
+    await _process_change_sms_apikey(
+        message=message,
+        state=state,
+        sms_service_key=HEROSMS.KEY
     )
 
 

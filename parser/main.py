@@ -161,7 +161,7 @@ class LeadsGenerator:
 
                 code = self._receive_sms_code(phone_id=phone_id)
 
-                print(f"LEAD #{lead_id} CODE RECEIVED")
+                print(f"LEAD #{lead_id} CODE RECEIVED {code}")
 
                 initializer.enter_registration_code(code=code)
 
@@ -170,6 +170,7 @@ class LeadsGenerator:
                 break
             except (RegistrationSMSTimeoutError, CardDataEnteringBanned) as exc:
                 print("OWNER DATA RegistrationSMSTimeoutError CardDataEnteringBanned")
+                time.sleep(120)
                 if session.strategy == SessionStrategy.DEFAULT or type(exc) == RegistrationSMSTimeoutError:
                     bad_phone = True
 
@@ -334,9 +335,13 @@ class LeadsGenerator:
                 if after_cancel_code is not None:
                     return after_cancel_code
 
+                print("NO SMS")
+
                 raise RegistrationSMSTimeoutError("No receive sms")
 
             code = self._sms_service.check_code(phone_id=phone_id)
+
+            print(code)
 
             time.sleep(1)
 

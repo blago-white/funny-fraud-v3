@@ -53,6 +53,16 @@ def session_results_commiter(func):
 
         session: LeadsGenerationSession
 
+        # start_allowed = input(f"NEW WRAPPED WOULD START {lead_id=} START?:")
+        #
+        # if not start_allowed:
+        #     return self._db_service.change_status(
+        #         session_id=session_id,
+        #         lead_id=lead_id,
+        #         status=LeadGenResultStatus.FAILED,
+        #         error=f"START NOT PERMITTED"
+        #     )
+
         if lead_id is None:
             _, lead_id = self._db_service.add(
                 session_id=session_id,

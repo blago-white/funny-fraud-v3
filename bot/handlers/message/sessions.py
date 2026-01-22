@@ -17,7 +17,8 @@ from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
-                    HelperSmsServiceApikeyRepository)
+                    HelperSmsServiceApikeyRepository,
+                    HeroSmsServiceApikeyRepository)
 from db.statistics import LeadsGenerationStatisticsService
 from db.transfer import LeadGenResultStatus
 from parser.main import LeadsGenerator
@@ -36,24 +37,18 @@ router = Router(name=__name__)
 
 @router.message(CommandStart())
 @db_services_provider(provide_leads=False,
-                      provide_elsms=True,
-                      provide_smshub=True,
                       provide_proxy=True,
-                      provide_helper=TypeError)
+                      provide_herosms=True)
 async def start(
         message: Message, state: FSMContext,
         gologindb: GologinApikeysRepository,
-        elsmsdb: ElSmsServiceApikeyRepository,
-        smshubdb: SmsHubServiceApikeyRepository,
-        helperdb: HelperSmsServiceApikeyRepository,
+        herosmsdb: HeroSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
     await state.clear()
 
     apikeys = {
         "gologin": gologindb.get_current(),
-        "elsms": elsmsdb.get_current(),
-        "smshub": smshubdb.get_current(),
-        "helpersms": helperdb.get_current(),
+        "herosms": herosmsdb.get_current()
     }
 
     gologin_count_apikeys = gologindb.get_count()
@@ -70,21 +65,9 @@ async def start(
              else ""
              } [кол-во: {gologin_count_apikeys}]</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
-             f"— <b>El-Sms apikey: {"✅" if apikeys.get("elsms") else "📛"}"
+             f"— <b>Hero-Sms apikey: {"✅" if apikeys.get("herosms") else "📛"}"
              f"<code>{
-             apikeys.get("elsms")[:6] + '...' + apikeys.get("elsms")[-3:]
-             if apikeys.get("elsms")
-             else ""
-             }</code></b>\n"
-             f"— <b>Sms-Hub apikey: {"✅" if apikeys.get("smshub") else "📛"}"
-             f"<code>{
-             apikeys.get("smshub")[:6] + '...' + apikeys.get("smshub")[-3:]
-             if apikeys.get("smshub")
-             else ""
-             }</code></b>\n"
-             f"— <b>Helper-Sms apikey: {"✅" if apikeys.get("helpersms") else "📛"}"
-             f"<code>{
-             apikeys.get("helpersms")[:6] + '...' + apikeys.get("helpersms")[-3:]
+             apikeys.get("helpersms")[:6] + '...' + apikeys.get("herosms")[-3:]
              if apikeys.get("helpersms")
              else ""
              }</code></b>\n\n"
@@ -96,20 +79,15 @@ async def start(
 
 @router.message(F.text == "🔥Новый Сеанс")
 @db_services_provider(provide_leads=False,
-                      provide_elsms=True,
-                      provide_smshub=True,
-                      provide_helper=True,
+                      provide_herosms=True,
                       provide_proxy=True)
 async def new_session(
         message: Message,
         state: FSMContext,
         gologindb: GologinApikeysRepository,
-        elsmsdb: ElSmsServiceApikeyRepository,
-        smshubdb: SmsHubServiceApikeyRepository,
-        helperdb: HelperSmsServiceApikeyRepository,
+        herosmsdb: HeroSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
-    if not (gologindb.exists and (
-            elsmsdb.exists or smshubdb.exists or helperdb.exists)):
+    if not (gologindb.exists and herosmsdb.exists):
         return await message.reply(
             "⭕Сначала добавьте <b>Gologin apikey</b> и один из"
             "<b>Sms-Service apikey</b>"

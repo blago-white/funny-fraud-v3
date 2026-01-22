@@ -16,7 +16,7 @@ class WebDriversService:
                 platforms=["pc"]
             ),
             gologin_manager: GologinProfilesManager = GologinProfilesManager,
-            driver_path: str = None):
+            driver_path: str = "D:\\FDISKCOPY\\python\\funny-fraud-v3\\chromedriver.exe"):
         self._default_driver = default_driver
         self._default_opts_class = default_opts_class
         self._agent_service = agent_service
