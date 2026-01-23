@@ -149,6 +149,10 @@ class OfferInitializerParser:
             for _ in range(3):
                 try:
                     for _ in range(35):
+                        if "submit" in self._driver.page_source.lower():
+                            print("CONFIRM BY SUBMIT IN PAGE TEXT")
+                            return True
+
                         if (("подписка" in self._driver.page_source.lower())
                                 and (
                                         "оформлена" in self._driver.page_source.lower())):
