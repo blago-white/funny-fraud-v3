@@ -548,6 +548,10 @@ class OfferInitializerParser:
         except:
             raise exceptions.TraficBannedError()
 
+        self._driver.fullscreen_window()
+        print("TIME SLEEP")
+        time.sleep(120)
+
         self._driver.find_element(
             By.CSS_SELECTOR, ".dk-sbol-button.dk-sbol-button_type_primary.dk-sbol-button_size_md.dk-sbol-button_inline.PrimeMP-teaser-banner__button.PrimeMP-teaser-banner__button_primary"
         ).click()
