@@ -170,11 +170,23 @@ class LeadsGenerator:
                 break
             except (RegistrationSMSTimeoutError, CardDataEnteringBanned) as exc:
                 print("OWNER DATA RegistrationSMSTimeoutError CardDataEnteringBanned")
-                time.sleep(120)
+
+                print(f"COOKIES: {initializer.driver.get_cookies()}")
+
                 if session.strategy == SessionStrategy.DEFAULT or type(exc) == RegistrationSMSTimeoutError:
                     bad_phone = True
 
                     self._sms_service.cancel(phone_id=phone_id)
+
+                    if not initializer.unlogin_acc_if_logined():
+                        self._db_service.change_status(
+                            session_id=session_id,
+                            lead_id=lead_id,
+                            status=LeadGenResultStatus.FAILED,
+                            error="Number already registered in SberID"
+                        )
+
+                        raise CreatePaymentFatalError("Number already registered in SberID")
 
                     if _ >= self._GLOBAL_RETRIES - 1:
                         raise BadPhoneError(

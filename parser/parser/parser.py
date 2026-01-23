@@ -226,6 +226,21 @@ class OfferInitializerParser:
         except:
             print("CANNOT RESEND CODE")
 
+    def unlogin_acc_if_logined(self):
+        return False
+        # try:
+        #     WebDriverWait(self._driver, 5).until(
+        #         expected_conditions.presence_of_element_located(
+        #             (By.CSS_SELECTOR, "input[id='pan']")
+        #         )
+        #     )
+        # except:
+        #     return
+        #
+        # self._driver.find_element(By.CSS_SELECTOR, 'button[data-test-id="profile-toggle"]').click()
+        #
+        # self._driver.find_element(By.CSS_SELECTOR, 'button[data-test-id="profile-popup-exit"]').click()
+
     def _enter_card(
             self, is_retry: bool = False, overrided_timeout: int = 120):
         WebDriverWait(self._driver, overrided_timeout).until(
