@@ -178,7 +178,7 @@ class LeadsGenerator:
 
                     self._sms_service.cancel(phone_id=phone_id)
 
-                    if not initializer.unlogin_acc_if_logined():
+                    if (type(exc) is CardDataEnteringBanned) and (not initializer.unlogin_acc_if_logined()):
                         self._db_service.change_status(
                             session_id=session_id,
                             lead_id=lead_id,
