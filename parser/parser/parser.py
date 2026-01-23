@@ -333,7 +333,7 @@ class OfferInitializerParser:
                         _retry_count=_retry_count - 1
                     )
 
-                if time.time() - START > 19:
+                if time.time() - START > 35:
                     print("PAYMENT URL DONT CHANGES")
 
                     raise Exception("Cannot submit form")
