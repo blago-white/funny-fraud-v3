@@ -22,7 +22,7 @@ class HeroSMSCodesService(BaseSmsService):
         result = requests.get(
             url="https://hero-sms.com/stubs/handler_api.php"
                 f"?api_key={self._apikey}&action=getNumber"
-                "&service=atu&country=0&maxPrice=0.6"
+                f"&service=atu&country={os.environ.get("SMS_COUNTRY")}&maxPrice=0.6"
         ).text
 
         print("HERO SMS", result)
