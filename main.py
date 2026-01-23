@@ -24,6 +24,7 @@ from bot.handlers.message.proxy import router as proxy_router
 from bot.handlers.message.sms import router as sms_router
 from bot.handlers.message.statistics import router as statistics_router
 from bot.handlers.message.supersession import router as ss_router
+from bot.handlers.message.regions import router as reg_router
 from bot.middlewares import quotas
 
 from server import start_server_pooling
@@ -50,6 +51,7 @@ async def main():
                        sms_callback_router,
                        ss_router,
                        supervisor_router,
+                       reg_router,
                        ss_callback_router)
 
     dp.message.middleware(quotas.QuotasMiddleware())

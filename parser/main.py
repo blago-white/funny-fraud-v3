@@ -1,3 +1,4 @@
+import json
 import threading
 import time
 
@@ -21,6 +22,26 @@ from .utils.sms.middleware.throttling import SmsServiceThrottlingMiddleware
 from .utils.sessions import session_results_commiter
 from .exceptions import OtpTimeoutError, ClientAbortedOtpValidation, \
     CreatePaymentFatalError
+
+
+def save_cookies_completed_lead(lead_id: int, session_id: int, cookies: dict):
+    with open("cookies.json") as file:
+        data = dict(json.loads(file.read()))
+
+    data.setdefault(f"{session_id}@{lead_id}", cookies)
+
+    with open("cookies.json", "w") as file:
+        file.write(json.dumps(data))
+
+
+def save_cookies_failed_lead(lead_id: int, session_id: int, cookies: dict):
+    with open("cookies-registered-accounts.json") as file:
+        data = dict(json.loads(file.read()))
+
+    data.setdefault(f"{session_id}@{lead_id}", cookies)
+
+    with open("cookies-registered-accounts.json", "w") as file:
+        file.write(json.dumps(data))
 
 
 class LeadsGenerator:
@@ -171,14 +192,20 @@ class LeadsGenerator:
             except (RegistrationSMSTimeoutError, CardDataEnteringBanned) as exc:
                 print("OWNER DATA RegistrationSMSTimeoutError CardDataEnteringBanned")
 
-                print(f"COOKIES: {initializer.driver.get_cookies()}")
-
                 if session.strategy == SessionStrategy.DEFAULT or type(exc) == RegistrationSMSTimeoutError:
                     bad_phone = True
 
                     self._sms_service.cancel(phone_id=phone_id)
 
                     if (type(exc) is CardDataEnteringBanned) and (not initializer.unlogin_acc_if_logined()):
+                        print(f"COOKIES: {initializer.driver.get_cookies()}")
+
+                        save_cookies_failed_lead(
+                            lead_id=lead_id,
+                            session_id=session_id,
+                            cookies=initializer.driver.get_cookies()
+                        )
+
                         self._db_service.change_status(
                             session_id=session_id,
                             lead_id=lead_id,
@@ -330,6 +357,14 @@ class LeadsGenerator:
             )
 
             initializer.resend_otp()
+
+        print(f"COOCKIES: {initializer.driver.get_cookies()}")
+
+        save_cookies_completed_lead(
+            lead_id=lead_id,
+            session_id=session_id,
+            cookies=initializer.driver.get_cookies()
+        )
 
         print(f"LEAD #{lead_id} FINISHED")
 
