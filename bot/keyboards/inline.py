@@ -90,7 +90,7 @@ def generate_leads_statuses_kb(leads: list[LeadGenResult]):
 
 
 def get_session_presets_kb(
-        current_sms_service: str = mapper.HEROSMS.KEY,
+        current_sms_service: str = mapper.CODEXSMS.KEY,
         is_supervised: bool = False,
         strict_mode: bool = False,
 ):
@@ -98,33 +98,12 @@ def get_session_presets_kb(
         inline_keyboard=[
             [InlineKeyboardButton(
                 text=f"{
-                "🚩" if current_sms_service == mapper.SMSHUB.KEY else ""
-                }☎ Sms-Hub",
+                    "🚩" if current_sms_service == sms.KEY else ""
+                }☎ {sms.NAME}",
                 callback_data=data.SMSServiceSelectorData(
-                    sms_service=mapper.SMSHUB.KEY
+                    sms_service=sms.KEY
                 ).pack()
-            ), InlineKeyboardButton(
-                text=f"{
-                "🚩" if current_sms_service == mapper.ELSMS.KEY else ""
-                }☎ Еl-Sms",
-                callback_data=data.SMSServiceSelectorData(
-                    sms_service=mapper.ELSMS.KEY
-                ).pack()
-            ), InlineKeyboardButton(
-                text=f"{
-                "🚩" if current_sms_service == mapper.HELPERSMS.KEY else ""
-                }☎ Helper",
-                callback_data=data.SMSServiceSelectorData(
-                    sms_service=mapper.HELPERSMS.KEY
-                ).pack()
-            ), InlineKeyboardButton(
-                text=f"{
-                "🚩" if current_sms_service == mapper.HEROSMS.KEY else ""
-                }☎ Hero-Sms",
-                callback_data=data.SMSServiceSelectorData(
-                    sms_service=mapper.HEROSMS.KEY
-                ).pack()
-            )],
+            ) for sms in mapper.SMS_DB_REPOSITORY_MAPPER.keys()],
             [InlineKeyboardButton(
                 text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
                 callback_data=data.UseSupervisorData(use=not is_supervised).pack()

@@ -4,7 +4,8 @@ from db.gologin import GologinApikeysRepository
 from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
 from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository, \
-    HelperSmsServiceApikeyRepository, HeroSmsServiceApikeyRepository
+    HelperSmsServiceApikeyRepository, HeroSmsServiceApikeyRepository, \
+    CodexSmsServiceApikeyRepository
 from db.statistics import LeadsGenerationStatisticsService
 from parser.main import LeadsGenerator
 
@@ -16,6 +17,7 @@ def db_services_provider(
         provide_smshub: bool = False,
         provide_helper: bool = False,
         provide_herosms: bool = False,
+        provide_codexsms: bool = False,
         provide_proxy: bool = False,
         provide_stats: bool = False):
     def wrapper(func):
@@ -40,6 +42,9 @@ def db_services_provider(
 
             if provide_herosms:
                 db_services.update(herosmsdb=HeroSmsServiceApikeyRepository())
+
+            if provide_codexsms:
+                db_services.update(codexsms=CodexSmsServiceApikeyRepository())
 
             if provide_proxy:
                 db_services.update(proxydb=ProxyRepository())

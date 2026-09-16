@@ -1,0 +1,1 @@
+OTP_CODE_LENGTH = [4, 5]

@@ -7,6 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from seleniumwire.webdriver import Chrome
 
 from . import utils, exceptions
+from ..utils.mail.base import BaseEmailVerificationService
 
 
 class OfferInitializerParser:
@@ -16,12 +17,12 @@ class OfferInitializerParser:
     _account_not_logined: bool = None
 
     _OWNER_DATA_FIELDS_IDS = [
+        "input[name='email']",
         "input[name='firstName']",
         "input[name='lastName']",
         "input[name='dob']",
         "input[name='password']",
         "input[name='confirmPassword']",
-        "input[name='email']",
     ]
 
     _PAYMENT_CARD_FIELDS_IDS = [
@@ -127,22 +128,22 @@ class OfferInitializerParser:
     def enter_payment_card_otp(self, code: str):
         WebDriverWait(self._driver, 60).until(
             expected_conditions.presence_of_element_located(
-                (By.ID, "passwordEdit")
+                (By.CSS_SELECTOR, 'input[data-testid="obi-test-id-input"]')
             )
         )
 
         self._driver.find_element(
-            By.ID, "passwordEdit"
+            By.CSS_SELECTOR, 'input[data-testid="obi-test-id-input"]'
         ).click()
 
         self._driver.find_element(
-            By.ID, "passwordEdit"
+            By.CSS_SELECTOR, 'input[data-testid="obi-test-id-input"]'
         ).send_keys(code)
 
         try:
             WebDriverWait(self._driver, 7).until(
                 expected_conditions.presence_of_element_located(
-                    (By.CSS_SELECTOR, "div[class='error']")
+                    (By.CSS_SELECTOR, 'p[data-testid="input-error"]')
                 )
             )
         except:
@@ -154,8 +155,7 @@ class OfferInitializerParser:
                             return True
 
                         if (("подписка" in self._driver.page_source.lower())
-                                and (
-                                        "оформлена" in self._driver.page_source.lower())):
+                                and ("оформлена" in self._driver.page_source.lower())):
                             print("CONFIRM WORDS IN PAGE SOURCE")
                             return True
 
@@ -177,11 +177,11 @@ class OfferInitializerParser:
                             continue
                     raise TimeoutError("Cannot find success flags")
                 except:
-                    self._driver.execute_script(
-                        "location.href = location.href;")
+                    self._driver.execute_script("location.href = location.href;")
             else:
                 raise exceptions.OTPError(
-                    "Success page not opened but code is ok")
+                    "Success page not opened but code is ok"
+                )
 
         raise exceptions.InvalidOtpCodeError("Invalid otp code received")
 
@@ -195,6 +195,15 @@ class OfferInitializerParser:
                 )
         else:
             self._try_go_to_payment()
+
+        amount = WebDriverWait(self._driver, 30).until(
+            expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, 'div[data-test-id="orderResultAmount"]')
+            )
+        )
+
+        if "1" not in amount.text:
+            raise SberIdAlreadyRegisteredError("Already registered")
 
         self._card_data_already_entered = True
 
@@ -230,20 +239,32 @@ class OfferInitializerParser:
         except:
             print("CANNOT RESEND CODE")
 
+    def request_email_verification(
+            self,
+            email_verif_addr: str
+    ):
+        try:
+            self._enter_email_for_verification(email_verif_addr)
+        except Exception as e:
+            if "/payment/" in self._driver.current_url:
+                print("MAIL VERIF NOT REQUESTED")
+                raise exceptions.SuccessVerificationWithOutMailException(
+                    "Mail verif not requested by Sber!"
+                )
+
+            raise e
+
+    def send_email_verification_code(self, code: str):
+        WebDriverWait(
+            self._driver, 30
+        ).until(
+            expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, 'input[data-testid="emailCodeInput"]')
+            )
+        ).send_keys(code)
+
     def unlogin_acc_if_logined(self):
         return False
-        # try:
-        #     WebDriverWait(self._driver, 5).until(
-        #         expected_conditions.presence_of_element_located(
-        #             (By.CSS_SELECTOR, "input[id='pan']")
-        #         )
-        #     )
-        # except:
-        #     return
-        #
-        # self._driver.find_element(By.CSS_SELECTOR, 'button[data-test-id="profile-toggle"]').click()
-        #
-        # self._driver.find_element(By.CSS_SELECTOR, 'button[data-test-id="profile-popup-exit"]').click()
 
     def _enter_card(
             self, is_retry: bool = False, overrided_timeout: int = 120):
@@ -252,16 +273,6 @@ class OfferInitializerParser:
                 (By.CSS_SELECTOR, "input[id='pan']")
             )
         )
-
-        # if not is_retry:
-            # self._try_exit_profile(override_timeout=.25)
-
-        # if is_retry:
-        #     if self._payments_card.number in self._driver.find_element(
-        #         By.CSS_SELECTOR,
-        #         self._PAYMENT_CARD_FIELDS_IDS[0]
-        #     ).text:
-        #
 
         for field_id, field_value in zip(self._PAYMENT_CARD_FIELDS_IDS,
                                          (self._payments_card.number,
@@ -317,7 +328,8 @@ class OfferInitializerParser:
             while True:
                 if "Не удалось инициализировать" in self._driver.page_source:
                     self._driver.execute_script(
-                        "location.href = location.href;")
+                        "location.href = location.href;"
+                    )
 
                     return self._submit_payment_form(
                         _need_reenter_card=True,
@@ -326,7 +338,8 @@ class OfferInitializerParser:
 
                 elif "Сервис недоступен" in self._driver.page_source:
                     self._driver.execute_script(
-                        "location.href = location.href;")
+                        "location.href = location.href;"
+                    )
 
                     return self._submit_payment_form(
                         _need_reenter_card=True,
@@ -356,7 +369,7 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 15).until(
                 expected_conditions.presence_of_element_located(
-                    (By.ID, "passwordEdit")
+                    (By.CSS_SELECTOR, 'input[data-testid="obi-test-id-input"]')
                 )
             )
 
@@ -367,7 +380,9 @@ class OfferInitializerParser:
             print("OTP PASSWORDS FIELD FIND ERROR 1")
 
             try:
-                if not (self._driver.current_url.endswith("payment/") or self._driver.current_url.endswith("payment")):
+                if not (self._driver.current_url.endswith(
+                        "payment/") or self._driver.current_url.endswith(
+                        "payment")):
                     raise Exception("Is not sub page, skip!")
 
                 self._click_subscription_button()
@@ -395,7 +410,7 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 13).until(
                 expected_conditions.presence_of_element_located(
-                    (By.ID, "passwordEdit")
+                    (By.CSS_SELECTOR, 'input[data-testid="obi-test-id-input"]')
                 )
             )
 
@@ -404,7 +419,9 @@ class OfferInitializerParser:
             return
         except:
             try:
-                if not (self._driver.current_url.endswith("payment/") or self._driver.current_url.endswith("payment")):
+                if not (self._driver.current_url.endswith(
+                        "payment/") or self._driver.current_url.endswith(
+                        "payment")):
                     raise Exception("Is not sub page, skip!")
 
                 self._click_subscription_button()
@@ -428,22 +445,26 @@ class OfferInitializerParser:
 
     def _try_go_to_payment(self):
         pass
-        # try:
-        #     WebDriverWait(
-        #         self._driver, 60
-        #     ).until(
-        #         expected_conditions.presence_of_element_located(
-        #             (By.CSS_SELECTOR, "input[data-testid='redirectToServiceBtn']")
-        #         )
-        #     )
-        #
-        #     self._driver.find_element(
-        #         By.CSS_SELECTOR, "input[data-testid='redirectToServiceBtn']"
-        #     ).click()
-        # except:
-        #     pass
 
     def _enter_owner_data(self):
+        try:
+            if self._driver.find_element(self._OWNER_DATA_FIELDS_IDS[1]):
+                self._enter_account_owner_data()
+            else:
+                raise Exception
+        except:
+            raise exceptions.EmailVerificationRequired("Email Verification need!")
+
+    def _enter_email_for_verification(self, email_verif_addr: str):
+        email_field = self._driver.find_element(self._OWNER_DATA_FIELDS_IDS[0])
+
+        email_field.send_keys(email_verif_addr)
+
+        self._driver.find_element(
+            By.CSS_SELECTOR, 'button[data-testid="fillProfileNextBtn"]'
+        ).click()
+
+    def _enter_account_owner_data(self):
         for field_id, field_data in zip(
                 self._OWNER_DATA_FIELDS_IDS,
                 self._owner_data_generator.get_random_owner_data()
@@ -460,6 +481,8 @@ class OfferInitializerParser:
         ).click()
 
     def _check_registration_code_correct(self):
+        print("CHECK REG CODE CORRECT")
+
         try:
             WebDriverWait(self._driver, 60).until(
                 expected_conditions.presence_of_element_located(
@@ -467,9 +490,20 @@ class OfferInitializerParser:
                 )
             )
         except:
-            raise exceptions.CardDataEnteringBanned(
-                "Cannot enter card data!"
-            )
+            print("FIRST CHECK REG CODE CORRECT === FAILED!!!")
+
+            try:
+                WebDriverWait(self._driver, 30).until(
+                    expected_conditions.url_contains(
+                        "https://oplataecompay.ru/payment/merchants/sbersafe_sberid/payment_ru.html"
+                    ) or expected_conditions.url_contains("/sberprime/payment")
+                )
+            except:
+                print("SECOND CHECK REG CODE CORRECT === FAILED!!!")
+
+                raise exceptions.CardDataEnteringBanned(
+                    "Cannot enter Account data!"
+                )
 
     def _enter_registration_code(self, code: str):
         WebDriverWait(self._driver, 30).until(
@@ -550,7 +584,6 @@ class OfferInitializerParser:
         except:
             return
 
-
         self._driver.find_element(
             By.CSS_SELECTOR, "button[data-testid='reinitSessionButton']"
         ).click()
@@ -558,19 +591,24 @@ class OfferInitializerParser:
         raise ValueError
 
     def _click_get_account(self):
+        print('GET ACCOUNT =========================================')
+
         try:
             WebDriverWait(self._driver, 40).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, ".dk-sbol-button.dk-sbol-button_type_primary.dk-sbol-button_size_md.dk-sbol-button_inline.PrimeMP-teaser-banner__button.PrimeMP-teaser-banner__button_primary")
+                    (By.XPATH,
+                     '//*[@id="115:YVLXau-Hl5DdCuxc"]/div/div/div/form/div[1]/div[1]/button')
                 )
             )
         except:
+            input("TRAFIC BANNED ERROR?: ")
             raise exceptions.TraficBannedError()
 
         self._driver.fullscreen_window()
 
         self._driver.find_element(
-            By.CSS_SELECTOR, ".dk-sbol-button.dk-sbol-button_type_primary.dk-sbol-button_size_md.dk-sbol-button_inline.PrimeMP-teaser-banner__button.PrimeMP-teaser-banner__button_primary"
+            By.XPATH,
+            '//*[@id="115:YVLXau-Hl5DdCuxc"]/div/div/div/form/div[1]/div[1]/button'
         ).click()
 
     def _try_drop_form(self):

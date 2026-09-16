@@ -30,6 +30,7 @@ from . import _labels as labels
 from ._transfer import SessionStatusPullingCallStack
 from ._utils import all_threads_ended, leads_differences_exists, \
     get_sms_service
+from .config import OTP_CODE_LENGTH
 from ..common import db_services_provider, leads_service_provider
 
 router = Router(name=__name__)
@@ -38,17 +39,17 @@ router = Router(name=__name__)
 @router.message(CommandStart())
 @db_services_provider(provide_leads=False,
                       provide_proxy=True,
-                      provide_herosms=True)
+                      provide_codexsms=True)
 async def start(
         message: Message, state: FSMContext,
         gologindb: GologinApikeysRepository,
-        herosmsdb: HeroSmsServiceApikeyRepository,
+        codexsms: HeroSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
     await state.clear()
 
     apikeys = {
         "gologin": gologindb.get_current(),
-        "herosms": herosmsdb.get_current()
+        "codexsms": codexsms.get_current()
     }
 
     gologin_count_apikeys = gologindb.get_count()
@@ -65,11 +66,9 @@ async def start(
              else ""
              } [кол-во: {gologin_count_apikeys}]</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
-             f"— <b>Hero-Sms apikey: {"✅" if apikeys.get("herosms") else "📛"}"
+             f"— <b>Codex-Sms apikey: {"✅" if apikeys.get("codexsms") else "📛"}"
              f"<code>{
-             apikeys.get("helpersms")[:6] + '...' + apikeys.get("herosms")[-3:]
-             if apikeys.get("helpersms")
-             else ""
+             (apikeys.get("codexsms")[-3:] + "...") if apikeys.get("codexsms") else ""
              }</code></b>\n\n"
              f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>\n\n"
              f"<b>Статистика за сегодня: /stats</b>",
@@ -294,7 +293,7 @@ async def set_payment_code(
 
     await message.delete()
 
-    if not user_code.isdigit() or len(user_code) != 4:
+    if not user_code.isdigit() or (len(user_code) not in OTP_CODE_LENGTH):
         bot_reply_msg_id = await message.bot.send_message(
             chat_id=chat_id,
             text="❌<b>Неверный формат!</b> Введите заново"
@@ -374,9 +373,9 @@ async def _start_session_keyboard_pooling(
 
                     await call_stack.initiator_message.edit_text(
                         text=labels.SESSION_INFO.format(*(
-                            new_stats + [
-                                sms_service_balance, balance_delta
-                            ] + [call_stack.supervisor_label]
+                                new_stats + [
+                            sms_service_balance, balance_delta
+                        ] + [call_stack.supervisor_label]
                         )),
                         reply_markup=generate_leads_statuses_kb(leads=leads)
                     )
@@ -389,8 +388,8 @@ async def _start_session_keyboard_pooling(
                     leads=leads,
                     sms_stat_middleware=sms_stat_middleware,
                     delta_balance=(
-                        call_stack.default_sms_service_balance -
-                        sms_service_balance
+                            call_stack.default_sms_service_balance -
+                            sms_service_balance
                     ) if call_stack.default_sms_service_balance else None
                 )
 
@@ -405,8 +404,8 @@ async def _start_session_keyboard_pooling(
                     leads=leads,
                     sms_stat_middleware=sms_stat_middleware,
                     delta_balance=(
-                        call_stack.default_sms_service_balance -
-                        sms_service_balance
+                            call_stack.default_sms_service_balance -
+                            sms_service_balance
                     ) if call_stack.default_sms_service_balance else None
                 )
 
@@ -436,9 +435,10 @@ async def _process_session_finish(
     await asyncio.sleep(1)
 
 
-def _commit_session_results(session_id: int,
-                            delta_balance: float,
-                            leads: list):
+def _commit_session_results(
+        session_id: int,
+        delta_balance: float,
+        leads: list):
     results = {}
 
     for l in leads:
@@ -455,7 +455,8 @@ def _commit_session_results(session_id: int,
         )
 
     if delta_balance:
-        LeadsGenerationStatisticsService().add_sms_delta_balance(session_id=session_id, delta=delta_balance)
+        LeadsGenerationStatisticsService().add_sms_delta_balance(
+            session_id=session_id, delta=delta_balance)
 
 
 def _get_sms_service_balance(sms_service: BaseSmsService):

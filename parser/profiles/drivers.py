@@ -12,8 +12,12 @@ class WebDriversService:
             self, default_driver: Chrome = Chrome,
             default_opts_class: ChromeOptions = ChromeOptions,
             agent_service: UserAgent = UserAgent(
-                os=["windows"],
-                platforms=["pc"]
+                os=[
+                    "Windows",
+                    "Mac OS X",
+                    "Android",
+                    "iOS",
+                ],
             ),
             gologin_manager: GologinProfilesManager = GologinProfilesManager,
             driver_path: str = None):
@@ -28,14 +32,22 @@ class WebDriversService:
         return self._gologin_manager()
 
     def get_desctop(self, worker_id: str, proxy: str = None) -> tuple[str, Chrome]:
-        return self.get(
+        d = self.get(
             proxy=proxy,
             agent=type(self._agent_service)(
-                os=["windows"],
-                platforms=["pc"]
+                os=[
+                    "Windows",
+                    "Mac OS X",
+                    "Android",
+                    "iOS",
+                ],
             ).random,
             worker_id=worker_id
         )
+
+        print(d)
+
+        return d
 
     def get(self, worker_id: str,
             proxy: str = None,
@@ -55,11 +67,12 @@ class WebDriversService:
                     agent: str,
                     proxy: str,
                     worker_id: str) -> tuple[str, Chrome]:
+        print()
         pid = self.gologin_manager.get_profile_id(
             useragent=agent,
             proxy=proxy
         )
-
+        print("REQUESTED DRIVER ====")
         return pid, self._default_driver(
             service=Service(executable_path=self._driver_path),
             options=self.gologin_manager.use_profile(

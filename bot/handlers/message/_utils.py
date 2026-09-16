@@ -1,6 +1,7 @@
 from db.transfer import LeadGenResult, LeadGenResultStatus
 
-from parser.utils.sms.mapper import SMS_SERVICES_MAPPER, HELPERSMS, HEROSMS
+from parser.utils.sms.mapper import SMS_SERVICES_MAPPER, HELPERSMS, HEROSMS, \
+    CODEXSMS
 
 
 def leads_differences_exists(
@@ -28,5 +29,5 @@ def all_threads_ended(leads: list[LeadGenResult]) -> bool:
 def get_sms_service(state_data: dict) -> object:
     print(state_data)
     return SMS_SERVICES_MAPPER[
-        state_data.get("sms-service", HEROSMS.KEY) or HEROSMS.KEY
+        state_data.get("sms-service", CODEXSMS.KEY) or CODEXSMS.KEY
     ]

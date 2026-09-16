@@ -12,11 +12,16 @@ from .parser.exceptions import (TraficBannedError,
                                 OTPError,
                                 BadPhoneError,
                                 RegistrationSMSTimeoutError,
+                                RegistrationMailTimeoutError,
                                 BadSMSService,
                                 InitializingError,
-                                CardDataEnteringBanned)
+                                CardDataEnteringBanned,
+                                EmailVerificationRequired,
+                                SuccessVerificationWithOutMailException,
+                                SberIdAlreadyRegisteredError)
 from .parser.parser import OfferInitializerParser
 from .sessions import LeadsGenerationSession, SessionStrategy
+from .utils.mail.base import BaseEmailVerificationService
 from .utils.sms.elsms import ElSmsSMSCodesService
 from .utils.sms.middleware.throttling import SmsServiceThrottlingMiddleware
 from .utils.sessions import session_results_commiter
@@ -184,7 +189,41 @@ class LeadsGenerator:
 
                 print(f"LEAD #{lead_id} CODE RECEIVED {code}")
 
-                initializer.enter_registration_code(code=code)
+                try:
+                    initializer.enter_registration_code(
+                        code=code,
+                    )
+                except EmailVerificationRequired:
+                    print(f"LEAD #{lead_id} EMAIL VERIF STARTED!")
+                    for email_verif_attempt_n in range(3):
+                        print(f"LEAD #{lead_id} EMAIL VERIF TRY "
+                              f"#{email_verif_attempt_n}")
+
+                        mail_service = session.mail_verification_service()
+
+                        try:
+                            initializer.request_email_verification(
+                                email_verif_addr=mail_service.get_mail()
+                            )
+                        except SuccessVerificationWithOutMailException:
+                            print(f"LEAD #{lead_id} EMAIL VERIF NOT REQUESTED")
+                            break
+
+                        try:
+                            email_verif_code = self._receive_mail_code(
+                                mail_verification_service=mail_service
+                            )
+                        except:
+                            print(f"LEAD #{lead_id} EMAIL VERIF TRY FAILED")
+                            continue
+
+                        print(f"LEAD #{lead_id} EMAIL VERIF CODE RECEIVED")
+
+                        initializer.send_email_verification_code(
+                            code=email_verif_code
+                        )
+
+                        print(f"LEAD #{lead_id} EMAIL VERIF CODE SENT!")
 
                 print("OWNER DATA ENTERED")
 
@@ -396,6 +435,31 @@ class LeadsGenerator:
 
         return code
 
+    def _receive_mail_code(
+        self, mail_verification_service: BaseEmailVerificationService
+    ) -> str:
+        START = time.time()
+
+        print("AWAITING FOR MAIL VERIFICATION CODE")
+        time.sleep(10)
+
+        try:
+            if code := mail_verification_service.get_code():
+                return code
+        except Exception as e:
+            print(f"CODE NOT RECEIVED AFTER 10 SECONDS {e}")
+
+        while time.time() - START < 45:
+            try:
+                if code := mail_verification_service.get_code():
+                    return code
+            except Exception as e:
+                print(f"CODE NOT RECEIVED {e}")
+
+            time.sleep(5)
+
+        return RegistrationMailTimeoutError("Verification Mail not received!")
+
     def _get_payment_otp(
             self, session_id: int,
             lead_id: int,
@@ -471,6 +535,9 @@ class LeadsGenerator:
                 initializer.enter_card_data()
 
                 break
+            except SberIdAlreadyRegisteredError as e:
+                print(f"LEAD #{lead_id} ALREADY REGISTERED SBERID")
+                raise e
             except Exception as e:
                 print(f"ENTER CARD DATA ERROR: {repr(e)}")
                 if _ >= (retries or self._CARD_DATA_ENTERING_RETRIES) - 1:

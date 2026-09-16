@@ -4,6 +4,7 @@ import time
 from zoneinfo import reset_tzpath
 
 import dotenv
+from aiogram.client.session.aiohttp import AiohttpSession
 
 from quotas.main import QuotasManager
 
@@ -32,6 +33,12 @@ from server import start_server_pooling
 from quotas import main as _quotas_manager
 
 
+def get_bot_async_proxy_session() -> AiohttpSession:
+    PROXY_URL = os.environ.get("TG_API_PROXY")
+
+    return AiohttpSession(proxy=PROXY_URL)
+
+
 async def main():
     dp = Dispatcher()
 
@@ -39,7 +46,8 @@ async def main():
         token=os.environ.get("BOT_TOKEN"),
         default=DefaultBotProperties(
             parse_mode=ParseMode.HTML
-        )
+        ),
+        session=get_bot_async_proxy_session()
     )
 
     dp.include_routers(statistics_router,
@@ -64,7 +72,7 @@ if __name__ == '__main__':
 
     qw_manager.start_quota_monitoring()
 
-    print("wait...")
+    print("Wait please...")
 
     time.sleep(1)
 

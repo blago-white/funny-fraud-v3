@@ -19,7 +19,8 @@ class GologinProfilesManager:
 
         self._manager = GoLogin(options={
             "token": self._TOKEN,
-            "spawn_browser": False
+            "spawn_browser": False,
+            "extra_params": ["--start-maximized"]
         })
 
     def use_profile(self, driver_options: Options,
@@ -42,10 +43,12 @@ class GologinProfilesManager:
                 [random.choice(string.ascii_lowercase) for _ in range(10)]
             ),
             "os": 'win',
+            "browserType": "chrome",
+            "browserVersion": "151",
             "navigator": {
                 "language": 'ru',
                 "userAgent": useragent,
-                "resolution": '1024x768',
+                "resolution": '1920x1080',
                 "platform": 'win',
             },
             'proxyEnabled': True,

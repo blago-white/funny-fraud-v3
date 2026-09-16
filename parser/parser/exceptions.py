@@ -23,6 +23,10 @@ class RegistrationSMSTimeoutError(Exception):
     pass
 
 
+class RegistrationMailTimeoutError(Exception):
+    pass
+
+
 class BadPhoneError(Exception):
     used_phone_id: int | None
     used_phone_number: int | None
@@ -47,3 +51,15 @@ class InitializingError(TraficBannedError):
         self.crude_exception = crude_exception
 
         super().__init__(*args, **kwargs)
+
+
+class EmailVerificationRequired(Exception):
+    pass
+
+
+class SberIdAlreadyRegisteredError(Exception):
+    pass
+
+
+class SuccessVerificationWithOutMailException(Exception):
+    pass
