@@ -20,7 +20,7 @@ class GologinProfilesManager:
         self._manager = GoLogin(options={
             "token": self._TOKEN,
             "spawn_browser": False,
-            "extra_params": ["--start-maximized"]
+            "extra_params": ["--start-maximized", "--ignore-certificate-errors"]
         })
 
     def use_profile(self, driver_options: Options,
