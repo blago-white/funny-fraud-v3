@@ -18,7 +18,8 @@ from db.proxy import ProxyRepository
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
                     HelperSmsServiceApikeyRepository,
-                    HeroSmsServiceApikeyRepository)
+                    HeroSmsServiceApikeyRepository,
+                    CodexSmsServiceApikeyRepository)
 from db.statistics import LeadsGenerationStatisticsService
 from db.transfer import LeadGenResultStatus
 from parser.main import LeadsGenerator
@@ -61,17 +62,20 @@ async def start(
         if apikeys.get("gologin")
         else ""
     )
+    codexsms_status = (
+        apikeys.get("codexsmsdb")[:6] + '...' + apikeys.get("codexsmsdb")[-3:]
+        if apikeys.get("codexsmsdb")
+        else ""
+    )
 
     await message.bot.send_message(
         chat_id=message.chat.id,
-        text=f"🏠<b>Меню Парсера</b>\n"
+        text=f"🏠<b>Меню Парсера</b>\n\n"
              f"🤖<b>Gologin apikey: {"✅" if apikeys.get("gologin") else "📛"}"
              f"<code>{gologin_status} [кол-во: {gologin_count_apikeys}]</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
              f"— <b>Codex-Sms apikey: {"✅" if apikeys.get("codexsmsdb") else "📛"}"
-             f"<code>{
-                (apikeys.get("codexsmsdb")[-3:] + "...") if apikeys.get("codexsmsdb") else ""
-             }</code></b>\n\n"
+             f"<code>{codexsms_status}</code></b>\n\n"
              f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>\n\n"
              f"<b>Статистика за сегодня: /stats</b>",
         reply_markup=MAIN_MENU_KB
@@ -80,17 +84,17 @@ async def start(
 
 @router.message(F.text == "🔥Новый Сеанс")
 @db_services_provider(provide_leads=False,
-                      provide_herosms=True,
+                      provide_codexsms=True,
                       provide_proxy=True)
 async def new_session(
         message: Message,
         state: FSMContext,
         gologindb: GologinApikeysRepository,
-        herosmsdb: HeroSmsServiceApikeyRepository,
+        codexsmsdb: CodexSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
-    if not (gologindb.exists and herosmsdb.exists):
+    if not (gologindb.exists and codexsmsdb.exists):
         return await message.reply(
-            "⭕Сначала добавьте <b>Gologin apikey</b> и один из"
+            "⭕Сначала добавьте <b>Gologin apikey</b> и один из "
             "<b>Sms-Service apikey</b>"
         )
 
