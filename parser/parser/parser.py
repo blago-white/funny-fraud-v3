@@ -229,23 +229,29 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 10).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.ID, "resendLink")
+                    (By.CSS_SELECTOR, 'button[data-testid="obi-test-id-borderless-button"]')
                 )
             )
 
-            self._driver.find_element(
-                By.ID, "resendLink"
-            ).click()
+            self._driver.find_elements(
+                By.CSS_SELECTOR, 'button[data-testid="obi-test-id-borderless-button"]'
+            )[0].click()
         except:
             print("CANNOT RESEND CODE")
 
     def request_email_verification(
             self,
-            email_verif_addr: str
+            email_verif_addr: str,
+            is_retry: bool = False
     ):
+        if is_retry:
+            self._driver.find_element(By.CSS_SELECTOR, 'button[data-testid="topBarLeftBtn"]').click()
+
         try:
             self._enter_email_for_verification(email_verif_addr)
         except Exception as e:
+            print("FAILED EMAIL VERIFICATION")
+
             if "/payment/" in self._driver.current_url:
                 print("MAIL VERIF NOT REQUESTED")
                 raise exceptions.SuccessVerificationWithOutMailException(
@@ -456,13 +462,25 @@ class OfferInitializerParser:
             raise exceptions.EmailVerificationRequired("Email Verification need!")
 
     def _enter_email_for_verification(self, email_verif_addr: str):
-        email_field = self._driver.find_element(self._OWNER_DATA_FIELDS_IDS[0])
+        print("REQUEST MAIL FOR VERIFICATION")
+        time.sleep(2)
+
+        email_field = self._driver.find_element(By.CSS_SELECTOR, self._OWNER_DATA_FIELDS_IDS[0])
+        print("GET EMAIL FIELD")
+
+        time.sleep(2)
 
         email_field.send_keys(email_verif_addr)
+
+        print("SET EMAIL FIELD")
+
+        time.sleep(2)
 
         self._driver.find_element(
             By.CSS_SELECTOR, 'button[data-testid="fillProfileNextBtn"]'
         ).click()
+
+        print("SEND EMAIL!!!")
 
     def _enter_account_owner_data(self):
         for field_id, field_data in zip(
@@ -596,20 +614,19 @@ class OfferInitializerParser:
         try:
             WebDriverWait(self._driver, 40).until(
                 expected_conditions.element_to_be_clickable(
-                    (By.XPATH,
-                     '//*[@id="115:YVLXau-Hl5DdCuxc"]/div/div/div/form/div[1]/div[1]/button')
+                    (By.CSS_SELECTOR,
+                     'div[data-test-id="ZeroBlockButtonAgreement"] button')
                 )
             )
         except:
-            input("TRAFIC BANNED ERROR?: ")
             raise exceptions.TraficBannedError()
 
         self._driver.fullscreen_window()
 
-        self._driver.find_element(
-            By.XPATH,
-            '//*[@id="115:YVLXau-Hl5DdCuxc"]/div/div/div/form/div[1]/div[1]/button'
-        ).click()
+        self._driver.find_elements(
+            By.CSS_SELECTOR,
+            'div[data-test-id="ZeroBlockButtonAgreement"] button'
+        )[0].click()
 
     def _try_drop_form(self):
         try:

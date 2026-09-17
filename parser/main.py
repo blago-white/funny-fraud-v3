@@ -203,7 +203,8 @@ class LeadsGenerator:
 
                         try:
                             initializer.request_email_verification(
-                                email_verif_addr=mail_service.get_mail()
+                                email_verif_addr=mail_service.get_mail(),
+                                is_retry=email_verif_attempt_n > 0
                             )
                         except SuccessVerificationWithOutMailException:
                             print(f"LEAD #{lead_id} EMAIL VERIF NOT REQUESTED")
@@ -452,6 +453,7 @@ class LeadsGenerator:
         while time.time() - START < 45:
             try:
                 if code := mail_verification_service.get_code():
+                    print(f"RECEIVED EMAIL VERIF CODE {code}")
                     return code
             except Exception as e:
                 print(f"CODE NOT RECEIVED {e}")
