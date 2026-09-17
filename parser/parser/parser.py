@@ -248,6 +248,11 @@ class OfferInitializerParser:
             self._driver.find_element(By.CSS_SELECTOR, 'button[data-testid="topBarLeftBtn"]').click()
 
         try:
+            if "/payment/" in self._driver.current_url:
+                raise exceptions.SuccessVerificationWithOutMailException(
+                    "Mail verif not requested by Sber [1]!"
+                )
+
             self._enter_email_for_verification(email_verif_addr)
         except Exception as e:
             print("FAILED EMAIL VERIFICATION")
@@ -255,7 +260,7 @@ class OfferInitializerParser:
             if "/payment/" in self._driver.current_url:
                 print("MAIL VERIF NOT REQUESTED")
                 raise exceptions.SuccessVerificationWithOutMailException(
-                    "Mail verif not requested by Sber!"
+                    "Mail verif not requested by Sber [2]!"
                 )
 
             raise e

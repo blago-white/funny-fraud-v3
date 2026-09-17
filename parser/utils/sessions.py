@@ -136,6 +136,8 @@ def session_results_commiter(func):
                 error=f"CANT RUN GOLOGIN AFTER 15 RETRY"
             )
 
+        print(f"LEAD #{lead_id} GOLOGIN PROFILE CREATED")
+
         initializer = self._initializer(
             payments_card=session.card,
             driver=driver
