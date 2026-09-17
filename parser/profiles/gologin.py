@@ -84,7 +84,6 @@ class GologinProfilesManager:
 
             "extra_params": [
                 "--ignore-certificate-errors",
-                "--no-sandbox",
                 "--start-maximized"
             ]
         }).start()
