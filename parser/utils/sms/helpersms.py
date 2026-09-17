@@ -2,7 +2,17 @@ import random
 import threading
 import time
 
-from helper20sms.helper20sms import Helper20SMS, BadApiKeyProvidedException
+# from helper20sms.helper20sms import Helper20SMS, BadApiKeyProvidedException
+
+
+class Helper20SMS:
+    def __init__(self, api_key: str):
+        pass
+
+
+class BadApiKeyProvidedException(Exception):
+    pass
+
 
 from db.sms import HelperSmsServiceApikeyRepository
 
