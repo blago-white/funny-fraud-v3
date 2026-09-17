@@ -80,5 +80,11 @@ class GologinProfilesManager:
         return GoLogin({
             "token": self._TOKEN,
             "profile_id": pid,
-            "port": 10000+(worker_id % 10000)
+            "port": 10000+(worker_id % 10000),
+
+            "extra_params": [
+                "--ignore-certificate-errors",
+                "--no-sandbox",
+                "--start-maximized"
+            ]
         }).start()
