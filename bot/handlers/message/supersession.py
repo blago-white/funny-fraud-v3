@@ -13,7 +13,8 @@ from db.gologin import GologinApikeysRepository
 from db.proxy import ProxyRepository
 from db.sms import (ElSmsServiceApikeyRepository,
                     SmsHubServiceApikeyRepository,
-                    HelperSmsServiceApikeyRepository)
+                    HelperSmsServiceApikeyRepository,
+                    CodexSmsServiceApikeyRepository)
 from db.statistics import LeadsGenerationStatisticsService
 from .sessions import approve_session
 from ..common import db_services_provider
@@ -26,6 +27,7 @@ router = Router(name=__name__)
                       provide_elsms=True,
                       provide_smshub=True,
                       provide_helper=True,
+                      provide_codexsms=True,
                       provide_proxy=True)
 async def make_super_session(
         message: Message,
@@ -34,9 +36,13 @@ async def make_super_session(
         elsmsdb: ElSmsServiceApikeyRepository,
         smshubdb: SmsHubServiceApikeyRepository,
         helperdb: HelperSmsServiceApikeyRepository,
+        codexsmsdb: CodexSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
     if not (gologindb.exists and (
-            elsmsdb.exists or smshubdb.exists or helperdb.exists)):
+            elsmsdb.exists or
+            smshubdb.exists or
+            helperdb.exists or
+            codexsmsdb.exists)):
         return await message.reply(
             "⭕Сначала добавьте <b>Gologin apikey</b> и один из"
             "<b>Sms-Service apikey</b>"

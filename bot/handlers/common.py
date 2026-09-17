@@ -1,56 +1,50 @@
 from functools import wraps
+from typing import Type
 
 from db.gologin import GologinApikeysRepository
 from db.leads import LeadGenerationResultsService
 from db.proxy import ProxyRepository
-from db.sms import ElSmsServiceApikeyRepository, SmsHubServiceApikeyRepository, \
-    HelperSmsServiceApikeyRepository, HeroSmsServiceApikeyRepository, \
+from db.sms import (
+    ElSmsServiceApikeyRepository,
+    SmsHubServiceApikeyRepository,
+    HelperSmsServiceApikeyRepository,
+    HeroSmsServiceApikeyRepository,
     CodexSmsServiceApikeyRepository
+)
 from db.statistics import LeadsGenerationStatisticsService
 from parser.main import LeadsGenerator
 
 
-def db_services_provider(
-        provide_leads: bool = True,
-        provide_gologin: bool = True,
-        provide_elsms: bool = False,
-        provide_smshub: bool = False,
-        provide_helper: bool = False,
-        provide_herosms: bool = False,
-        provide_codexsms: bool = False,
-        provide_proxy: bool = False,
-        provide_stats: bool = False):
+SERVICES_REGISTRY: dict[str, tuple[str, Type]] = {
+    "provide_leads": ("leadsdb", LeadGenerationResultsService),
+    "provide_gologin": ("gologindb", GologinApikeysRepository),
+    "provide_elsms": ("elsmsdb", ElSmsServiceApikeyRepository),
+    "provide_smshub": ("smshubdb", SmsHubServiceApikeyRepository),
+    "provide_helper": ("helperdb", HelperSmsServiceApikeyRepository),
+    "provide_herosms": ("herosmsdb", HeroSmsServiceApikeyRepository),
+    "provide_codexsms": ("codexsmsdb", CodexSmsServiceApikeyRepository),
+    "provide_proxy": ("proxydb", ProxyRepository),
+    "provide_stats": ("statsdb", LeadsGenerationStatisticsService),
+}
+
+DEFAULT_FLAGS = {
+    "provide_leads": True,
+    "provide_gologin": True,
+}
+
+
+def db_services_provider(**flags):
+    enabled_flags = {**DEFAULT_FLAGS, **flags}
+
     def wrapper(func):
         @wraps(func)
         async def wrapped(*args, **kwargs):
             db_services = {}
 
-            if provide_leads:
-                db_services.update(leadsdb=LeadGenerationResultsService())
-
-            if provide_gologin:
-                db_services.update(gologindb=GologinApikeysRepository())
-
-            if provide_elsms:
-                db_services.update(elsmsdb=ElSmsServiceApikeyRepository())
-
-            if provide_smshub:
-                db_services.update(smshubdb=SmsHubServiceApikeyRepository())
-
-            if provide_helper:
-                db_services.update(helperdb=HelperSmsServiceApikeyRepository())
-
-            if provide_herosms:
-                db_services.update(herosmsdb=HeroSmsServiceApikeyRepository())
-
-            if provide_codexsms:
-                db_services.update(codexsms=CodexSmsServiceApikeyRepository())
-
-            if provide_proxy:
-                db_services.update(proxydb=ProxyRepository())
-
-            if provide_stats:
-                db_services.update(statsdb=LeadsGenerationStatisticsService())
+            for flag, enabled in enabled_flags.items():
+                if enabled and flag in SERVICES_REGISTRY:
+                    kw_name, factory = SERVICES_REGISTRY[flag]
+                    db_services[kw_name] = factory()
 
             return await func(*args, **kwargs, **db_services)
 

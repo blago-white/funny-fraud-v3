@@ -36,6 +36,15 @@ class CODEXSMS:
     NAME = "Codex-Sms"
 
 
+SMS_SERVICES_AVAILABLE = [
+    SMSHUB,
+    ELSMS,
+    HELPERSMS,
+    HEROSMS,
+    CODEXSMS
+]
+
+
 SMS_SERVICES_MAPPER = {
     SMSHUB.KEY: SmsHubSMSService,
     ELSMS.KEY: ElSmsSMSCodesService,

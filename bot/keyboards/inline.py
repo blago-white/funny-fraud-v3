@@ -94,27 +94,30 @@ def get_session_presets_kb(
         is_supervised: bool = False,
         strict_mode: bool = False,
 ):
+    inline_kb_buttons = [[InlineKeyboardButton(
+        text=f"{
+            "🚩" if current_sms_service == sms.KEY else ""
+        }☎ {sms.NAME}",
+        callback_data=data.SMSServiceSelectorData(
+            sms_service=sms.KEY
+        ).pack()
+    )] for sms in mapper.SMS_SERVICES_AVAILABLE]
+
+    inline_kb_buttons.extend([
+        [InlineKeyboardButton(
+            text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
+            callback_data=data.UseSupervisorData(use=not is_supervised).pack()
+        )],
+        [InlineKeyboardButton(
+            text=f"{"✅" if strict_mode else ""}⚠ Четкое соблюд. кол-в'а лидов [СС]",
+            callback_data=data.StrictLeadsCountModeData(
+                use_strict=not strict_mode
+            ).pack()
+        )]
+    ])
+
     return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(
-                text=f"{
-                    "🚩" if current_sms_service == sms.KEY else ""
-                }☎ {sms.NAME}",
-                callback_data=data.SMSServiceSelectorData(
-                    sms_service=sms.KEY
-                ).pack()
-            ) for sms in mapper.SMS_DB_REPOSITORY_MAPPER.keys()],
-            [InlineKeyboardButton(
-                text=f"{"✅" if is_supervised else ""}🔮 Оптимизировать с ИИ",
-                callback_data=data.UseSupervisorData(use=not is_supervised).pack()
-            )],
-            [InlineKeyboardButton(
-                text=f"{"✅" if strict_mode else ""}⚠ Четкое соблюд. кол-в'а лидов [СС]",
-                callback_data=data.StrictLeadsCountModeData(
-                    use_strict=not strict_mode
-                ).pack()
-            )]
-        ]
+        inline_keyboard=inline_kb_buttons
     )
 
 

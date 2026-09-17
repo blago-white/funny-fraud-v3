@@ -43,32 +43,34 @@ router = Router(name=__name__)
 async def start(
         message: Message, state: FSMContext,
         gologindb: GologinApikeysRepository,
-        codexsms: HeroSmsServiceApikeyRepository,
+        codexsmsdb: HeroSmsServiceApikeyRepository,
         proxydb: ProxyRepository):
     await state.clear()
 
     apikeys = {
         "gologin": gologindb.get_current(),
-        "codexsms": codexsms.get_current()
+        "codexsmsdb": codexsmsdb.get_current()
     }
 
     gologin_count_apikeys = gologindb.get_count()
 
     proxy_ok, _ = proxydb.can_use
 
+    gologin_status = (
+        apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
+        if apikeys.get("gologin")
+        else ""
+    )
+
     await message.bot.send_message(
         chat_id=message.chat.id,
         text=f"🏠<b>Меню Парсера</b>\n"
              f"🤖<b>Gologin apikey: {"✅" if apikeys.get("gologin") else "📛"}"
-             f"<code>{
-             apikeys.get("gologin")[:6] + '...' + apikeys.get("gologin")[-3:]
-             if apikeys.get("gologin")
-             else ""
-             } [кол-во: {gologin_count_apikeys}]</code></b>\n\n"
+             f"<code>{gologin_status} [кол-во: {gologin_count_apikeys}]</code></b>\n\n"
              f"☎ <b>Смс-Сервисы:</b>\n"
-             f"— <b>Codex-Sms apikey: {"✅" if apikeys.get("codexsms") else "📛"}"
+             f"— <b>Codex-Sms apikey: {"✅" if apikeys.get("codexsmsdb") else "📛"}"
              f"<code>{
-             (apikeys.get("codexsms")[-3:] + "...") if apikeys.get("codexsms") else ""
+                (apikeys.get("codexsmsdb")[-3:] + "...") if apikeys.get("codexsmsdb") else ""
              }</code></b>\n\n"
              f"🔐<b>Proxy: {"✅" if proxy_ok else "📛"}</b>\n\n"
              f"<b>Статистика за сегодня: /stats</b>",
