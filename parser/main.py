@@ -226,6 +226,8 @@ class LeadsGenerator:
 
                         print(f"LEAD #{lead_id} EMAIL VERIF CODE SENT!")
 
+                        break
+
                 print("OWNER DATA ENTERED")
 
                 break
