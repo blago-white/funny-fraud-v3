@@ -203,7 +203,7 @@ class OfferInitializerParser:
         )
 
         if "1" not in amount.text:
-            raise SberIdAlreadyRegisteredError("Already registered")
+            raise exceptions.SberIdAlreadyRegisteredError("Already registered")
 
         self._card_data_already_entered = True
 
