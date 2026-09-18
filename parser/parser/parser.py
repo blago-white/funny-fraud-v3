@@ -515,6 +515,9 @@ class OfferInitializerParser:
         except:
             print("FIRST CHECK REG CODE CORRECT === FAILED!!!")
 
+            if "как продолжим?" in self._driver.page_source:
+                raise exceptions.CardDataEnteringBanned()
+
             try:
                 WebDriverWait(self._driver, 30).until(
                     expected_conditions.url_contains(
@@ -615,6 +618,12 @@ class OfferInitializerParser:
 
     def _click_get_account(self):
         print('GET ACCOUNT =========================================')
+
+        try:
+            self._driver.find_element(By.CSS_SELECTOR, 'div.cookies-nova button').click()
+        except Exception as e:
+            print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
+            pass
 
         try:
             WebDriverWait(self._driver, 40).until(
