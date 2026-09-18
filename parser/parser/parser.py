@@ -619,20 +619,22 @@ class OfferInitializerParser:
     def _click_get_account(self):
         print('GET ACCOUNT =========================================')
 
-        try:
-            self._driver.find_element(By.CSS_SELECTOR, 'div.cookies-nova button').click()
-        except Exception as e:
-            print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
-            pass
-
-        try:
-            WebDriverWait(self._driver, 40).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR,
-                     'div[data-test-id="ZeroBlockButtonAgreement"] button')
+        for _ in range(2):
+            try:
+                WebDriverWait(self._driver, 30).until(
+                    expected_conditions.element_to_be_clickable(
+                        (By.CSS_SELECTOR,
+                         'div[data-test-id="ZeroBlockButtonAgreement"] button')
+                    )
                 )
-            )
-        except:
+                break
+            except:
+                try:
+                    self._driver.find_element(By.CSS_SELECTOR, 'div.cookies-nova button').click()
+                except Exception as e:
+                    print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
+                    continue
+        else:
             raise exceptions.TraficBannedError()
 
         self._driver.fullscreen_window()
