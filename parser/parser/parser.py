@@ -636,7 +636,9 @@ class OfferInitializerParser:
                     self._driver.find_element(By.CSS_SELECTOR, 'div.cookies-nova button').click()
                 except Exception as e:
                     print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
-                    continue
+
+                continue
+
         if not loaded:
             raise exceptions.TraficBannedError()
 
