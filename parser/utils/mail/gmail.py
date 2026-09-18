@@ -46,6 +46,9 @@ class GmailVerificationService(BaseEmailVerificationService):
 
         msg_id = self._get_otp_message_id()
 
+        if not msg_id:
+            return None
+
         return self._get_otp_code_from_message(msg_id=msg_id)
 
     def _get_otp_code_from_message(self, msg_id: str) -> str:
@@ -62,9 +65,12 @@ class GmailVerificationService(BaseEmailVerificationService):
             data=json.dumps({"email": self._email, "limit": 20})
         ).json()
 
-        print(msg_list)
+        print(*msg_list, sep="\n")
 
         if msg_list["status"] != "success":
             raise ValueError("Gmail API Error")
 
-        return [msg["id"] for msg in msg_list["messages"] if msg["subject"] == "Код для входа в Сайт СберБанка"][0]
+        try:
+            return [msg["id"] for msg in msg_list["messages"] if msg["subject"] == "Код для входа в Сайт СберБанка"][0]
+        except IndexError:
+            return None

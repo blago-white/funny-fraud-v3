@@ -452,7 +452,7 @@ class LeadsGenerator:
 
         while time.time() - START < 45:
             try:
-                if code := mail_verification_service.get_code():
+                if (code := mail_verification_service.get_code()) is not None:
                     print(f"RECEIVED EMAIL VERIF CODE {code}")
                     return code
             except Exception as e:
