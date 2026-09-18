@@ -619,6 +619,8 @@ class OfferInitializerParser:
     def _click_get_account(self):
         print('GET ACCOUNT =========================================')
 
+        loaded = False
+
         for _ in range(2):
             try:
                 WebDriverWait(self._driver, 30).until(
@@ -627,6 +629,7 @@ class OfferInitializerParser:
                          'div[data-test-id="ZeroBlockButtonAgreement"] button')
                     )
                 )
+                loaded = True
                 break
             except:
                 try:
@@ -634,7 +637,7 @@ class OfferInitializerParser:
                 except Exception as e:
                     print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
                     continue
-        else:
+        if not loaded:
             raise exceptions.TraficBannedError()
 
         self._driver.fullscreen_window()
