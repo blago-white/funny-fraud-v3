@@ -619,16 +619,30 @@ class OfferInitializerParser:
     def _click_get_account(self):
         print('GET ACCOUNT =========================================')
 
-        loaded = False
+        loaded, btn = False, None
 
         for _ in range(2):
             try:
-                WebDriverWait(self._driver, 30).until(
-                    expected_conditions.element_to_be_clickable(
+                btn = WebDriverWait(self._driver, 30).until(
+                    expected_conditions.presence_of_element_located(
                         (By.CSS_SELECTOR,
                          'div[data-test-id="ZeroBlockButtonAgreement"] button')
                     )
                 )
+
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+
+                print(f"START BUTTON VISIBLE: {btn.is_displayed()}")
+
+                btn.click()
+
+                # WebDriverWait(self._driver, 30).until(
+                #     expected_conditions.presence_of_element_clickable(
+                #         (By.CSS_SELECTOR,
+                #          'div[data-test-id="ZeroBlockButtonAgreement"] button')
+                #     )
+                # )
+
                 loaded = True
                 break
             except:
@@ -636,6 +650,9 @@ class OfferInitializerParser:
                     self._driver.find_element(By.CSS_SELECTOR, 'div.cookies-nova button').click()
                 except Exception as e:
                     print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
+
+                    if btn:
+                        driver.execute_script("arguments[0].click();", btn)
 
                 continue
 

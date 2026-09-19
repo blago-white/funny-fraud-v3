@@ -109,7 +109,7 @@ def session_results_commiter(func):
 
                 if "proxyerror" in str(e).lower():
                     continue
-                elif ("expecting value" in str(e).lower()) or ("navigator" in str(e).lower()):
+                elif ("expecting value" in str(e).lower()) or ("navigator" in str(e).lower()) or ("JSON" in str(e).lower()):
                     try:
                         GologinApikeysRepository().annihilate_current()
                     except Exception as e:
@@ -123,7 +123,6 @@ def session_results_commiter(func):
                         raise e
 
                     print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
-
                 else:
                     print(f"ERROR STR LOWER : {str(e).lower()}")
 
@@ -191,13 +190,14 @@ def session_results_commiter(func):
                 }
             )
         except (RegistrationSMSTimeoutError, BadPhoneError, Exception) as e:
-            print(f"{e} {repr(e)} LEAD #{lead_id} RETRY WITH PHONE GENERATION")
+            if "JSON" not in str(e):
+                print(f"{e} {repr(e)} LEAD #{lead_id} RETRY WITH PHONE GENERATION")
 
-            _close_driver(initializer=initializer,
-                          drivers_service=self._drivers_service,
-                          pid=pid)
+                _close_driver(initializer=initializer,
+                              drivers_service=self._drivers_service,
+                              pid=pid)
 
-            return wrapped(*args, **kwargs | {"lead_id": lead_id})
+                return wrapped(*args, **kwargs | {"lead_id": lead_id})
         finally:
             _close_driver(initializer=initializer,
                           drivers_service=self._drivers_service,

@@ -169,6 +169,7 @@ class LeadsGenerator:
                         used_phone_number=phone
                     )
                 except Exception as e:
+                    print(f"{e}")
                     print(f"LEAD #{lead_id} CANNOT SEND REG SMS RETRY №{_}")
                     continue
             else:
@@ -400,13 +401,13 @@ class LeadsGenerator:
 
             initializer.resend_otp()
 
-        print(f"COOCKIES: {initializer.driver.get_cookies()}")
-
-        save_cookies_completed_lead(
-            lead_id=lead_id,
-            session_id=session_id,
-            cookies=initializer.driver.get_cookies()
-        )
+        # print(f"COOCKIES: {initializer.driver.get_cookies()}")
+        #
+        # save_cookies_completed_lead(
+        #     lead_id=lead_id,
+        #     session_id=session_id,
+        #     cookies=initializer.driver.get_cookies()
+        # )
 
         print(f"LEAD #{lead_id} FINISHED")
 
