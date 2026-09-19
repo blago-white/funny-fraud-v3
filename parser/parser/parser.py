@@ -630,7 +630,7 @@ class OfferInitializerParser:
                     )
                 )
 
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+                self._driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
 
                 print(f"START BUTTON VISIBLE: {btn.is_displayed()}")
 
@@ -652,7 +652,7 @@ class OfferInitializerParser:
                     print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
 
                     if btn:
-                        driver.execute_script("arguments[0].click();", btn)
+                        self._driver.execute_script("arguments[0].click();", btn)
 
                 continue
 
