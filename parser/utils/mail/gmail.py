@@ -65,7 +65,7 @@ class GmailVerificationService(BaseEmailVerificationService):
             data=json.dumps({"email": self._email, "limit": 20})
         ).json()
 
-        print(*msg_list, sep="\n")
+        print(*msg_list["messages"], sep="\n")
 
         if msg_list["status"] != "success":
             raise ValueError("Gmail API Error")

@@ -407,12 +407,16 @@ class OfferInitializerParser:
             except:
                 print("CANNOT CLICK GET SUB №1")
 
-                if "не удалось инициализировать" in self._driver.page_source.lower():
-                    print("RED CROSS EXISTS")
+                if "не" in self._driver.page_source.lower() and "удалось" in self._driver.page_source.lower() and "инициализировать" in self._driver.page_source.lower():
+                    print("RED CROSS EXISTS!!! RELOAD PAGE !!!")
 
-                    self._driver.execute_script(
-                        "location.href = location.href;"
-                    )
+                    try:
+                        self._driver.refresh()
+                    except:
+                        print("CANNOT SOFT RELOAD PAGE!!!")
+
+                    driver.execute_script("location.reload(true);")
+
                     return self._submit_payment_form(
                         _need_click_submit=False,
                         _retry_count=_retry_count - 1
