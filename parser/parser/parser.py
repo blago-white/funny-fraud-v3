@@ -634,8 +634,6 @@ class OfferInitializerParser:
 
                 print(f"START BUTTON VISIBLE: {btn.is_displayed()}")
 
-                btn.click()
-
                 # WebDriverWait(self._driver, 30).until(
                 #     expected_conditions.presence_of_element_clickable(
                 #         (By.CSS_SELECTOR,
@@ -651,9 +649,6 @@ class OfferInitializerParser:
                 except Exception as e:
                     print(f"CANNOT CLICK ACCEPT COOKIES! {e}")
 
-                    if btn:
-                        self._driver.execute_script("arguments[0].click();", btn)
-
                 continue
 
         if not loaded:
@@ -661,10 +656,21 @@ class OfferInitializerParser:
 
         self._driver.fullscreen_window()
 
-        self._driver.find_elements(
-            By.CSS_SELECTOR,
-            'div[data-test-id="ZeroBlockButtonAgreement"] button'
-        )[0].click()
+        try:
+            self._driver.find_elements(
+                By.CSS_SELECTOR,
+                'div[data-test-id="ZeroBlockButtonAgreement"] button'
+            )[0].click()
+        except:
+            print("FORSED CLICKED BY JS!!!")
+
+            self._driver.execute_script(
+                "arguments[0].click();",
+                self._driver.find_elements(
+                    By.CSS_SELECTOR,
+                    'div[data-test-id="ZeroBlockButtonAgreement"] button'
+                )[0]
+            )
 
     def _try_drop_form(self):
         try:
