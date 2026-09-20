@@ -15,6 +15,7 @@ def _get_lead_status(status: str):
         LeadGenResultStatus.CODE_INVALID: "🔶",
         LeadGenResultStatus.RESEND_CODE: "🔷",
         LeadGenResultStatus.WAIT_CODE_FAIL: "🚫⚠",
+        LeadGenResultStatus.TIMEOUTING: "⌛️"
     }[status]
 
 

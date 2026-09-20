@@ -69,16 +69,24 @@ def session_results_commiter(func):
                 session_id=session_id,
                 result=LeadGenResult(
                     session_id=session_id,
-                    status=LeadGenResultStatus.PROGRESS,
+                    status=LeadGenResultStatus.TIMEOUTING,
                     ref_link=convert_ref_link(session.ref_link),
                     error="",
                 )
             )
 
+            time.sleep(30*lead_id)
+
+            print(f"LEAD {lead_id} START WAITING FOR {30*lead_id} SECONDS")
+        else:
+            print(f"LEAD {lead_id} TRHEAD RELOADED, AWAITING FOR 10-30 SEC.")
+            time.sleep(random.randint(10, 30))
+
         print(f"LEAD #{lead_id} STARTED")
 
-        for _ in range(10):
-            time.sleep(lead_id*0.25)
+        for _ in range(5):
+            print(f"LEAD {lead_id} START WAITING 10 SEC. BEFORE GET GOLOGIN")
+            time.sleep(10)
 
             proxy = self._proxy_service.next()
 
@@ -122,7 +130,7 @@ def session_results_commiter(func):
 
                         raise e
 
-                    print(f"ANNIHILATED UNRELEVANT GOLOGIN APIKEY")
+                    print(f"DROP UNRELEVANT GOLOGIN APIKEY")
                 else:
                     print(f"ERROR STR LOWER : {str(e).lower()}")
 
@@ -137,6 +145,16 @@ def session_results_commiter(func):
             )
 
         print(f"LEAD #{lead_id} GOLOGIN PROFILE CREATED")
+
+        _, lead_id = self._db_service.add(
+            session_id=session_id,
+            result=LeadGenResult(
+                session_id=session_id,
+                status=LeadGenResultStatus.PROGRESS,
+                ref_link=convert_ref_link(session.ref_link),
+                error="",
+            )
+        )
 
         initializer = self._initializer(
             payments_card=session.card,

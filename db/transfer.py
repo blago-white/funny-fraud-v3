@@ -11,6 +11,7 @@ class LeadGenResultStatus:
     FAILED = "f"
     SUCCESS = "s"
     PROGRESS = "r"
+    TIMEOUTING = "t"
 
 
 STATUS_MAPPING = {
@@ -21,7 +22,8 @@ STATUS_MAPPING = {
     "s": LeadGenResultStatus.SUCCESS,
     "i": LeadGenResultStatus.CODE_INVALID,
     "e": LeadGenResultStatus.RESEND_CODE,
-    "l": LeadGenResultStatus.WAIT_CODE_FAIL
+    "l": LeadGenResultStatus.WAIT_CODE_FAIL,
+    "t": LeadGenResultStatus.TIMEOUTING
 }
 
 BLOCKING_STATUS_CODES = [
