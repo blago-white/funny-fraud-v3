@@ -146,14 +146,11 @@ def session_results_commiter(func):
 
         print(f"LEAD #{lead_id} GOLOGIN PROFILE CREATED")
 
-        _, lead_id = self._db_service.add(
+        self._db_service.change_status(
             session_id=session_id,
-            result=LeadGenResult(
-                session_id=session_id,
-                status=LeadGenResultStatus.PROGRESS,
-                ref_link=convert_ref_link(session.ref_link),
-                error="",
-            )
+            lead_id=lead_id,
+            status=LeadGenResultStatus.PROGRESS,
+            error="",
         )
 
         initializer = self._initializer(
