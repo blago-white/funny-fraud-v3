@@ -2,6 +2,7 @@ from aiogram import F
 from aiogram.dispatcher.router import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.filters import Command
 
 from bot.states.forms import GologinApikeySettingForm
 from db.gologin import GologinApikeysRepository
@@ -36,4 +37,15 @@ async def set_apikey(
 
     await message.reply(
         text=f"✅Ключ сохранен:\n\n <code>{gologindb.get_current()}</code>"
+    )
+
+
+@router.message(Command("drop-gologin"))
+async def set_apikey(
+        message: Message, state: FSMContext,
+        gologindb: GologinApikeysRepository):
+    gologindb.annihilate_current()
+
+    await message.reply(
+        text=f"✅Ключ УДАЛЕН осталось ключей:\n\n <code>{gologindb.get_count()}</code>"
     )
