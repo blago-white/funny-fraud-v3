@@ -40,7 +40,7 @@ async def set_apikey(
     )
 
 
-@router.message(Command("drop-gologin"))
+@router.message(Command("dropgologin"))
 @db_services_provider(provide_leads=False)
 async def drop_apikey(
         message: Message, state: FSMContext,
