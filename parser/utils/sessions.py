@@ -24,7 +24,7 @@ def session_results_commiter(func):
     def _close_driver(drivers_service, pid, initializer):
         print("DRIVER CLOSING!")
         try:
-            # drivers_service.gologin_manager.delete_profile(pid=pid)
+            drivers_service.gologin_manager.delete_profile(pid=pid)
             initializer.driver.close()
             return True
         except:
