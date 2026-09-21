@@ -41,7 +41,8 @@ async def set_apikey(
 
 
 @router.message(Command("drop-gologin"))
-async def set_apikey(
+@db_services_provider(provide_leads=False)
+async def drop_apikey(
         message: Message, state: FSMContext,
         gologindb: GologinApikeysRepository):
     gologindb.annihilate_current()
